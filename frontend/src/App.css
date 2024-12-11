@@ -1,6 +1,6 @@
 body{
   font-family:Georgia, 'Times New Roman', Times, serif ;
-  background: #f2f1f5;
+  background: #edf2fa;
 }
 .form{
   display: flex;
@@ -37,18 +37,20 @@ body{
   cursor: pointer;
 }
 .homeImage{
-  
+  background-color: #edf2fa;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   
 }
 .homeImage img{
-
-  position: absolute;
-}
-.landingText{
-  margin-top: 5%;
-  position: relative;
-  right:-1;
+  height: 550px;
   
 }
+.landingText{
+  margin: 5%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  
+}
+
