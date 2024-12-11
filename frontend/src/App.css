@@ -1,0 +1,54 @@
+body{
+  font-family:Georgia, 'Times New Roman', Times, serif ;
+  background: #f2f1f5;
+}
+.form{
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+  margin-top: 10%;
+  margin-left: 8%;
+  margin-right: 8%;
+}
+.navbar-brand{
+  margin-left: 10%;
+}
+#navbarTogglerDemo02{
+  text-align: right;
+}
+.navCenter{
+  margin-left: 30%;
+
+}
+.navData{
+  margin-right: 35px;
+}
+.login-btn{
+  
+  text-align: center;
+  font-size: 1.1rem;
+  color: white;
+  padding: 7px;
+  border-radius: 25%;
+  border: none;
+  
+}
+.signLink{
+  cursor: pointer;
+}
+.homeImage{
+  
+  display: flex;
+  flex-direction: column;
+  
+}
+.homeImage img{
+
+  position: absolute;
+}
+.landingText{
+  margin-top: 5%;
+  position: relative;
+  right:-1;
+  
+}
