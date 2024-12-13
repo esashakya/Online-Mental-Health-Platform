@@ -30,7 +30,7 @@ export default function Navbar() {
                 </Link>
               </li>
               <li className="nav-item ml-5 navData">
-                <Link className="nav-link" to="/Appointment">
+                <Link className="nav-link" to="/Doctor">
                   Make An Appointment
                 </Link>
               </li>
