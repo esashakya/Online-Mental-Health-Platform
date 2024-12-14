@@ -23,7 +23,7 @@ export class Doctor extends Component {
                   <i className="fa-regular fa-star" style={{color:' #FFD43B'}}></i>
                   <i className="fa-regular fa-star" style={{color: '#FFD43B'}}></i>
                   <br/>
-                  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+                  <button type="button" className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
                     Book Appointment
                   </button>
                 </div>
@@ -42,7 +42,7 @@ export class Doctor extends Component {
                   <i className="fa-solid fa-star" style={{color:' #FFD43B'}}></i>
                   <i className="fa-regular fa-star" style={{color: '#FFD43B'}}></i>
                   <br/>
-                  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+                  <button type="button" className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
                     Book Appointment
                   </button>
                 </div>
@@ -61,7 +61,7 @@ export class Doctor extends Component {
                   <i className="fa-solid fa-star" style={{color:' #FFD43B'}}></i>
                   <i className="fa-solid fa-star" style={{color: '#FFD43B'}}></i>
                   <br/>
-                  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+                  <button type="button" className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
                     Book Appointment
                   </button>
                 </div>
@@ -80,7 +80,7 @@ export class Doctor extends Component {
                   <i className="fa-solid fa-star" style={{color:' #FFD43B'}}></i>
                   <i className="fa-solid fa-star" style={{color: '#FFD43B'}}></i>
                   <br/>
-                  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+                  <button type="button" className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
                     Book Appointment
                   </button>
                 </div>
@@ -99,7 +99,7 @@ export class Doctor extends Component {
                   <i className="fa-solid fa-star" style={{color:' #FFD43B'}}></i>
                   <i className="fa-solid fa-star" style={{color: '#FFD43B'}}></i>
                   <br/>
-                  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+                  <button type="button" className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
                     Book Appointment
                   </button>
                 </div>
@@ -118,7 +118,7 @@ export class Doctor extends Component {
                   <i className="fa-solid fa-star" style={{color:' #FFD43B'}}></i>
                   <i className="fa-solid fa-star" style={{color: '#FFD43B'}}></i>
                   <br/>
-                  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+                  <button type="button" className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
                     Book Appointment
                   </button>
                 </div>
@@ -130,33 +130,34 @@ export class Doctor extends Component {
             
           
         </div>
-        <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-          <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h1 class="modal-title fs-5" id="staticBackdropLabel">Enter your details. We will get connected to you as soon as possible.</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        {/* filling the form */}
+        <div className="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabIndex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+          <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h1 className="modal-title fs-5" id="staticBackdropLabel">Enter your details. We will get connected to you as soon as possible.</h1>
+                <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
-              <div class="modal-body">
+              <div className="modal-body">
                 <form>
-                  <div class="mb-3">
-                    <label for="recipient-name" class="col-form-label">Full Name:</label>
-                    <input type="text" class="form-control" id="recipient-name"/>
+                  <div className="mb-3">
+                    <label htmlFor="recipient-name" className="col-form-label">Full Name:</label>
+                    <input type="text" className="form-control" id="recipient-name"/>
                   </div>
-                  <div class="mb-3">
-                    <label for="number-text" class="col-form-label">Phone Number:</label>
-                    <input class="form-control" id="recipient-name"></input>
+                  <div className="mb-3">
+                    <label htmlFor="number-text" className="col-form-label">Phone Number:</label>
+                    <input className="form-control" id="recipient-name"></input>
                   </div>
-                  <div class="mb-3">
-                    <label for="email-text" class="col-form-label">Email Address:</label>
-                    <input class="form-control" id="recipient-name"></input>
+                  <div className="mb-3">
+                    <label htmlFor="email-text" className="col-form-label">Email Address:</label>
+                    <input className="form-control" id="recipient-name"></input>
                   </div>
                 </form>
               </div>
               
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Send</button>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" className="btn btn-primary" data-bs-dismiss="modal">Send</button>
               </div>
             </div>
           </div>
