@@ -47,7 +47,7 @@ export default function Navbar() {
                   data-bs-toggle="dropdown"
                   aria-expanded="false"
                 >
-                  Exercise
+                  Explore
                 </a>
                 <ul className="dropdown-menu">
                   <li>
