@@ -11,7 +11,7 @@ import Login from './components/Login';
 import SignUp from './components/SignUp';
 import Doctor from './components/Doctor';
 import Forum from './components/Forum';
-import Post from './components/Post';
+import Blog from './components/Blog';
 
 
 function App() {
@@ -25,7 +25,7 @@ function App() {
           <Route exact path="/SignUp" element= {<SignUp/>}></Route>
           <Route exact path="/Doctor" element= {<Doctor/>}></Route>
           <Route exact path="/Forum" element= {<Forum/>}></Route>
-          <Route exact path="/Post" element= {<Post/>}></Route>
+          <Route exact path="/Blog" element= {<Blog/>}></Route>
         
 
         </Routes>
