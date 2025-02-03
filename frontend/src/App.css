@@ -147,6 +147,38 @@ body{
   overflow: hidden;
   
 }
+.musicBg{
+  background-color: #F3F5F7;
+}
+hr.blue-line{
+  border-top: 7px solid #007AF5;
+  width:25%;
+  border-radius: 5px;
+  
+}
+.recommend-music{
+  position: relative;
+}
+.recommend-music img{
+  height:90%;
+}
+.recommend-music .category-name{
+  position: absolute;
+  bottom: 85px;
+  right:45px;
+}
+.recommend-music .pause-music{
+  position: absolute;
+  bottom: 45%;
+  left:45%;
+}
+.category-name{
+  background-color: #FFFFFF;
+  opacity: 50%;
+  color: black;
+  width:75px;
+}
+
 @media (max-width:768px){
   .homeImage{
     flex-direction: column-reverse;
@@ -165,7 +197,13 @@ body{
     margin-right: 0;
     margin-bottom: 5%;
   }
-  /* .viewButton{
-    margin-left: 30%;
-  } */
+  hr.blue-line{
+    width:90%;
+  }
+  .recommend-music .category-name{
+    
+    bottom: 55px;
+    right:45px;
+  }
+  
 } 

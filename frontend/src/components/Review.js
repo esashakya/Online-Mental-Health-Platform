@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 
-export class Review extends Component {
-  render() {
+export default function Review() {
     return (
       <div >
         <div className='testimonialsTitle text-center m-5'>
@@ -55,6 +54,4 @@ export class Review extends Component {
       </div>
     )
   }
-}
 
-export default Review

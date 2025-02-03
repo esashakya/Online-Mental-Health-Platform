@@ -12,8 +12,8 @@ import SignUp from './components/SignUp';
 import Doctor from './components/Doctor';
 import Forum from './components/Forum';
 import Blog from './components/Blog';
-
-
+import SearchBar from './components/SearchBar';
+import Music from './components/Music';
 function App() {
   return (
     <>
@@ -26,7 +26,9 @@ function App() {
           <Route exact path="/Doctor" element= {<Doctor/>}></Route>
           <Route exact path="/Forum" element= {<Forum/>}></Route>
           <Route exact path="/Blog" element= {<Blog/>}></Route>
-        
+          <Route exact path="/SearchBar" element= {<SearchBar/>}></Route>
+          <Route exact path="/Music" element= {<Music/>}></Route>
+
 
         </Routes>
         

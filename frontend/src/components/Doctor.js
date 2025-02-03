@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import {Link} from 'react-router-dom'
-export class Doctor extends Component {
-  render() {
+export default function Doctor() {
     return (
       <div>
         <div className='doctorsList text-center mt-4'>
@@ -140,6 +139,6 @@ export class Doctor extends Component {
       
     )
   }
-}
 
-export default Doctor
+
+

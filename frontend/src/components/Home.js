@@ -1,8 +1,7 @@
 import React, { Component } from 'react'
 import Review from './Review'
 import {Link} from 'react-router-dom'
-export class Home extends Component {
-  render() {
+export default function Home() {
     return (
       <div>
           <div className='homeImage'>
@@ -22,6 +21,5 @@ export class Home extends Component {
       </div>
     )
   }
-}
 
-export default Home
+

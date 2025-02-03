@@ -1,15 +1,25 @@
 import React, { Component } from 'react'
 import {Link} from 'react-router-dom'
-
-export class Blog extends Component {
-  render() {
+import SearchBar from './SearchBar'
+import Typewriter from 'typewriter-effect';
+export default function Blog()  {
+  
     return (
       <div>
         <div className='container'>
           <div className="text-center">
             <h1 className="fw-bold pt-3">Blog</h1>
-            <p className="fs-5 text-muted">Discover articles written by our doctors</p>
+            <p className="fs-5 text-muted">
+                <Typewriter options={{
+                    autoStart:true,
+                    loop:true,
+                    delay:100, 
+                    deleteSpeed:100,
+                    strings:["Discover articles written by our doctors"]
+                }}/> 
+            </p>
         </div>
+        <SearchBar/>
          <div className="row g-4 bg-white mt-5 px-3">
                 
             <div  className="col-md-6 mb-4 blogContent d-flex flex-column">
@@ -96,6 +106,6 @@ export class Blog extends Component {
      
     )
   }
-}
 
-export default Blog
+
+

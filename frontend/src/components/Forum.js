@@ -1,12 +1,21 @@
 import React, { Component } from 'react'
 import {Link} from 'react-router-dom'
-export class Forum extends Component {
-  render() {
+import Typewriter from 'typewriter-effect';
+
+export default function Forum(){
     return (
       <div>
         <div className='topicForum text-center mt-4'>
             <h1>Forum</h1>
-            <p className='fs-5 text-center'>A mental health forum is a safe haven—a place where voices are heard, struggles are shared,<br/> and healing begins through connection and understanding</p>
+            <p className='fs-5 text-center'>
+            <Typewriter options={{
+                    autoStart:true,
+                    loop:true,
+                    delay:50, 
+                    deleteSpeed:100,
+                    strings:["A mental health forum is a safe haven—a place where voices are heard, struggles are shared,and healing begins through connection and understanding"]
+                }}/> 
+            </p>
         </div>
 
         <div className='bg-light rounded p-3' style={{margin:'5%'}}>
@@ -101,6 +110,4 @@ export class Forum extends Component {
       
     )
   }
-}
 
-export default Forum
