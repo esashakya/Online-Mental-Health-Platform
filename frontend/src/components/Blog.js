@@ -5,75 +5,92 @@ export class Blog extends Component {
   render() {
     return (
       <div>
-          <div className='topicForum text-center mt-4'>
-            <h1>Blog</h1>
-            <p className='fs-5 text-center'>Explore our blogs</p>
+        <div className='container'>
+          <div className="text-center">
+            <h1 className="fw-bold pt-3">Blog</h1>
+            <p className="fs-5 text-muted">Discover articles written by our doctors</p>
         </div>
-           
-        <div className='bg-light rounded p-3' style={{margin:'4%'}}>
-            <div className='d-flex flex-direction-column justify-content-around'>
-                <div className='col-md-6 mb-3 bg-info bg-opacity-10 border border-info-subtle rounded p-3 '>
-                    <div className='row mb-3'>
-                        <div className='titlePost col-md-9'>
-                            <h2>Post Title</h2>
-                        </div>
-                        <div className='dateData col-md-3'>
-                            <h5 className='fw-medium'>Date: 14/12/2024</h5>
-                        </div>
+         <div className="row g-4 bg-white mt-5 px-3">
+                
+            <div  className="col-md-6 mb-4 blogContent d-flex flex-column">
+                <div className='blogPicture pt-2'>
+                    <img src="http://localhost:8000/media/anxiety.png" alt="Blog Img"></img>
+                    <div className='blogCredit text-start w-100'>
+                        <p >Dr. Eva Maharjan || Therapist</p>
                         
-                    </div>
-                    
-                    <div className='detailsPost'>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus blandit accumsan neque sed rutrum. Duis sodales varius lacinia. Vivamus egestas vitae libero ut vulputate. Maecenas mi sapien, cursus in lacus at, posuere ullamcorper ante. Proin felis ex, mattis nec venenatis at, tempor vel turpis. Etiam pulvinar quam quis urna consectetur laoreet. Donec luctus sem et eleifend gravida. Pellentesque pretium ante ac turpis rutrum tempus.</p>
-
-                    </div>
-                    <div className='viewButton'>
-                        <button type="button" className="btn btn-primary"><Link to="/Post" style={{ color: 'white', textDecoration:'none' }}>View More</Link></button>
+                        <p>Over <span className='text-success'>3+ years</span> experience</p>
                     </div>
                 </div>
-                {/* end of post 1 */}
-                <div className='col-md-6 mb-3 bg-info bg-opacity-10 border border-info-subtle rounded p-3 '>
-                    <div className='row mb-3'>
-                        <div className='titlePost col-md-9'>
-                            <h2>Post Title</h2>
-                        </div>
-                        <div className='dateData col-md-3'>
-                            <h5 className='fw-medium'>Date: 14/12/2024</h5>
-                        </div>
+                <div className=" blogPost  p-2 h-100">
                         
+                    <h3 className="text-center">Blog Title</h3>
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                        <p className="text-body-secondary">Date: 2/3/2025</p>
+                        <span className="badge rounded-pill text-bg-info fw-lighter">OCD</span>
                     </div>
-                    
-                    <div className='detailsPost'>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus blandit accumsan neque sed rutrum. Duis sodales varius lacinia. Vivamus egestas vitae libero ut vulputate. Maecenas mi sapien, cursus in lacus at, posuere ullamcorper ante. Proin felis ex, mattis nec venenatis at, tempor vel turpis. Etiam pulvinar quam quis urna consectetur laoreet. Donec luctus sem et eleifend gravida. Pellentesque pretium ante ac turpis rutrum tempus.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus blandit accumsan neque sed rutrum.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus blandit accumsan neque sed rutrum.</p>
-
-                    </div>
-                    <div className='viewButton'>
-                        <button type="button" className="btn btn-primary"><Link to="/Post" style={{ color: 'white', textDecoration:'none' }}>View More</Link></button>
+                        
+                    <p className="text-dark">lorem ipsum Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum pharetra nunc non diam lacinia, id viverra magna porttitor. Donec nulla turpis, finibus sit amet diam laoreet, bibendum ultricies dui.</p>
+                    <div className="text-start ">
+                        <Link to="/Post" className='text-decoration-none'>
+                                Read More 
+                        </Link>
                     </div>
                 </div>
                 
             </div>
-            {/* end of post 3 */}
-            <div className='col-md-6 mb-3 bg-info bg-opacity-10 border border-info-subtle rounded p-3 '>
-                    <div className='row mb-3'>
-                        <div className='titlePost col-md-9'>
-                            <h2>Post Title</h2>
-                        </div>
-                        <div className='dateData col-md-3'>
-                            <h5 className='fw-medium'>Date: 14/12/2024</h5>
-                        </div>
+            <div  className=" col-md-6 mb-4 blogContent d-flex flex-column">
+                <div className='blogPicture pt-2'>
+                    <img src="http://localhost:8000/media/depression.png" alt="Blog Img"></img>
+                    <div className='blogCredit text-start w-100'>
+                        <p >Dr. Rajesh Maharjan || Therapist</p>
                         
+                        <p>Over <span className='text-success'>15+ years</span> experience</p>
                     </div>
-                    
-                    <div className='detailsPost'>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus blandit accumsan neque sed rutrum. Duis sodales varius lacinia. Vivamus egestas vitae libero ut vulputate. Maecenas mi sapien, cursus in lacus at, posuere ullamcorper ante. Proin felis ex, mattis nec venenatis at, tempor vel turpis. Etiam pulvinar quam quis urna consectetur laoreet. Donec luctus sem et eleifend gravida. Pellentesque pretium ante ac turpis rutrum tempus.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus blandit accumsan neque sed rutrum.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus blandit accumsan neque sed rutrum.</p>
-
+                </div>
+                <div className=" blogPost  p-3 h-50">
+                        
+                    <h3 className="text-center">Blog Title</h3>
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                        <p className="text-body-secondary">Date: 2/3/2025</p>
+                        <span className="badge rounded-pill text-bg-info fw-lighter">OCD</span>
                     </div>
-                    <div className='viewButton'>
-                        <button type="button" className="btn btn-primary"><Link to="/Post" style={{ color: 'white', textDecoration:'none' }}>View More</Link></button>
+                        
+                    <p className="text-dark">lorem ipsum Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum pharetra nunc non diam lacinia, id viverra magna porttitor. Donec nulla turpis, finibus sit amet diam laoreet, bibendum ultricies dui.</p>
+                    <div className="text-start ">
+                        <Link to="/Post" className='text-decoration-none'>
+                                Read More 
+                        </Link>
                     </div>
                 </div>
                 
+            </div>
+            <div  className=" col-md-6 mb-4 blogContent d-flex flex-column">
+                <div className='blogPicture pt-2'>
+                    <img src="http://localhost:8000/media/depression.png" alt="Blog Img"></img>
+                    <div className='blogCredit text-start w-100'>
+                        <p >Dr. Rajesh Maharjan || Therapist</p>
+                        
+                        <p>Over <span className='text-success'>15+ years</span> experience</p>
+                    </div>
+                </div>
+                <div className=" blogPost  p-3 h-50">
+                        
+                    <h3 className="text-center">Blog Title</h3>
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                        <p className="text-body-secondary">Date: 2/3/2025</p>
+                        <span className="badge rounded-pill text-bg-info fw-lighter">OCD</span>
+                    </div>
+                        
+                    <p className="text-dark">lorem ipsum Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum pharetra nunc non diam lacinia, id viverra magna porttitor. Donec nulla turpis, finibus sit amet diam laoreet, bibendum ultricies dui.</p>
+                    <div className="text-start ">
+                        <Link to="/Post" className='text-decoration-none'>
+                                Read More 
+                        </Link>
+                    </div>
+                </div>
+                
+            </div>  
+            </div>
             </div>
         </div>
      

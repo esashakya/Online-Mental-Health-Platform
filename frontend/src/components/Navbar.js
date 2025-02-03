@@ -61,6 +61,11 @@ export default function Navbar() {
                     </a>
                   </li>
                   <li>
+                    <Link className="dropdown-item" to="/Blog">
+                      Blogs
+                    </Link>
+                  </li>
+                  <li>
                     <a className="dropdown-item" href="#">
                       Mood Tracker
                     </a>
