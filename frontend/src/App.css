@@ -158,10 +158,12 @@ hr.blue-line{
 }
 .recommend-music{
   position: relative;
+  height: auto;
 }
 .recommend-music img{
   height:90%;
 }
+
 .recommend-music .category-name{
   position: absolute;
   bottom: 85px;
@@ -177,6 +179,152 @@ hr.blue-line{
   opacity: 50%;
   color: black;
   width:75px;
+}
+.mood-icons i {
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
+  border-radius: 50%;
+}
+
+.mood-icons i:hover {
+  box-shadow: 0px 0px 20px rgba(4, 38, 101, 0.3);
+  
+}
+
+.sad i { color: #dc3545; }       
+.happy i { color: #28a745; }     
+.anxious i { color: #ffc107; }  
+.cry i { color: #6c757d; }       
+.chill i { color: #007bff; }     
+
+/* demo */
+/* body */
+.musicReco{ 
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+}
+.musicBg{
+  max-width:1200px;
+  width: 90%;
+}
+
+.top-music-list .music-list{
+  display:grid;
+  gap:25px;
+  /* horizontal scroll */
+  overflow-x: auto; 
+  scrollbar-width: none;
+  grid-template-columns: repeat(10,1fr);
+}
+.top-music-list .music-list .recommend-music{
+  width: 425px;
+  height:300px;
+  object-fit: cover;
+}
+
+
+.top-music-list {
+  position: relative;
+  padding: 0px 15px 0 15px;
+}
+.btn-slide{
+  position: absolute;
+  cursor: pointer;
+  top:50%;
+  height:50px;
+  width:50px;
+  transform: translateY(-50%);
+  z-index: 10;
+}
+
+.carousel-control-prev {
+  left: 10px; 
+}
+.carousel-control-next {
+  right: 10px; 
+}
+/* breathing */
+.exercise {
+  box-sizing: border-box;
+  min-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(to bottom right, #a2c2e7, #87c6f2, #b4e1f6);
+}
+
+#exercise-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 400px;
+  height: 400px;
+}
+
+.circle {
+  position: absolute;
+  z-index: 2;
+  background-color: #004890;
+  height: 250px;
+  width: 250px;
+  border-radius: 50%;
+  animation: grow-shrink 7.5s ease-in-out infinite;
+}
+
+
+.outer-circle {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  z-index: 1;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #a2c2e7, #87c6f2, #b4e1f6, #87c6f2, #a2c2e7);
+  box-shadow: 0px 0px 20px rgba(49, 115, 237, 0.3);
+}
+
+/* Pointer  */
+.pointer {
+  background-color: #FBFBFB;
+  border-radius: 50%;
+  height: 25px;
+  width: 25px;
+  position: absolute;
+  z-index: 3;
+  top: 18%;
+  left: 45%;
+  transform: translateX(-50%);
+  animation: rotate 7.5s linear infinite;
+  transform-origin: center 150px;
+  
+}
+
+/* exercise */
+@keyframes grow-shrink {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.2);
+  }
+  70%{
+    transform: scale(1.2);
+  }
+  100%{
+    transform: scale(1);
+  }
+}
+
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg) translateX(-50%);
+  }
+  to {
+    transform: rotate(360deg) translateX(-50%);
+  }
 }
 
 @media (max-width:768px){
@@ -207,3 +355,4 @@ hr.blue-line{
   }
   
 } 
+

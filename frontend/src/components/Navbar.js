@@ -56,9 +56,9 @@ export default function Navbar() {
                     </Link>
                   </li>
                   <li>
-                    <a className="dropdown-item" href="#">
+                    <Link className="dropdown-item" to="/Exercise">
                       Breathing Exercise
-                    </a>
+                    </Link>
                   </li>
                   <li>
                     <Link className="dropdown-item" to="/Blog">
@@ -66,9 +66,9 @@ export default function Navbar() {
                     </Link>
                   </li>
                   <li>
-                    <a className="dropdown-item" href="#">
+                    <Link className="dropdown-item" to="/Mood">
                       Mood Tracker
-                    </a>
+                    </Link>
                   </li>
                 </ul>
               </li>

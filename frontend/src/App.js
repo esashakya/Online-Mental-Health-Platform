@@ -14,6 +14,10 @@ import Forum from './components/Forum';
 import Blog from './components/Blog';
 import SearchBar from './components/SearchBar';
 import Music from './components/Music';
+import Category from './components/Category';
+import Exercise from './components/Exercise';
+import Mood from './components/Mood'
+
 function App() {
   return (
     <>
@@ -28,6 +32,10 @@ function App() {
           <Route exact path="/Blog" element= {<Blog/>}></Route>
           <Route exact path="/SearchBar" element= {<SearchBar/>}></Route>
           <Route exact path="/Music" element= {<Music/>}></Route>
+          <Route exact path="/Category" element={<Category/>}></Route>
+          <Route exact path="/Exercise" element={<Exercise/>}></Route>
+          <Route exact path="/Mood" element={<Mood/>}></Route>
+
 
 
         </Routes>
