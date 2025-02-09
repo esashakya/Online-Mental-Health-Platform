@@ -22,10 +22,10 @@ export default function Forum(){
             <div className='newPost'>
                 <div className='postedData   p-3 '  data-bs-toggle="modal" data-bs-target="#staticBackdrop">
                     <div className='row mb-3 align-items-center'>
-                        <div className='titlePost col-md-9'>
+                        <div className='titlePost col-md-9 '>
                             <h5 className='fw-medium'>Add a new post</h5>
                         </div>
-                        <div className='dateData col-md-2'>
+                        <div className='dateData col-md-2 '>
                             <button type="button" className='btn btn-primary'  data-bs-toggle="modal" data-bs-target="#staticBackdrop" style={{fontSize:"1.2rem",display: "flex",alignItems: "center",
                         justifyContent: "center",backgroundColor:"#007AF5",marginLeft:"99%"}}>+</button>
                         </div>

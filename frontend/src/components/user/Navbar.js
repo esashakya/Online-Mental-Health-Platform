@@ -1,5 +1,6 @@
 import React from "react";
 import {Link} from 'react-router-dom'
+import { Outlet } from "react-router-dom";
 export default function Navbar() {
   return (
     <div>
@@ -79,6 +80,8 @@ export default function Navbar() {
           
         </div>
       </nav>
+      {/* to render other components in website */}
+      <Outlet />
     </div>
   );
 }
