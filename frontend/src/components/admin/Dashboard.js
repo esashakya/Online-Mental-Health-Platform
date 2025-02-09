@@ -4,11 +4,13 @@ import SearchBar from "../user/SearchBar";
 import Calculation from "./Calculation";
 import DashboardChart from "./DashboardChart";
 import AgeChart from "./AgeChart";
+
+
 export default function Dashboard() {
   return (
     <div>
-      <div className="admin d-flex flex-row" style={{ height: "100vh" }}>
-        <AdminPanel />
+      <div className="admin d-flex flex-col " style={{ height: "100%" }}>
+        
         <div className="dashboardAdmin w-100">
           <SearchBar />
           <div className="d-flex flex-wrap mt-3 justify-content-evenly">
@@ -16,11 +18,13 @@ export default function Dashboard() {
             <Calculation detail="Users" />
             <Calculation detail="Appoitments" />
           </div>
-          <div className="d-flex flex-row flex-sm-col justify-content-center">
+          <div className="charts d-flex flex-col flex-lg-row flex-wrap justify-content-center m-3">
             <DashboardChart />
             <AgeChart />
           </div>
         </div>
+        
+        
       </div>
     </div>
   );

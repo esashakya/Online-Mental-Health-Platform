@@ -15,8 +15,12 @@ import Category from "./components/user/Category";
 import Exercise from "./components/user/Exercise";
 import Mood from "./components/user/Mood";
 
-import AdminPanel from "./components/admin/AdminPanel";
+import UserTable from "./components/admin/UserTable";
 import Dashboard from "./components/admin/Dashboard";
+import AdminPanel from "./components/admin/AdminPanel";
+import DoctorTable from "./components/admin/DoctorTable";
+import AdminAppointment from "./components/admin/AdminAppointment";
+
 
 function App() {
   return (
@@ -39,8 +43,12 @@ function App() {
             <Route exact path="/Mood" element={<Mood />}></Route>
           </Route>
           {/* admin web */}
-          <Route path="/admin" element={<Dashboard />}>
+          <Route path="/admin" element={<AdminPanel />}>
             <Route index element={<Dashboard />} />
+            <Route exact path="RegisteredUsers" element={<UserTable />}></Route>
+            <Route exact path="RegisteredDoctorUsers" element={<DoctorTable />}></Route>
+            <Route exact path="Schedule/Appointments" element={<AdminAppointment />}></Route>
+
             
           </Route>
         </Routes>

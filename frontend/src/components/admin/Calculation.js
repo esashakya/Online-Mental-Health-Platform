@@ -22,7 +22,7 @@ export default function Calculation({detail}) {
     <>
     <div className=' col-12 col-md-3'>
       
-        <div className='box d-flex flex-row p-4 text-center '>
+        <div className='box d-flex flex-wrap p-4 text-center '>
             <span className='title fs-4'>{value.boxTitle}</span>
             <div className='d-flex flex-column view'>
             <span className='numbers fs-4'>{value.boxNumbers}</span>

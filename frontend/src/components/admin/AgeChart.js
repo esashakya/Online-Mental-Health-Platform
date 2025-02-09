@@ -18,7 +18,7 @@ export default function AgeChart() {
       fill: "#8dd1e1",
     },
     {
-      name: "30-35 Age",
+      name: "30-35",
       totalNoAge: 11,
       fill: "#82ca9d",
     },
@@ -31,13 +31,14 @@ export default function AgeChart() {
 
   return (
     <div>
-      <div className="analysis-chart p-4 d-flex flex-column justify-content-center shadow-sm rounded">
+      <div className="analysis-chart p-4 d-flex flex-column justify-content-center shadow-sm rounded p-2 ">
         <div>
           <span className="fw-medium fs-5">Analysis Report of User's age</span>
         </div>
+        <hr/>
         <div className="d-flex align-items-center">
           <RadialBarChart
-            width={400}
+            width={420}
             height={360}
             innerRadius="10%"
             outerRadius="90%"
@@ -55,9 +56,10 @@ export default function AgeChart() {
             
             <Legend
               iconSize={10}
-              layout="horizontal"
+
+              layout="vertical"
               verticalAlign="bottom"
-              align="center"
+              align="right"
             />
             <Tooltip />
           </RadialBarChart>
