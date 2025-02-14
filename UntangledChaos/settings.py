@@ -141,9 +141,10 @@ MEDIA_ROOT = BASE_DIR /"media"
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # type of authenication
 REST_FRAMEWORK ={
-    'DEFAULT_AUTHENICATION_CLASSES':(
+    'DEFAULT_AUTHENICATION_CLASSES':[
         'rest_framework_simplejwt.authenication.JWTAuthenication',
-    )
+    ],
+    
 }
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
