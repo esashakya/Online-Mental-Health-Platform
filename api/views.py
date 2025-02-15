@@ -16,19 +16,6 @@ class SignUpView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (AllowAny,)
     serializer_class = SignUpSerializer
-@api_view(['GET','POST'])
-@permission_classes([IsAuthenticated])
-def DashboardView(request):
     
-    if request.method =="GET":
-        data = f"Hey{request.user},GET response"
-        return Response({'response':data},status=status.HTTP_200_OK)
 
-    elif request.method == 'POST':
-        text = request.POST.get("text")
-        data = f"Hey{request.user},{text}"
-        return Response({'response':data},status=status.HTTP_200_OK)
-
-    return Response({},status=status.HTTP_400_BAD_REQUEST)
-    
 

@@ -5,7 +5,4 @@ urlpatterns=[
     path("token/", views.TokenPairView.as_view()),
     path("token/refresh/",TokenRefreshView.as_view()),
     path("register/", views.SignUpView.as_view()),
-    path("dashboardapi/", views.DashboardView),
-
-
 ]

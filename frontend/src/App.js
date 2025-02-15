@@ -1,6 +1,7 @@
 import "./App.css";
 import "./Admin.css";
-
+import RestrictedRoute from "./utils/RestrictedRoute";
+import { AuthProvider } from "./context/AuthContext";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/user/Navbar";
 import Home from "./components/user/Home";
@@ -21,37 +22,48 @@ import AdminPanel from "./components/admin/AdminPanel";
 import DoctorTable from "./components/admin/DoctorTable";
 import AdminAppointment from "./components/admin/AdminAppointment";
 
-
 function App() {
   return (
     <>
       <Router>
-        <Routes>
-          {/* user web */}
-          <Route path="/" element={<Navbar />}>
-            <Route index element={<Home />} />
-            {/* <Route exact path="/" element= {<Home/>}></Route> */}
-            <Route exact path="/Login" element={<Login />}></Route>
-            <Route exact path="/SignUp" element={<SignUp />}></Route>
-            <Route exact path="/Doctor" element={<Doctor />}></Route>
-            <Route exact path="/Forum" element={<Forum />}></Route>
-            <Route exact path="/Blog" element={<Blog />}></Route>
-            <Route exact path="/SearchBar" element={<SearchBar />}></Route>
-            <Route exact path="/Music" element={<Music />}></Route>
-            <Route exact path="/Category" element={<Category />}></Route>
-            <Route exact path="/Exercise" element={<Exercise />}></Route>
-            <Route exact path="/Mood" element={<Mood />}></Route>
-          </Route>
-          {/* admin web */}
-          <Route path="/admin" element={<AdminPanel />}>
-            <Route index element={<Dashboard />} />
-            <Route exact path="RegisteredUsers" element={<UserTable />}></Route>
-            <Route exact path="RegisteredDoctorUsers" element={<DoctorTable />}></Route>
-            <Route exact path="Schedule/Appointments" element={<AdminAppointment />}></Route>
-
-            
-          </Route>
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            {/* user web */}
+            <Route path="/" element={<Navbar />}>
+              <Route index element={<Home />} />
+              {/* <Route exact path="/" element= {<Home/>}></Route> */}
+              <Route exact path="/Login" element={<Login />}></Route>
+              <Route exact path="/SignUp" element={<SignUp />}></Route>
+              <Route exact path="/Doctor" element={<Doctor />}></Route>
+              <Route exact path="/Forum" element={<Forum />}></Route>
+              <Route exact path="/Blog" element={<Blog />}></Route>
+              <Route exact path="/SearchBar" element={<SearchBar />}></Route>
+              <Route exact path="/Music" element={<Music />}></Route>
+              <Route exact path="/Category" element={<Category />}></Route>
+              <Route exact path="/Exercise" element={<Exercise />}></Route>
+              <Route exact path="/Mood" element={<Mood />}></Route>
+            </Route>
+            {/* admin web */}
+            <Route path="/admin" element={<AdminPanel />}>
+              <Route index element={<Dashboard />} />
+              <Route
+                exact
+                path="RegisteredUsers"
+                element={<UserTable />}
+              ></Route>
+              <Route
+                exact
+                path="RegisteredDoctorUsers"
+                element={<DoctorTable />}
+              ></Route>
+              <Route
+                exact
+                path="Schedule/Appointments"
+                element={<AdminAppointment />}
+              ></Route>
+            </Route>
+          </Routes>
+        </AuthProvider>
       </Router>
     </>
   );

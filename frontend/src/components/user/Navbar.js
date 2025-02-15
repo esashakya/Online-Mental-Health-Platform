@@ -1,7 +1,12 @@
-import React from "react";
+import React, {useContext} from "react";
+import { jwtDecode } from "jwt-decode";
+import AuthContext from "../../context/AuthContext";
 import {Link} from 'react-router-dom'
 import { Outlet } from "react-router-dom";
 export default function Navbar() {
+  const {user,logoutRegisteredUser} = useContext(AuthContext)
+  const token = localStorage.getItem("authTokens")
+
   return (
     <div>
       <nav className="navbar navbar-expand-lg bg-body-tertiary d-flex">
@@ -75,7 +80,16 @@ export default function Navbar() {
               </li>
               
             </ul>
-            <button className="login-btn sm-ml-5 d-none d-lg-block bg-primary" ><Link className='signLink' to = "/Login" style={{ color: 'white', textDecoration:'none' }}>Login</Link></button>
+            {token == null ?(
+            <>
+              <button className="login-btn sm-ml-5 d-none d-lg-block bg-primary" ><Link className='signLink' to = "/Login" style={{ color: 'white', textDecoration:'none' }}>Login</Link></button>
+            </>)
+            :(
+            <>
+              <button className="login-btn sm-ml-5 d-none d-lg-block bg-primary" onClick={logoutRegisteredUser} ><Link className='signLink' to = "/Login" style={{ color: 'white', textDecoration:'none' }}>Logout</Link></button>
+            </>)
+            }
+            
           </div>
           
         </div>
