@@ -21,7 +21,7 @@ import Dashboard from "./components/admin/Dashboard";
 import AdminPanel from "./components/admin/AdminPanel";
 import DoctorTable from "./components/admin/DoctorTable";
 import AdminAppointment from "./components/admin/AdminAppointment";
-
+import JoinUs from "./components/user/JoinUs";
 function App() {
   return (
     <>
@@ -42,6 +42,8 @@ function App() {
               <Route exact path="/Category" element={<Category />}></Route>
               <Route exact path="/Exercise" element={<Exercise />}></Route>
               <Route exact path="/Mood" element={<Mood />}></Route>
+              <Route exact path="/Join/Doctor" element={<JoinUs />}></Route>
+
             </Route>
             {/* admin web */}
             <Route path="/admin" element={<AdminPanel />}>

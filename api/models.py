@@ -38,6 +38,7 @@ class Doctor(models.Model):
     ]
     doctor_fullname= models.CharField(max_length=150)
     doctor_email = models.EmailField(max_length=100)
+    doctor_photo = models.ImageField(upload_to='Doctors/',default='Doctors/default.png')
     doctor_password = models.CharField(max_length=150)
     doctor_gender = models.IntegerField(choices=gender_options, default=1)
     doctor_type = models.IntegerField(choices= doctor_role,default=1)

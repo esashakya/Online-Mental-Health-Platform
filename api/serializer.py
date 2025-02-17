@@ -54,3 +54,38 @@ class SignUpSerializer(serializers.ModelSerializer):
         user.save()
         return user
     
+class SignUpDoctorSerializer(serializers.ModelSerializer):
+    doctor_password = serializers.CharField(
+        write_only= True, 
+        required=True,
+        validators=[validate_password]
+    )
+    
+   
+    
+    class Meta:
+        model=Doctor
+        fields=['doctor_fullname','doctor_email','doctor_photo','doctor_gender','doctor_type','doctor_availableTime','doctor_password']
+        extra_kwargs = {
+            'doctor_fullname':{'required': True}
+        }
+    
+    
+    def create(self,validated_data):
+        hashed_password = make_password(validated_data['doctor_password'])
+        doctor_photo = validated_data.get('doctor_photo', None)
+        doctor = Doctor.objects.create(
+            doctor_fullname = validated_data['doctor_fullname'],
+            doctor_email = validated_data['doctor_email'],
+            doctor_photo = doctor_photo,
+            
+            doctor_gender = validated_data['doctor_gender'],
+            doctor_type = validated_data['doctor_type'],
+            doctor_availableTime = validated_data['doctor_availableTime'],
+            doctor_password=hashed_password
+
+        )
+        
+        doctor.save()
+        return doctor
+    

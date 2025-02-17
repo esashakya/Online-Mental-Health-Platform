@@ -16,6 +16,10 @@ class SignUpView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (AllowAny,)
     serializer_class = SignUpSerializer
-    
+
+class SignUpDoctorView(generics.CreateAPIView):
+    queryset = Doctor.objects.all()
+    permission_classes = (AllowAny,)
+    serializer_class = SignUpDoctorSerializer    
 
 

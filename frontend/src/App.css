@@ -300,6 +300,23 @@ hr.blue-line{
   transform-origin: center 150px;
   
 }
+.join-us{
+  background: linear-gradient(to bottom, #edf2fa, rgb(167, 220, 246));
+
+}
+.text {
+
+  color: #171717;
+  opacity: 0; 
+  transform: translateY(30px); 
+  transition: opacity 1s ease, transform 1s ease;
+}
+
+.text.visible {
+  opacity: 1;
+  transform: translateY(0); 
+}
+
 
 /* exercise */
 @keyframes grow-shrink {

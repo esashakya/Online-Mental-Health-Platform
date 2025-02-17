@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import Review from "./Review";
 import { Link } from "react-router-dom";
+import JoinUs from "./JoinUs";
 export default function Home() {
   return (
     <div>
@@ -23,7 +24,7 @@ export default function Home() {
               style={{ color: "white", textDecoration: "none" }}
             >
               <h5>Book Your Appointment</h5>
-            </Link>{" "}
+            </Link>
           </div>
         </div>
 
@@ -32,8 +33,8 @@ export default function Home() {
           className="img-fluid"
         ></img>
       </div>
-      <Review />
-      
+      {/* <Review /> */}
+      <JoinUs/>
     </div>
   );
 }
