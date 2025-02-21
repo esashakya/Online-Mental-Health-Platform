@@ -23,7 +23,30 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
-
+  const getRegisteredDoctors = async () => {
+    try {
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/all/registered/doctors",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          
+        }
+      );
+      if (!response.ok) {
+        throw new Error(`Status: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log("API Data:", data);
+      return data;
+    } catch (error) {
+      console.error("Error while fetchhing the doctor records",error);
+      
+      return null;
+    }
+  };
   const loginRegisteredUser = async (email, password) => {
     const response = await fetch("http://127.0.0.1:8000/api/token/", {
       method: "POST",
@@ -194,6 +217,7 @@ export const AuthProvider = ({ children }) => {
     registerNewUser,
     loginRegisteredUser,
     logoutRegisteredUser,
+    getRegisteredDoctors,
   };
 
   useEffect(() => {

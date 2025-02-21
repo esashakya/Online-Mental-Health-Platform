@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from api.models import *
 from api.serializer import *
+from rest_framework import viewsets
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
@@ -28,5 +29,11 @@ class SignUpDoctorView(generics.CreateAPIView):
     queryset = Doctor.objects.all()
     permission_classes = (AllowAny,)
     serializer_class = SignUpDoctorSerializer    
+
+
+class DoctorView(viewsets.ReadOnlyModelViewSet):
+    queryset = Doctor.objects.all()
+    serializer_class = DoctorSerializer
+
 
     

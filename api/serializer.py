@@ -9,11 +9,13 @@ class UserSerializer(serializers.ModelSerializer): #serialize to json format
     class Meta:
         model = User #user class that needs to be serialized
         fields = ['user_fullname','user_email','user_gender','user_role']
-class DoctorSerializer(serializers.ModelSerializer): #serialize to json format
+class DoctorSerializer(serializers.ModelSerializer):
+    user = UserSerializer()  
+
     class Meta:
-        model = Doctor #user class that needs to be serialized
-        fields = ["doctor_fullname", "doctor_email", "doctor_photo",
-            "doctor_gender", "doctor_type", "doctor_availableTime", "doctor_password"]
+        model = Doctor
+        fields = ['id', 'user', 'doctor_photo', 'doctor_type', 'doctor_availableTime']
+
 class TokenSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls,user):
@@ -89,7 +91,7 @@ class SignUpDoctorSerializer(serializers.ModelSerializer):
             )
         return attrs
     def create(self, validated_data):
-        
+        #since the following columns are not present in doctor it is deleted but stored in variable for storing in user table
         user_data = {
             "user_email": validated_data.pop("user_email"),
             "user_fullname": validated_data.pop("user_fullname"),

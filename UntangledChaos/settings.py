@@ -31,19 +31,20 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'corsheaders',
     'api',
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -51,7 +52,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
+    
 ]
 CORS_ORIGIN_WHITELIST = [
      'http://localhost:3000',  
@@ -142,7 +143,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # type of authenication
 REST_FRAMEWORK ={
     'DEFAULT_AUTHENICATION_CLASSES':[
-        'rest_framework_simplejwt.authenication.JWTAuthenication',
+        'rest_framework_simplejwt.authentication.JWTAuthenication',
     ],
     
 }
@@ -156,11 +157,11 @@ SIMPLE_JWT = {
     'AUDIENCE': None,
     'ISSUER': None,
     'LEEWAY': 0,
-    'AUTH_HEADER_TYPES': ('Bearer'),
+    'AUTH_HEADER_TYPES': ('Bearer',),
     'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
     'USER_ID_FIELD':'id',
     'USER_ID_CLAIM':'user_id',
-    'USER_AUTHENICATION_RULE': 'rest_framework_simplejwt.authenication.default_user_authenication_rule',
+    'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
     'TOKEN_TYPE_CLAIM':'token_type',
     'TOKEN_USER_CLASS':'rest_framework_simplejwt.models.TokenUser',
