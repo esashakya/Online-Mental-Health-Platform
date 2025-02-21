@@ -33,7 +33,8 @@ export default function Login() {
                 <input type="password"  className="form-control" name="userPassword" placeholder="Password" aria-describedby="passwordHelpBlock"/>
               </div>  
               <div className="form-text mb-2">Don't have an account. <Link className='signLink' to = "/SignUp">Sign Up</Link></div>
-              <button type="submit" className="btn btn-primary">LOG IN</button>      
+              <button type="submit" className="btn btn-primary">LOG IN</button>     
+               
             </form>
         </div>
         </div>

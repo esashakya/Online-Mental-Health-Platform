@@ -4,6 +4,7 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.core.exceptions import ValidationError
 from django.db.models.signals import post_save
 # Create your models here.
+
 class User(AbstractUser):
     gender_options = [
         (1, "Male"),
@@ -13,6 +14,7 @@ class User(AbstractUser):
     roles = [
         (1,"Normal User"),
         (2,"Admin"),
+        (3,"Doctor"),
     ]
     
     user_fullname = models.CharField(max_length=100)
@@ -27,27 +29,14 @@ class User(AbstractUser):
     USERNAME_FIELD = "user_email"
     REQUIRED_FIELDS = ["user_fullname"]
 class Doctor(models.Model):
-    gender_options = [
-        (1, "Male"),
-        (2, "Female"),
-        (3, "Other"),
-    ]
     doctor_role = [
-        (1,"Therapist"),
-        (2,"Psychatrist"),
+        (1, "Therapist"),
+        (2, "Psychiatrist"),
     ]
-    doctor_fullname= models.CharField(max_length=150)
-    doctor_email = models.EmailField(max_length=100)
-    doctor_photo = models.ImageField(upload_to='Doctors/',default='Doctors/default.png')
-    doctor_password = models.CharField(max_length=150)
-    doctor_gender = models.IntegerField(choices=gender_options, default=1)
-    doctor_type = models.IntegerField(choices= doctor_role,default=1)
+    doctor_photo = models.ImageField(upload_to="Doctors/", default="Doctors/default.png")
+    doctor_type = models.IntegerField(choices=doctor_role, default=1)
     doctor_availableTime = models.TimeField()
-    def set_hashed_password(self,password):
-        self.doctor_password = make_password(password)
-
-    def validate_password(self,password):
-        return check_password(password,self.doctor_password)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="doctorDetails")
 
 class Appointment(models.Model):
     options=[
