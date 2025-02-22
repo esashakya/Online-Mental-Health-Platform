@@ -36,6 +36,7 @@ class Doctor(models.Model):
     doctor_photo = models.ImageField(upload_to="Doctors/", default="Doctors/default.png")
     doctor_type = models.IntegerField(choices=doctor_role, default=1)
     doctor_availableTime = models.TimeField()
+    doctor_degree = models.TextField(max_length=250)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="doctorDetails")
 
 class Appointment(models.Model):
@@ -77,9 +78,9 @@ class Forum(models.Model):
     def clean(self):
         if len(self.post_detail)<10:
             raise ValidationError("Forum post must be longer than 10 characters")
-    def save(self,*args,**kwargs):
-        self.full_clean()
-        super().save(*args,**kwargs)
+    # def save(self,*args,**kwargs):
+    #     self.full_clean()
+    #     super().save(*args,**kwargs)
 class Mood(models.Model):
     mood_options=[
         ("Sad","Sad"),

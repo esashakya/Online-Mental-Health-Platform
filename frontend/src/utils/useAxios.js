@@ -1,5 +1,5 @@
 import axios from "axios";
-import jwt_decode from "jwt-decode";
+import {jwtDecode} from "jwt-decode";
 import dayjs from "dayjs";
 import { useContext } from "react";
 import AuthContext from "../context/AuthContext";
@@ -13,7 +13,7 @@ const useAxios = () => {
   });
   //this function runs before request is handled
   apiAxios.interceptors.request.use(async (userRequest) => {
-    const user = jwt_decode(authTokens.access);
+    const user = jwtDecode(authTokens.access);
     // exp predefined claims
     //calculate total time left untill expiration of token
     const expirationToken = dayjs.unix(user.exp).diff(dayjs()) < 1;
@@ -21,16 +21,19 @@ const useAxios = () => {
       return userRequest;
     } else {
       try {
-        const response = await axios.post(`$[apiURL]token/refresh/`, {
+        const response = await axios.post(`${apiURL}token/refresh/`, {
           refresh: authTokens.refresh,
         });
         localStorage.setItem("authToken", JSON.stringify(response.data));
+        
         setAuthTokens(response.data);
-        setUser(jwt_decode(response.data.access));
+        setUser(jwtDecode(response.data.access));
         userRequest.headers.Authorization = `Bearer ${response.data.access}`;
         return userRequest;
       } catch{
         console.error("Error while refreshing token");
+        console.log("Refresh token:", authTokens?.refresh);
+
       }
     }
   });

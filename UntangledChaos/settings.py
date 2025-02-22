@@ -54,11 +54,13 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     
 ]
-CORS_ORIGIN_WHITELIST = [
-     'http://localhost:3000',  
-]
+# CORS_ORIGIN_WHITELIST = [
+#      'http://localhost:3000/',  
+# ]
 CORS_ALLOW_ALL_ORIGINS = True
 ROOT_URLCONF = 'UntangledChaos.urls'
+CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+CORS_ALLOW_HEADERS = ['Content-Type', 'Authorization']
 
 TEMPLATES = [
     {
@@ -140,15 +142,15 @@ MEDIA_ROOT = BASE_DIR /"media"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-# type of authenication
+# type of authentication
 REST_FRAMEWORK ={
-    'DEFAULT_AUTHENICATION_CLASSES':[
-        'rest_framework_simplejwt.authentication.JWTAuthenication',
+    'DEFAULT_AUTHENTICATION_CLASSES':[
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     
 }
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME':timedelta(days=50),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,

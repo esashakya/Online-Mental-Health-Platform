@@ -30,10 +30,19 @@ class SignUpDoctorView(generics.CreateAPIView):
     permission_classes = (AllowAny,)
     serializer_class = SignUpDoctorSerializer    
 
+class ForumViewSet(viewsets.ModelViewSet):
+    queryset = Forum.objects.all()
+    permission_classes = [IsAuthenticated] 
+    serializer_class = ForumSerializer
 
-class DoctorView(viewsets.ReadOnlyModelViewSet):
-    queryset = Doctor.objects.all()
-    serializer_class = DoctorSerializer
+@api_view(['GET'])
+@permission_classes([AllowAny])  
+def get_doctors(request):
+    # fetches all the forum posts
+    doctors = Doctor.objects.all() 
+    # convert into json with the use of json
+    serializer = DoctorSerializer(doctors, many=True)  
+    return Response(serializer.data)
 
 
     

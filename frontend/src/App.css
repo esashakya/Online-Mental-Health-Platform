@@ -102,7 +102,15 @@ body{
   background-color: #e2e2e4;
   border-radius: 5px;
 }
-
+.doctor-img{
+  height: 300px;
+  object-fit: cover;
+  overflow: hidden;
+}
+.card-title {
+  color: #4169E1;
+  
+}
 /* .card{
   border-width: 5px;
   border-color: #476f95;

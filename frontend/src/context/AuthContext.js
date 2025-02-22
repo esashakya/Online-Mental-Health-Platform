@@ -23,30 +23,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
-  const getRegisteredDoctors = async () => {
-    try {
-      const response = await fetch(
-        "http://127.0.0.1:8000/api/all/registered/doctors",
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          
-        }
-      );
-      if (!response.ok) {
-        throw new Error(`Status: ${response.status}`);
-      }
-      const data = await response.json();
-      console.log("API Data:", data);
-      return data;
-    } catch (error) {
-      console.error("Error while fetchhing the doctor records",error);
-      
-      return null;
-    }
-  };
+  
   const loginRegisteredUser = async (email, password) => {
     const response = await fetch("http://127.0.0.1:8000/api/token/", {
       method: "POST",
@@ -104,7 +81,65 @@ export const AuthProvider = ({ children }) => {
       });
     }
   };
+  const addNewPost = async(post_title,post_detail,anonymous,posts)=>{
+    console.log("Sending Post Data:", posts);
+     console.log("Access Token:", authTokens.access);
+    const response = await fetch("http://127.0.0.1:8000/api/forum/", {
+      method : "POST",
+      headers: {
+        "Authorization": `Bearer ${authTokens.access}`,
+        "Content-Type": "application/json",
+        
+      },
+      body: JSON.stringify({
+        post_title,post_detail,anonymous,
+        user_id : user.user_id,
+      }),
 
+    });
+    
+
+    if (response.status === 201) {
+      navigate("/login");
+      msg.fire({
+        title: "Added post successfully!",
+        icon: "success",
+        toast: true,
+        timer: 5000,
+        position: "top-right",
+        timerProgressBar: true,
+        showConfirmButton: false,
+        background: "#28a745",
+        color: "#ffffff",
+        text: "Hope you have a great day!",
+        didOpen: () => {
+          msg.showLoading();
+        },
+        willClose: () => {
+          msg.hideLoading();
+        },
+      });
+    } else {
+      msg.fire({
+        title: "Error Occured in input fields ",
+        icon: "error",
+        toast: true,
+        timer: 5000,
+        position: "top-right",
+        timerProgressBar: true,
+        showConfirmButton: false,
+        background: "#dc3545",
+        color: "#ffffff",
+        text: "The entered creddentials are incorrect. Please try again",
+        didOpen: () => {
+          msg.showLoading();
+        },
+        willClose: () => {
+          msg.hideLoading();
+        },
+      });
+    } 
+  }
   const registerNewUser = async (
     email,
     user_fullname,
@@ -217,7 +252,8 @@ export const AuthProvider = ({ children }) => {
     registerNewUser,
     loginRegisteredUser,
     logoutRegisteredUser,
-    getRegisteredDoctors,
+    addNewPost,
+    
   };
 
   useEffect(() => {

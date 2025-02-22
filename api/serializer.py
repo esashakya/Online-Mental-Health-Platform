@@ -14,7 +14,7 @@ class DoctorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Doctor
-        fields = ['id', 'user', 'doctor_photo', 'doctor_type', 'doctor_availableTime']
+        fields = ['id', 'user', 'doctor_photo', 'doctor_type', 'doctor_availableTime','doctor_degree']
 
 class TokenSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -80,7 +80,7 @@ class SignUpDoctorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Doctor
         fields = [
-            "user_email", "user_fullname", "user_gender", "user_role", "password","retype_password","doctor_photo", "doctor_type", "doctor_availableTime"  
+            "user_email", "user_fullname", "user_gender", "user_role", "password","retype_password","doctor_photo", "doctor_type", "doctor_availableTime","doctor_degree" 
         ]
     def validate(self, attrs):
         password = attrs.get('password')
@@ -111,5 +111,8 @@ class SignUpDoctorSerializer(serializers.ModelSerializer):
         doctor = Doctor.objects.create(user=user, **validated_data)
 
         return doctor
-
+class ForumSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Forum
+        fields = ['post_title','post_detail','post_date','anonymous','user_id']
 
