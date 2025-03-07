@@ -11,10 +11,43 @@ class UserSerializer(serializers.ModelSerializer): #serialize to json format
         fields = ['user_fullname','user_email','user_gender','user_role']
 class DoctorSerializer(serializers.ModelSerializer):
     user = UserSerializer()  
-
+    doctor_photo = serializers.ImageField(required=False)
     class Meta:
         model = Doctor
         fields = ['id', 'user', 'doctor_photo', 'doctor_type', 'doctor_availableTime','doctor_degree']
+class DoctorUpdateSerializer(serializers.ModelSerializer):
+    user_email = serializers.EmailField(required=False)
+    user_fullname = serializers.CharField(required=False)
+    user_gender = serializers.ChoiceField(choices=User.gender_options, required=False)
+    doctor_photo = serializers.ImageField(required=False)  # Optional for updates
+
+    class Meta:
+        model = Doctor
+        fields = ["user_email", "user_fullname", "user_gender", "doctor_photo", "doctor_type", "doctor_availableTime", "doctor_degree"]
+
+    def update(self, instance, validated_data):
+        user_data = {}
+
+        # Handle user-related fields separately
+        if "user_email" in validated_data:
+            existing_user = User.objects.filter(user_email=validated_data["user_email"]).exclude(id=instance.user.id)
+            if existing_user.exists():
+                raise serializers.ValidationError({"user_email": "User with this email already exists."})
+            user_data["user_email"] = validated_data.pop("user_email")
+
+        if "user_fullname" in validated_data:
+            user_data["user_fullname"] = validated_data.pop("user_fullname")
+
+        if "user_gender" in validated_data:
+            user_data["user_gender"] = validated_data.pop("user_gender")
+
+        # Update User model
+        for attr, value in user_data.items():
+            setattr(instance.user, attr, value)
+        instance.user.save()
+
+        # Update Doctor model
+        return super().update(instance, validated_data)
 
 class TokenSerializer(TokenObtainPairSerializer):
     @classmethod
