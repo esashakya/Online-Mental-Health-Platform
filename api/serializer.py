@@ -6,9 +6,26 @@ from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
 from rest_framework.validators import UniqueValidator
 class UserSerializer(serializers.ModelSerializer): #serialize to json format
+    password = serializers.CharField(
+        write_only= True, 
+        required=True,
+        validators=[validate_password]
+    )
+    retype_password = serializers.CharField(write_only= True, 
+        required=True)
     class Meta:
         model = User #user class that needs to be serialized
-        fields = ['user_fullname','user_email','user_gender','user_role']
+        fields = ['id','user_fullname','user_email','user_gender','user_role','password','retype_password']
+    def create(self,validated_data):
+        validated_data.pop('retype_password')
+        user = User.objects.create(
+            user_fullname = validated_data['user_fullname'],
+            user_email = validated_data['user_email'],
+
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
 class DoctorSerializer(serializers.ModelSerializer):
     user = UserSerializer()  
     doctor_photo = serializers.ImageField(required=False)
@@ -147,5 +164,5 @@ class SignUpDoctorSerializer(serializers.ModelSerializer):
 class ForumSerializer(serializers.ModelSerializer):
     class Meta:
         model = Forum
-        fields = ['post_title','post_detail','post_date','anonymous','user_id']
+        fields = ['id','post_title','post_detail','post_date','anonymous','user_id']
 

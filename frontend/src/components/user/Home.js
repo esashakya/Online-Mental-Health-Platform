@@ -18,7 +18,7 @@ export default function Home() {
             <br /> Explore our resources, find professional help, and discover
             ways to live your best life with mental wellness.
           </h5>
-          <div className="mt-3 btn-lg text-center btn btn-primary">
+          <div className="mt-3 btn-lg text-center btn btn-primary pt-3 d-flex align-items-center">
             <Link
               to="/Doctor"
               style={{ color: "white", textDecoration: "none" }}

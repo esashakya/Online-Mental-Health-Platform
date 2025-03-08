@@ -27,7 +27,10 @@ class SignUpView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (AllowAny,)
     serializer_class = SignUpSerializer
-
+class AddView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    permission_classes = (AllowAny,)
+    serializer_class = UserSerializer
 class SignUpDoctorView(generics.CreateAPIView):
     queryset = Doctor.objects.all()
     permission_classes = (AllowAny,)
@@ -38,6 +41,10 @@ class ForumViewSet(viewsets.ModelViewSet):
     queryset = Forum.objects.all()
     permission_classes = [IsAuthenticated] 
     serializer_class = ForumSerializer
+    def destroy(self, request, *args, **kwargs):
+        post = self.get_object()
+        post.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 @api_view(['GET'])
 @permission_classes([AllowAny])  
@@ -52,6 +59,7 @@ def get_doctors(request):
 @api_view(['PUT','DELETE'])
 @parser_classes([MultiPartParser, FormParser])
 def update_doctor(request, pk):
+    print("Function  called")
     try:
         doctor = Doctor.objects.get(pk=pk)
     except Doctor.DoesNotExist:
@@ -60,10 +68,61 @@ def update_doctor(request, pk):
         doctor.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     elif request.method == 'PUT':
+        print("Content type:",request.content_type)
+        print("Request Data:", request.data)
+        
+
         doctor_data = request.data
-        serializer = DoctorSerializer(doctor,data=doctor_data)
+        if 'user_email' in doctor_data or 'user_fullname' in doctor_data or 'user_gender' in doctor_data:
+            # if any of user data is updated,it is changed otherwise it is kept same
+            user_data = {
+                'user_email': doctor_data.get('user_email', doctor.user.user_email),
+                'user_fullname': doctor_data.get('user_fullname', doctor.user.user_fullname),
+                'user_gender': doctor_data.get('user_gender', doctor.user.user_gender)
+            }
+
+            
+            user = doctor.user 
+            user_serializer = UserSerializer(user, data=user_data, partial=True)
+            # update the data
+            if user_serializer.is_valid():
+                user_serializer.save()
+
+        serializer = DoctorSerializer(doctor,data=doctor_data,partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
     
+# for user
+@api_view(['GET'])
+@permission_classes([AllowAny])  
+def get_users(request):
+    # fetches all the forum posts
+    users = User.objects.all() 
+    # convert into json with the use of json
+    serializer = UserSerializer(users, many=True)  
+    return Response(serializer.data)
+@api_view(['PUT','DELETE'])
+@parser_classes([MultiPartParser, FormParser])
+def update_user(request, pk):
+    print("Function  called")
+    try:
+        user = User.objects.get(pk=pk)
+    except User.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    if request.method == 'DELETE':
+        user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    elif request.method == 'PUT':
+        print("Content type:",request.content_type)
+        print("Request Data:", request.data)
+        
+
+        user_data = request.data
+        
+        serializer = UserSerializer(user,data=user_data,partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)

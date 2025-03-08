@@ -20,7 +20,7 @@ import UserTable from "./components/admin/UserTable";
 import Dashboard from "./components/admin/Dashboard";
 import AdminPanel from "./components/admin/AdminPanel";
 import DoctorTable from "./components/admin/DoctorTable";
-import AdminAppointment from "./components/admin/AdminAppointment";
+import AdminForum from "./components/admin/AdminForum";
 import JoinUs from "./components/user/JoinUs";
 function App() {
   return (
@@ -60,8 +60,8 @@ function App() {
               ></Route>
               <Route
                 exact
-                path="Schedule/Appointments"
-                element={<AdminAppointment />}
+                path="Schedule/Forums"
+                element={<AdminForum/>}
               ></Route>
             </Route>
           </Routes>

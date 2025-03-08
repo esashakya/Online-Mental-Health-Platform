@@ -140,6 +140,85 @@ export const AuthProvider = ({ children }) => {
       });
     } 
   }
+  
+  const addNewUser = async (
+    formData
+  ) => {
+    try {
+    const response = await fetch("http://127.0.0.1:8000/api/admin/add", {
+      method: "POST",
+      body: formData,
+    });
+    if (response.status === 400) {
+      const errorData = await response.json();
+      console.error("Error response:", errorData);
+  }
+    if (response.status === 201) {
+      navigate("/admin/RegisteredUsers");
+      
+
+      msg.fire({
+        title: "Registration Successful",
+        icon: "success",
+        toast: true,
+        timer: 5000,
+        position: "top-right",
+        timerProgressBar: true,
+        showConfirmButton: false,
+        background: "#28a745",
+        color: "#ffffff",
+        text: "Hope you have a great day!",
+        didOpen: () => {
+          msg.showLoading();
+        },
+        willClose: () => {
+          msg.hideLoading();
+          
+        },
+        
+      });
+    } else if (response.status === 400) {
+      msg.fire({
+        title: "Error Occured in input fields ",
+        icon: "error",
+        toast: true,
+        timer: 5000,
+        position: "top-right",
+        timerProgressBar: true,
+        showConfirmButton: false,
+        background: "#dc3545",
+        color: "#ffffff",
+        text: "The entered creddentials are incorrect. Please try again",
+        didOpen: () => {
+          msg.showLoading();
+        },
+        willClose: () => {
+          msg.hideLoading();
+        },
+      });
+    } else {
+      msg.fire({
+        title: "An Error Occured " + response.status,
+        icon: "error",
+        toast: true,
+        timer: 5000,
+        position: "top-right",
+        timerProgressBar: true,
+        showConfirmButton: false,
+        background: "#dc3545",
+        color: "#ffffff",
+        text: "There is some server problem. Please try again in few minutes.",
+        didOpen: () => {
+          msg.showLoading();
+        },
+        willClose: () => {
+          msg.hideLoading();
+        },
+      });
+    }}catch(error){
+      console.error("Error:", error);
+    }
+  };
   const registerNewUser = async (
     email,
     user_fullname,
@@ -257,7 +336,7 @@ export const AuthProvider = ({ children }) => {
       console.error("Error response:", errorData);
   }
     if (response.status === 201) {
-      navigate("/RegisteredDoctorUsers");
+      navigate("/admin/RegisteredDoctorUsers");
       msg.fire({
         title: "Registration Successful",
         icon: "success",
@@ -333,7 +412,7 @@ export const AuthProvider = ({ children }) => {
     loginRegisteredUser,
     logoutRegisteredUser,
     addNewPost,
-    
+    addNewUser,
   };
 
   useEffect(() => {

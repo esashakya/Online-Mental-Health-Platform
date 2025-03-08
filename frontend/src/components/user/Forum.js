@@ -3,6 +3,9 @@ import { Link } from "react-router-dom";
 import Typewriter from "typewriter-effect";
 import AuthContext from '../../context/AuthContext'
 import useAxios from "../../utils/useAxios";
+
+const msg = require("sweetalert2");
+
 export default function Forum() {
     const apiAxios = useAxios();
   const [post, setPost] = useState([]);
@@ -24,39 +27,84 @@ export default function Forum() {
     fetchPosts();
   }, []);
   const handleNewPost = async (e) => {
-    e.preventDefault(); 
-
-    
+    e.preventDefault();
+  
     const formData = new FormData(e.target);
     const postTitle = e.target.postTitle.value;
     const postDetail = e.target.postDetail.value;
     const anonymous = e.target.elements.anonymous.value === "1";
-
-   
+  
     if (!postTitle || !postDetail) {
-        console.log("missing fields");
-        return;
+      console.log("Missing fields");
+      return;
     }
-
+  
     try {
-        const response = await apiAxios.post("/forum/", {
-            post_title: postTitle,
-            post_detail: postDetail,
-            anonymous: anonymous,
-            user_id: user.user_id
+      const response = await apiAxios.post("/forum/", {
+        post_title: postTitle,
+        post_detail: postDetail,
+        anonymous: anonymous,
+        user_id: user.user_id
+      });
+  
+      
+      if (response.status === 201) {
+        
+        setPost([response.data, ...post]);
+  
+        
+        msg.fire({
+          title: "Successfully uploaded your new post",
+          icon: "success",
+          toast: true,
+          timer: 3000,
+          position: "top-right",
+          timerProgressBar: true,
+          showConfirmButton: false,
+          background: "#28a745",
+          color: "#ffffff",
+          text: "Hope you have a great day!",
+          didOpen: () => {
+            msg.showLoading();
+          },
+          willClose: () => {
+            msg.hideLoading();
+          }
         });
-
-        
-        setPost([...post, ...response.data]);
-
-        
-        e.target.reset();
+  
+        // Refresh the page after 5 seconds
+        setTimeout(() => {
+          window.location.reload();
+        }, 3000);
+      }
+  
+      // Reset the form after successful submission
+      e.target.reset();
+  
     } catch (error) {
-        console.log("Error:", error.response?.data || error.message);
+      // Handle errors here
+      console.log("Error while adding:", error);
+      msg.fire({
+        title: "Error is found",
+        icon: "error",
+        toast: true,
+        timer: 5000,
+        position: "top-right",
+        timerProgressBar: true,
+        showConfirmButton: false,
+        background: "#d9534f",
+        color: "#ffffff",
+        text: "Please try again later.",
+        didOpen: () => {
+          msg.showLoading();
+        },
+        willClose: () => {
+          msg.hideLoading();
+        }
+      });
     }
-      
-      
   };
+  
   return (
     <div>
       <div className="topicForum text-center mt-4">

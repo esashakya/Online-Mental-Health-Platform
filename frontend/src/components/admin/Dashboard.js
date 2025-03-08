@@ -16,7 +16,7 @@ export default function Dashboard() {
           <div className="d-flex flex-wrap mt-3 justify-content-evenly">
             <Calculation detail="Doctors" />
             <Calculation detail="Users" />
-            <Calculation detail="Appoitments" />
+            <Calculation detail="Forum" />
           </div>
           <div className="charts d-flex flex-col flex-lg-row flex-wrap justify-content-center m-3">
             <DashboardChart />
