@@ -39,7 +39,7 @@ export default function AdminPanel() {
             <li><Link to="RegisteredUsers" className='text-decoration-none text-reset'>Registered User Accounts</Link></li>
             <li><Link to="RegisteredDoctorUsers" className='text-decoration-none text-reset'>Registered Doctor Accounts</Link></li>
             <li><Link to="Schedule/Forums" className='text-decoration-none text-reset'>Forum</Link></li>
-            <li>Admin Profile</li>
+            <li><Link to="Post/Blog" className='text-decoration-none text-reset'>Blog</Link></li>
           </ul>
         </div>
       </div>

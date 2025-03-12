@@ -5,6 +5,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
 from rest_framework.validators import UniqueValidator
+from rest_framework.fields import SerializerMethodField
 class UserSerializer(serializers.ModelSerializer): #serialize to json format
     password = serializers.CharField(
         write_only= True, 
@@ -166,3 +167,16 @@ class ForumSerializer(serializers.ModelSerializer):
         model = Forum
         fields = ['id','post_title','post_detail','post_date','anonymous','user_id']
 
+class BlogSerializer(serializers.ModelSerializer):
+    
+    therapist_id = serializers.PrimaryKeyRelatedField(queryset=Doctor.objects.all())
+
+     # get the therapist name
+    therapist_name = serializers.CharField(source='therapist_id.user.user_fullname', read_only=True)
+    
+    class Meta:
+        model = Blog
+        fields = ['id', 'blog_image', 'blog_title', 'blog_detail', 'blog_date','blog_category', 'therapist_id', 'therapist_name']
+
+    
+    

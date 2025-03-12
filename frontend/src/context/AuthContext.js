@@ -19,6 +19,19 @@ export const AuthProvider = ({ children }) => {
       ? jwtDecode(localStorage.getItem("authTokens"))
       : null
   );
+  //delete auth tokens after certain time
+  useEffect(() => {
+    const storedLocalTokens = JSON.parse(localStorage.getItem("authTokens"));
+    if (storedLocalTokens) {
+        const decodedUser = jwtDecode(storedLocalTokens.access);
+        if (decodedUser.exp * 1000 < Date.now()) {
+          logoutRegisteredUser(); 
+        } else {
+            setAuthTokens(storedLocalTokens);
+            setUser(decodedUser);
+        }
+    }
+}, []);
 
   const [loading, setLoading] = useState(true);
 
@@ -177,6 +190,89 @@ export const AuthProvider = ({ children }) => {
         },
         
       });
+    } else if (response.status === 400) {
+      msg.fire({
+        title: "Error Occured in input fields ",
+        icon: "error",
+        toast: true,
+        timer: 5000,
+        position: "top-right",
+        timerProgressBar: true,
+        showConfirmButton: false,
+        background: "#dc3545",
+        color: "#ffffff",
+        text: "The entered creddentials are incorrect. Please try again",
+        didOpen: () => {
+          msg.showLoading();
+        },
+        willClose: () => {
+          msg.hideLoading();
+        },
+      });
+    } else {
+      msg.fire({
+        title: "An Error Occured " + response.status,
+        icon: "error",
+        toast: true,
+        timer: 5000,
+        position: "top-right",
+        timerProgressBar: true,
+        showConfirmButton: false,
+        background: "#dc3545",
+        color: "#ffffff",
+        text: "There is some server problem. Please try again in few minutes.",
+        didOpen: () => {
+          msg.showLoading();
+        },
+        willClose: () => {
+          msg.hideLoading();
+        },
+      });
+    }}catch(error){
+      console.error("Error:", error);
+    }
+  };
+  //blog
+  const addNewBlog = async (
+    formData
+  ) => {
+    try {
+    const response = await fetch("http://127.0.0.1:8000/api/blog/add", {
+      method: "POST",
+      body: formData,
+    });
+    if (response.status === 400) {
+      const errorData = await response.json();
+      console.error("Error response:", errorData);
+  }
+    if (response.status === 201) {
+      navigate("/admin/Post/Blog");
+      
+
+      msg.fire({
+        title: "New Blog Added Successfully",
+        icon: "success",
+        toast: true,
+        timer: 5000,
+        position: "top-right",
+        timerProgressBar: true,
+        showConfirmButton: false,
+        background: "#28a745",
+        color: "#ffffff",
+        text: "Hope you have a great day!",
+        didOpen: () => {
+          msg.showLoading();
+        },
+        willClose: () => {
+          msg.hideLoading();
+          
+        },
+        
+        
+      });setTimeout(() => {
+        window.location.reload();
+      }, 5000);
+      
     } else if (response.status === 400) {
       msg.fire({
         title: "Error Occured in input fields ",
@@ -413,6 +509,7 @@ export const AuthProvider = ({ children }) => {
     logoutRegisteredUser,
     addNewPost,
     addNewUser,
+    addNewBlog,
   };
 
   useEffect(() => {

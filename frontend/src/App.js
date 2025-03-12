@@ -21,6 +21,7 @@ import Dashboard from "./components/admin/Dashboard";
 import AdminPanel from "./components/admin/AdminPanel";
 import DoctorTable from "./components/admin/DoctorTable";
 import AdminForum from "./components/admin/AdminForum";
+import AdminBlog from "./components/admin/AdminBlog";
 import JoinUs from "./components/user/JoinUs";
 function App() {
   return (
@@ -62,6 +63,11 @@ function App() {
                 exact
                 path="Schedule/Forums"
                 element={<AdminForum/>}
+              ></Route>
+              <Route
+                exact
+                path="Post/Blog"
+                element={<AdminBlog/>}
               ></Route>
             </Route>
           </Routes>

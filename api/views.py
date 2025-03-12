@@ -36,6 +36,11 @@ class SignUpDoctorView(generics.CreateAPIView):
     permission_classes = (AllowAny,)
     serializer_class = SignUpDoctorSerializer    
     parser_classes = (MultiPartParser, FormParser)
+class AddBlogView(generics.CreateAPIView):
+    queryset = Blog.objects.all()
+    permission_classes = (AllowAny,)
+    serializer_class = BlogSerializer    
+    parser_classes = (MultiPartParser, FormParser)
 
 class ForumViewSet(viewsets.ModelViewSet):
     queryset = Forum.objects.all()
@@ -98,7 +103,7 @@ def update_doctor(request, pk):
 @api_view(['GET'])
 @permission_classes([AllowAny])  
 def get_users(request):
-    # fetches all the forum posts
+    # fetches all the user posts
     users = User.objects.all() 
     # convert into json with the use of json
     serializer = UserSerializer(users, many=True)  
@@ -122,6 +127,40 @@ def update_user(request, pk):
         user_data = request.data
         
         serializer = UserSerializer(user,data=user_data,partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+
+# for blog posts
+@api_view(['GET'])
+@permission_classes([AllowAny])  
+def get_blogs(request):
+    # fetches all the blog posts
+    blogs = Blog.objects.all() 
+    # convert into json with the use of json
+    serializer = BlogSerializer(blogs, many=True)  
+    return Response(serializer.data)
+
+@api_view(['PUT','DELETE'])
+@parser_classes([MultiPartParser, FormParser])
+def update_blog(request, pk):
+    print("Function  called")
+    try:
+        blog = Blog.objects.get(pk=pk)
+    except Blog.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    if request.method == 'DELETE':
+        blog.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    elif request.method == 'PUT':
+        print("Content type:",request.content_type)
+        print("Request Data:", request.data)
+        
+
+        blog_data = request.data
+        
+        serializer = BlogSerializer(blog,data=blog_data,partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)

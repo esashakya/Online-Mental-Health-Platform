@@ -8,7 +8,7 @@ export default function Home() {
       <div className="homeImage">
         <div className="landingText text-center">
           <h2 className="mt-1">
-            Welcome to <span style={{ color: "#3D52A0" }}>Untangle Chaos</span>{" "}
+            Welcome to <span style={{ color: "#3D52A0" }}>Untangle Chaos</span>
             - Your Safe Space for Mental Well-Being
           </h2>
           <br />

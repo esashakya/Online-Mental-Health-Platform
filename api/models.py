@@ -64,10 +64,19 @@ class Review(models.Model):
         self.full_clean()
         super().save(*args,**kwargs)
 class Blog(models.Model):
+    options=[
+        ("Anxiety","Anxiety"),
+        ("Depression","Depression"),
+        ("OCD","OCD"),
+        ("Sleep Paralysis", "Sleep Paralysis")
+    ]
+    blog_image = models.ImageField(upload_to="Blogs/", default="Blogs/default.png")
     blog_title = models.CharField(max_length=100, unique=True)
     blog_detail = models.TextField(max_length=5000)
     blog_date = models.DateField(auto_now_add=True)
+    blog_category = models.TextField(choices=options, default="Anxiety")
     therapist_id = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name='blog') #doctor foreign key
+   
 
 class Forum(models.Model):
     post_title = models.CharField(max_length=100)
