@@ -23,6 +23,10 @@ import DoctorTable from "./components/admin/DoctorTable";
 import AdminForum from "./components/admin/AdminForum";
 import AdminBlog from "./components/admin/AdminBlog";
 import JoinUs from "./components/user/JoinUs";
+import PreferredDoctor from "./components/user/PreferredDoctor";
+import BookAppointment from "./components/user/BookAppointment";
+
+
 function App() {
   return (
     <>
@@ -44,6 +48,10 @@ function App() {
               <Route exact path="/Exercise" element={<Exercise />}></Route>
               <Route exact path="/Mood" element={<Mood />}></Route>
               <Route exact path="/Join/Doctor" element={<JoinUs />}></Route>
+              <Route exact path="/PreferredDoctor/:id" element={<PreferredDoctor />}></Route>
+              <Route exact path="/BookAppointment/:id" element={<BookAppointment />}></Route>
+
+
 
             </Route>
             {/* admin web */}

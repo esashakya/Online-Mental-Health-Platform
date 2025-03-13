@@ -2,6 +2,7 @@ from django.shortcuts import render
 from rest_framework.parsers import MultiPartParser, FormParser
 from api.models import *
 from api.serializer import *
+from django.shortcuts import get_object_or_404
 from rest_framework.decorators import parser_classes
 from rest_framework import viewsets
 from rest_framework import status
@@ -58,6 +59,13 @@ def get_doctors(request):
     doctors = Doctor.objects.all() 
     # convert into json with the use of json
     serializer = DoctorSerializer(doctors, many=True)  
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_preferred_doctor(request,id):
+    doctor = get_object_or_404(Doctor, id=id) 
+    serializer = DoctorSerializer(doctor)
     return Response(serializer.data)
 
 # for doctor

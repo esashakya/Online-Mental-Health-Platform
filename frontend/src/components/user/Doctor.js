@@ -7,7 +7,7 @@ export default function Doctor() {
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:8000/api/doctors/");
+        const response = await fetch("http://127.0.0.1:8000/api/doctors");
         const data = await response.json();
         console.log("doctors:", data);
         setDoctor(data);
@@ -64,7 +64,7 @@ export default function Doctor() {
                     <button
                       type="button"
                       className="btn btn-primary"
-                      onClick={() => window.open("/PreferredDoctor", "_blank")}
+                      onClick={() => window.open(`/PreferredDoctor/${doctor.id}`, "_blank")}
                     >
                       Know More
                     </button>

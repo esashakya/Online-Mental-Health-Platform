@@ -3,7 +3,7 @@ from django.urls import path
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from api import views
-from .views import get_doctors,update_doctor,get_users,update_user,get_blogs,update_blog
+from .views import get_doctors,update_doctor,get_users,update_user,get_blogs,update_blog,get_preferred_doctor
 from rest_framework.routers import DefaultRouter
 
 
@@ -16,6 +16,8 @@ urlpatterns=[
     path("register/", views.SignUpView.as_view()),
     path("register/doctor", views.SignUpDoctorView.as_view()),
     path('doctors/', get_doctors, name='get_doctors'),
+    path('doctors/<int:id>', get_preferred_doctor, name='get_preferred_doctor'),
+
     path('blogs/', get_blogs, name='get_blogs'),
 
     path('users/', get_users, name='get_users'),
