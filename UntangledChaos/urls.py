@@ -28,6 +28,8 @@ urlpatterns = [
     path('Doctor/', TemplateView.as_view(template_name='index.html')),
     path('Forum/', TemplateView.as_view(template_name='index.html')),
     path('Post/', TemplateView.as_view(template_name='index.html')),
+    path('PreferredDoctor/<int:id>', TemplateView.as_view(template_name='index.html')),
+    
     path('', TemplateView.as_view(template_name='index.html')),
     path('admin/', admin.site.urls),
     

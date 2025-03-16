@@ -134,7 +134,7 @@ export default function DoctorTable() {
       updatedData.has("doctor_photo")
     ) {
       try {
-        const response = await fetch(`http://127.0.0.1:8000/api/doctors/${doctorId}`, {
+        const response = await fetch(`http://127.0.0.1:8000/api/update/doctors/${doctorId}`, {
           method: "PUT",
           body: updatedData,
         });
@@ -162,7 +162,7 @@ export default function DoctorTable() {
   // delete
   const handleDeleteBtn = async (pk) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/doctors/${pk}`, {
+      const response = await fetch(`http://127.0.0.1:8000/api/update/doctors/${pk}`, {
         method: "DELETE",
       });
   

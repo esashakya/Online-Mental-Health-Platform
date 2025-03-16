@@ -179,4 +179,3 @@ class BlogSerializer(serializers.ModelSerializer):
         fields = ['id', 'blog_image', 'blog_title', 'blog_detail', 'blog_date','blog_category', 'therapist_id', 'therapist_name']
 
     
-    

@@ -25,6 +25,9 @@ import AdminBlog from "./components/admin/AdminBlog";
 import JoinUs from "./components/user/JoinUs";
 import PreferredDoctor from "./components/user/PreferredDoctor";
 import BookAppointment from "./components/user/BookAppointment";
+import UserProfile from "./components/user/UserProfile";
+
+
 
 
 function App() {
@@ -47,6 +50,8 @@ function App() {
               <Route exact path="/Category" element={<Category />}></Route>
               <Route exact path="/Exercise" element={<Exercise />}></Route>
               <Route exact path="/Mood" element={<Mood />}></Route>
+              <Route exact path="/Profile" element={<UserProfile />}></Route>
+
               <Route exact path="/Join/Doctor" element={<JoinUs />}></Route>
               <Route exact path="/PreferredDoctor/:id" element={<PreferredDoctor />}></Route>
               <Route exact path="/BookAppointment/:id" element={<BookAppointment />}></Route>

@@ -1,4 +1,6 @@
 from django.shortcuts import render
+import json  
+from datetime import datetime
 from rest_framework.parsers import MultiPartParser, FormParser
 from api.models import *
 from api.serializer import *
@@ -20,6 +22,8 @@ from django.contrib.auth.hashers import check_password
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.http import JsonResponse
+from django.core.mail import send_mail
 # Create your views here.
 class TokenPairView(TokenObtainPairView):
     serializer_class = TokenSerializer
@@ -109,6 +113,12 @@ def update_doctor(request, pk):
     
 # for user
 @api_view(['GET'])
+@permission_classes([AllowAny])
+def get_preferred_user(request,id):
+    user = get_object_or_404(User, id=id) 
+    serializer = UserSerializer(user)
+    return Response(serializer.data)
+@api_view(['GET'])
 @permission_classes([AllowAny])  
 def get_users(request):
     # fetches all the user posts
@@ -173,3 +183,102 @@ def update_blog(request, pk):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def book_appointment(request):
+    print("Received request data:", request.data)
+    # get the data front frontend(request)
+    doctor_id = request.data.get('doctor_id')
+    date_time = request.data.get('date_time')
+    user_id = request.data.get('user_id')  
+    # debug
+    if not doctor_id or not date_time or not user_id:
+        return JsonResponse({"error": "Missing doctor_id, date_time, or user_id"}, status=400)
+
+    
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return JsonResponse({"error": "User not found"}, status=400)
+
+    # convering into django date time object
+    try:
+        date_time = datetime.fromisoformat(date_time.replace("Z", "+00:00"))
+    except ValueError:
+        return JsonResponse({"error": "Invalid date format. Expected ISO 8601 format."}, status=400)
+
+    # check if doctor exists or not
+    try:
+        doctor = Doctor.objects.get(id=doctor_id)
+    except Doctor.DoesNotExist:
+        return JsonResponse({"error": "Doctor not found"}, status=400)
+
+    # creating the appointment
+    appointment = Appointment.objects.create(
+        user_id=user,  
+        therapist_id=doctor, 
+        appointment_date=date_time,
+        appointment_status=2  #pending
+    )
+    # sending gmail to doctor to inform about new appointment
+    subject = f"New Appointment Request: {user.user_fullname} - {date_time.strftime('%B %d, %Y at %I:%M %p')}"
+    message = f"""
+    Dear Dr. {doctor.user.user_fullname},
+
+    We hope this email finds you well.
+
+    We would like to inform you that a new appointment request has been made by one of your patients. Here are the details:
+
+    - Patient Name: {user.user_fullname}
+    - Appointment Date & Time: {date_time.strftime('%B %d, %Y at %I:%M %p')}
+    - Patient Email: {user.user_email}
+    - Appointment Status: Pending
+
+    Please review and confirm your availability for the scheduled time.
+
+    Thank you for your time and attention. Should you have any questions, feel free to reach out.
+
+    Best regards,
+    UntangleChaos Team
+    """
+
+    # send the mail
+    send_mail(
+        subject,
+        message,
+        'UntangleChaos@gmail.com',  # Your email
+        [doctor.user.user_email]  # Doctor's email
+    )
+    
+
+    return JsonResponse({"message": "Appointment registered successfully", "appointment_id": appointment.id}, status=201)
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def approve_appointment(request):
+    appointment_id = request.data.get('id')
+    approved = request.data.get('approved', False)  # Boolean: True or False
+
+    try:
+        appointment = Appointment.objects.get(id=appointment_id)
+
+        # Check if the logged-in doctor owns the appointment
+        if appointment.doctor.user != request.user:
+            return Response({'error': 'Unauthorized'}, status=403)
+
+        # Update status based on doctor’s decision
+        appointment.status = 'confirmed' if approved else 'rejected'
+        appointment.save()
+
+        # Notify the patient
+        send_mail(
+            'Appointment Update',
+            f'Your appointment has been {"approved" if approved else "rejected"} by Dr. {appointment.doctor.user.user_name}.',
+            'admin@yourclinic.com',
+            [appointment.user.user_email]
+        )
+
+        return Response({'message': f'Appointment {"approved" if approved else "rejected"}'})
+    except Appointment.DoesNotExist:
+        return Response({'error': 'Appointment not found'}, status=404)
+
+ 
