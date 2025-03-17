@@ -1,13 +1,16 @@
 import React, { useContext, useEffect, useState } from "react";
 import useAxios from "../../utils/useAxios";
 import AuthContext from '../../context/AuthContext';
-const msg = require("sweetalert2");
-
+import msg from "sweetalert2";
+import DatePicker from "react-datepicker"; //to change the date swiftly
+import "react-datepicker/dist/react-datepicker.css";
 
 export default function AppointmentList() {
   const [appointmentList, setAppointmentList] = useState(null);
+  const [selectedDateAppointment, setSelectedDateAppointment] = useState(null);
+  const [newDateTime, setNewDateTime] = useState(new Date());
   const apiAxios = useAxios();
-  const {user} = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
 
   const statusOptions = [
     { value: 1, label: "In Call", colorClass: "bg-primary text-white" },
@@ -21,7 +24,6 @@ export default function AppointmentList() {
     const fetchAppointments = async () => {
       try {
         const response = await apiAxios.get("/appointments/");
-        console.log("Res:", response.data);
         setAppointmentList(response.data);
       } catch (error) {
         console.log(error);
@@ -29,46 +31,65 @@ export default function AppointmentList() {
     };
 
     fetchAppointments();
-    const interval = setInterval(fetchAppointments, 5000); //refresh after 5 seconds to update the status accordingly
+    const interval = setInterval(fetchAppointments, 5000); // Refresh every 5 seconds
 
     return () => clearInterval(interval);
   }, []);
 
   const handleStatusChange = async (appointmentId, newStatus) => {
     try {
-      const response = await apiAxios.patch(`/appointments/${appointmentId}/`, {
+      await apiAxios.patch(`/appointments/${appointmentId}/`, {
         appointment_status: newStatus,
       });
 
-      console.log("Status updated:", response);
+      setAppointmentList((prevList) =>
+        prevList.map((appointment) =>
+          appointment.id === appointmentId
+            ? { ...appointment, appointment_status: newStatus }
+            : appointment
+        )
+      );
 
-      //notification
       if (newStatus === 4) {
         msg.fire({
-          title: 'Appointment Approved!',
-          text: `The appointment status has been changed to Approved.`,
-          icon: 'success',
-          confirmButtonText: 'Okay',
+          title: "Appointment Approved!",
+          text: `The appointment has been approved.`,
+          icon: "success",
+          confirmButtonText: "Okay",
         });
       }
-
-      setAppointmentList((prevList) =>
-        prevList
-          ? prevList.map((appointment) =>
-              appointment.id === appointmentId
-                ? { ...appointment, appointment_status: newStatus }
-                : appointment
-            )
-          : []
-      );
     } catch (error) {
       console.error("Error updating status:", error);
     }
   };
 
-  const getStatusColor = (status) => {
-    const option = statusOptions.find((opt) => opt.value === status);
-    return option ? option.colorClass : "";
+  const handleReschedule = async () => {
+    if (!selectedDateAppointment) return;
+
+    try {
+      await apiAxios.patch(`/appointments/${selectedDateAppointment.id}/`, {
+        appointment_date: newDateTime.toISOString(),
+      });
+
+      setAppointmentList((prevList) =>
+        prevList.map((appointment) =>
+          appointment.id === selectedDateAppointment.id
+            ? { ...appointment, appointment_date: newDateTime }
+            : appointment
+        )
+      );
+
+      msg.fire({
+        title: "Appointment Rescheduled!",
+        text: `The appointment date has been updated.`,
+        icon: "success",
+        confirmButtonText: "Okay",
+      });
+
+      setSelectedDateAppointment(null);
+    } catch (error) {
+      console.error("Error rescheduling:", error);
+    }
   };
 
   return (
@@ -77,49 +98,88 @@ export default function AppointmentList() {
       <table className="table table-striped table-hover">
         <thead className="text-center">
           <tr>
-            <th scope="col">Sn.</th>
-            <th scope="col">Doctor's Name</th>
-            <th scope="col">Patient's Name</th>
-            <th scope="col">Appointment Date</th>
-            <th scope="col">Appointment Status</th>
+            <th>Sn.</th>
+            <th>Doctor's Name</th>
+            <th>Patient's Name</th>
+            <th>Appointment Date</th>
+            <th>Appointment Status</th>
+            {user.user_role === 3 && <th>Actions</th>}
           </tr>
         </thead>
         <tbody className="text-center">
           {appointmentList && appointmentList.length > 0 ? (
             appointmentList.map((appointment, index) => (
               <tr key={appointment.id}>
-                <th scope="row">{index + 1}</th>
+                <th>{index + 1}</th>
                 <td>{appointment.therapist_name}</td>
                 <td>{appointment.user_fullname}</td>
                 <td>{new Date(appointment.appointment_date).toLocaleString()}</td>
                 <td>
                   <select
-                    className={`form-select ${getStatusColor(appointment.appointment_status)}`}
+                    className={`form-select ${statusOptions.find((opt) => opt.value === appointment.appointment_status)?.colorClass}`}
                     value={appointment.appointment_status}
-                    disabled={user.user_role === 1} //patient can not change status
-                    onChange={(e) => {
-                      const selectedStatus = parseInt(e.target.value); //integer
-                      handleStatusChange(appointment.id, selectedStatus);
-                    }}
+                    disabled={user.user_role === 1}
+                    onChange={(e) => handleStatusChange(appointment.id, parseInt(e.target.value))}
                   >
                     {statusOptions.map((option) => (
-                      <option key={option.value} value={option.value} className={option.colorClass}>
+                      <option key={option.value} value={option.value}>
                         {option.label}
                       </option>
                     ))}
                   </select>
                 </td>
+                {user.user_role === 3 && (
+                  <td>
+                    <button
+                      className="btn btn-sm btn-warning"
+                      onClick={() => setSelectedDateAppointment(appointment)}
+                    >
+                      Reschedule
+                    </button>
+                  </td>
+                )}
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan="5" className="text-center">
+              <td colSpan="6" className="text-center">
                 No appointments
               </td>
             </tr>
           )}
         </tbody>
       </table>
+
+      {selectedDateAppointment && (
+        <div className="modal show d-block" tabIndex="-1">
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Reschedule Appointment</h5>
+                <button type="button" className="btn-close" onClick={() => setSelectedDateAppointment(null)}></button>
+              </div>
+              <div className="modal-body text-center">
+                <p>Select new date & time:</p>
+                <DatePicker
+                  selected={newDateTime}
+                  onChange={(date) => setNewDateTime(date)}
+                  showTimeSelect
+                  dateFormat="Pp"
+                  className="form-control"
+                />
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-secondary" onClick={() => setSelectedDateAppointment(null)}>
+                  Cancel
+                </button>
+                <button className="btn btn-primary" onClick={handleReschedule}>
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

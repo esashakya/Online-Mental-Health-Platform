@@ -206,7 +206,7 @@ def book_appointment(request):
     try:
         date_time = datetime.fromisoformat(date_time.replace("Z", "+00:00"))
     except ValueError:
-        return JsonResponse({"error": "Invalid date format. Expected ISO 8601 format."}, status=400)
+        return JsonResponse({"error": "Invalid date format"}, status=400)
 
     # check if doctor exists or not
     try:
@@ -302,6 +302,65 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         appointments = self.get_queryset()
         serializer = self.get_serializer(appointments, many=True)
         return Response(serializer.data)
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        previous_date = instance.appointment_date
+        previous_status = instance.appointment_status  # Get the previous status
+        response = super().update(request, *args, **kwargs)
+        updated_instance = self.get_object()
+        
+        # if status is approved send confirmation mail
+        if previous_status != updated_instance.appointment_status and updated_instance.appointment_status == 4:
+            print("Sending emails...")
+            self.send_approval_email(updated_instance)
+        elif previous_date != updated_instance.appointment_date:
+            self.send_updated_date_email(updated_instance)
+
+        return response
+    def send_updated_date_email(self, appointment):
+        user_email = appointment.user_id.user_email
+        doctor_email = appointment.therapist_id.user.user_email
+        subject = "Your timing has been updated. "
+        message = f"""
+        Hello {appointment.user_id.user_fullname},
+
+        Your appointment with Dr. {appointment.therapist_id.user.user_fullname} on {appointment.appointment_date.strftime('%Y-%m-%d %H:%M')} has been updated. There were few inconvenience which led to resheduling. We are sorry for any misconvenice.
+        
+        If you have any queries related to timing, please contact the following number. Please visit your profile and enter your appointment in time.
+
+        Please be on time.
+        5571584
+        Thank you.
+        """
+        send_mail(subject, message, 'UntangleChaos@gmail.com', [user_email])
+    def send_approval_email(self, appointment):
+        user_email = appointment.user_id.user_email
+        doctor_email = appointment.therapist_id.user.user_email
+
+        subject = "Your Appointment Has Been Approved. Please check the updated timing"
+        message = f"""
+        Hello {appointment.user_id.user_fullname},
+
+        Your appointment with Dr. {appointment.therapist_id.user.user_fullname} on {appointment.appointment_date.strftime('%Y-%m-%d %H:%M')} has been approved. If you have any queries related to timing, please contact the following number.
+
+        Please be on time.
+        5571584
+        Thank you.
+        """
+        send_mail(subject, message, 'UntangleChaos@gmail.com', [user_email])
+
+        # Email for doctor
+        doctor_subject = "New Approved Appointment"
+        doctor_message = f"""
+        Hello Dr. {appointment.therapist_id.user.user_fullname},
+
+        You have a new approved appointment with {appointment.therapist_id.user.user_fullname} on {appointment.appointment_date.strftime('%Y-%m-%d %H:%M')}.
+
+        Please check your schedule in website.
+
+        Thank you.
+        """
+        send_mail(doctor_subject, doctor_message, 'UntangleChaos@gmail.com', [doctor_email])
    
 
     
