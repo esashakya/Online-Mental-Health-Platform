@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import AuthContext from "../../context/AuthContext";
+import AppointmentList from "./AppointmentList";
 
 export default function UserProfile() {
   const { user } = useContext(AuthContext);
@@ -74,6 +75,9 @@ export default function UserProfile() {
             </div>
           </div>
         </div>
+      </div>
+      <div className="container mt-5">
+        <AppointmentList/>
       </div>
     </div>
   );

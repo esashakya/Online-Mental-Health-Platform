@@ -26,6 +26,7 @@ import JoinUs from "./components/user/JoinUs";
 import PreferredDoctor from "./components/user/PreferredDoctor";
 import BookAppointment from "./components/user/BookAppointment";
 import UserProfile from "./components/user/UserProfile";
+import AppointmentList from "./components/user/AppointmentList";
 
 
 
@@ -51,6 +52,7 @@ function App() {
               <Route exact path="/Exercise" element={<Exercise />}></Route>
               <Route exact path="/Mood" element={<Mood />}></Route>
               <Route exact path="/Profile" element={<UserProfile />}></Route>
+              <Route exact path="/AppointmentList" element={<AppointmentList />}></Route>
 
               <Route exact path="/Join/Doctor" element={<JoinUs />}></Route>
               <Route exact path="/PreferredDoctor/:id" element={<PreferredDoctor />}></Route>

@@ -178,4 +178,18 @@ class BlogSerializer(serializers.ModelSerializer):
         model = Blog
         fields = ['id', 'blog_image', 'blog_title', 'blog_detail', 'blog_date','blog_category', 'therapist_id', 'therapist_name']
 
+class AppointmentSerializer(serializers.ModelSerializer):
     
+    user_id = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+
+     # get the user name
+    user_fullname = serializers.CharField(source='user_id.user_fullname', read_only=True)
+
+    therapist_id = serializers.PrimaryKeyRelatedField(queryset=Doctor.objects.all())
+
+     # get the therapist name
+    therapist_name = serializers.CharField(source='therapist_id.user.user_fullname', read_only=True)
+    
+    class Meta:
+        model = Appointment
+        fields = ['id', 'user_id', 'therapist_id', 'appointment_date', 'appointment_status','user_fullname','therapist_name']  

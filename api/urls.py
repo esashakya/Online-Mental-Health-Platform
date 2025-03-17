@@ -9,6 +9,7 @@ from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
 router.register('forum',views.ForumViewSet, basename='forum')
+router.register('appointments', views.AppointmentViewSet, basename='appointment')
 
 urlpatterns=[
     path("token/", views.TokenPairView.as_view()),

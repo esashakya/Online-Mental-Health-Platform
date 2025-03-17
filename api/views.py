@@ -1,6 +1,7 @@
 from django.shortcuts import render
 import json  
 from datetime import datetime
+from rest_framework import viewsets, permissions
 from rest_framework.parsers import MultiPartParser, FormParser
 from api.models import *
 from api.serializer import *
@@ -11,7 +12,7 @@ from rest_framework import status
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
-from rest_framework.decorators import api_view,permission_classes
+from rest_framework.decorators import api_view,permission_classes,action
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import generics
@@ -281,4 +282,23 @@ def approve_appointment(request):
     except Appointment.DoesNotExist:
         return Response({'error': 'Appointment not found'}, status=404)
 
- 
+
+class AppointmentViewSet(viewsets.ModelViewSet):
+    serializer_class = AppointmentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        
+        user = self.request.user
+
+        if user.user_role == 3:  
+            return Appointment.objects.filter(therapist_id__user=user)
+        else:  
+            return Appointment.objects.filter(user_id=user)
+
+    @action(detail=False, methods=['GET'])
+    def my_appointments(self, request):
+        
+        appointments = self.get_queryset()
+        serializer = self.get_serializer(appointments, many=True)
+        return Response(serializer.data)
