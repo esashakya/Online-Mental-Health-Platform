@@ -3,7 +3,7 @@ from django.urls import path
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from api import views
-from .views import get_doctors,update_doctor,get_users,update_user,get_blogs,update_blog,get_preferred_doctor, book_appointment, approve_appointment,get_preferred_user
+from .views import get_doctors,update_doctor,get_users,update_user,get_blogs,update_blog,get_preferred_doctor,AppointmentViewSet, book_appointment, approve_appointment,get_preferred_user
 from rest_framework.routers import DefaultRouter
 
 
@@ -28,7 +28,7 @@ urlpatterns=[
     path('update/doctors/<int:pk>', update_doctor, name='update_doctor'),
     path('users/<int:pk>', update_user, name='update_user'),
     path('blogs/<int:pk>', update_blog, name='update_blog'),
-
+    
     path('',include(router.urls)),
 
 

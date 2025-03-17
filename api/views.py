@@ -302,3 +302,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         appointments = self.get_queryset()
         serializer = self.get_serializer(appointments, many=True)
         return Response(serializer.data)
+   
+
+    
+    

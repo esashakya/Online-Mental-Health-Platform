@@ -45,6 +45,8 @@ class Appointment(models.Model):
         (1,"In Call"),
         (2,"Pending"),
         (3,"Not attended"),
+        (4,"Approved"),
+        (5,"Completed")
     ]
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='userAppointments')
     therapist_id = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name='doctorAppointments')

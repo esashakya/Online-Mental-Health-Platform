@@ -11,6 +11,7 @@ const useAxios = () => {
     baseURL: apiURL,
     headers: { Authorization: `Bearer ${authTokens?.access}` },
   });
+  
   //this function runs before request is handled
   apiAxios.interceptors.request.use(async (userRequest) => {
     const user = jwtDecode(authTokens.access);

@@ -149,6 +149,14 @@ REST_FRAMEWORK ={
     ],
     
 }
+CORS_ALLOW_METHODS = [
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',  
+    'DELETE',
+    'OPTIONS'
+]
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME':timedelta(days=50),
