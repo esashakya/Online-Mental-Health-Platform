@@ -2,6 +2,7 @@ body{
   font-family:Georgia, 'Times New Roman', Times, serif ;
   background: #edf2fa;
 }
+
 .form{
   display: flex;
   justify-content: center;

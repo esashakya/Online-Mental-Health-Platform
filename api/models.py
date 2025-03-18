@@ -36,7 +36,9 @@ class Doctor(models.Model):
     doctor_photo = models.ImageField(upload_to="Doctors/", default="Doctors/default.png")
     doctor_type = models.IntegerField(choices=doctor_role, default=1)
     doctor_experience = models.IntegerField(default=1)
-    doctor_availableTime = models.TimeField()
+    doctor_availableStartTime = models.TimeField()
+    doctor_availableEndTime = models.TimeField()
+
     doctor_degree = models.TextField(max_length=250)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="doctorDetails")
 

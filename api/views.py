@@ -1,6 +1,7 @@
 from django.shortcuts import render
 import json  
 from datetime import datetime
+from django.utils.dateparse import parse_date
 from rest_framework import viewsets, permissions
 from rest_framework.parsers import MultiPartParser, FormParser
 from api.models import *
@@ -204,7 +205,7 @@ def book_appointment(request):
 
     # convering into django date time object
     try:
-        date_time = datetime.fromisoformat(date_time.replace("Z", "+00:00"))
+        date_time = parse_date(date_time)
     except ValueError:
         return JsonResponse({"error": "Invalid date format"}, status=400)
 
@@ -247,8 +248,8 @@ def book_appointment(request):
     send_mail(
         subject,
         message,
-        'UntangleChaos@gmail.com',  # Your email
-        [doctor.user.user_email]  # Doctor's email
+        'UntangleChaos@gmail.com',  
+        [doctor.user.user_email] 
     )
     
 
@@ -257,20 +258,20 @@ def book_appointment(request):
 @permission_classes([AllowAny])
 def approve_appointment(request):
     appointment_id = request.data.get('id')
-    approved = request.data.get('approved', False)  # Boolean: True or False
+    approved = request.data.get('approved', False)  
 
     try:
         appointment = Appointment.objects.get(id=appointment_id)
 
-        # Check if the logged-in doctor owns the appointment
+        
         if appointment.doctor.user != request.user:
             return Response({'error': 'Unauthorized'}, status=403)
 
-        # Update status based on doctor’s decision
+        
         appointment.status = 'confirmed' if approved else 'rejected'
         appointment.save()
 
-        # Notify the patient
+      
         send_mail(
             'Appointment Update',
             f'Your appointment has been {"approved" if approved else "rejected"} by Dr. {appointment.doctor.user.user_name}.',

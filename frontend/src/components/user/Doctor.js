@@ -54,9 +54,10 @@ export default function Doctor() {
                       {doctor?.user?.user_email || "No Email"}
                     </p>
                     <p className="card-text">
-                      <span>Available Time:</span>
-                      {doctor.doctor_availableTime || "Not Available"}
+                      <span>Available  Time:</span>
+                      {doctor.doctor_availableStartTime || "Not Available"} - {doctor.doctor_availableEndTime || "Not Available"}
                     </p>
+                    
                     <p className="card-text">
                     <span>Degree:</span>
                       {doctor.doctor_degree || "Not Degree"}

@@ -57,7 +57,7 @@ export default function PreferredDoctor() {
                   <strong>Specialization:</strong> {doctor.doctor_degree}
                 </p>
                 <p>
-                  <strong>Available Time:</strong> {doctor.doctor_availableTime}
+                  <strong>Available Time:</strong> {doctor.doctor_availableStartTime || "Not Available"} - {doctor.doctor_availableEndTime || "Not Available"}
                 </p>
                 <p>
                   <strong>Contact:</strong>{doctor.user.user_email}

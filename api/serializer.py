@@ -32,7 +32,7 @@ class DoctorSerializer(serializers.ModelSerializer):
     doctor_photo = serializers.ImageField(required=False)
     class Meta:
         model = Doctor
-        fields = ['id', 'user', 'doctor_photo', 'doctor_type', 'doctor_availableTime','doctor_degree']
+        fields = ['id', 'user', 'doctor_photo', 'doctor_type','doctor_availableStartTime', 'doctor_availableEndTime','doctor_degree']
 class DoctorUpdateSerializer(serializers.ModelSerializer):
     user_email = serializers.EmailField(required=False)
     user_fullname = serializers.CharField(required=False)
@@ -41,7 +41,7 @@ class DoctorUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Doctor
-        fields = ["user_email", "user_fullname", "user_gender", "doctor_photo", "doctor_type", "doctor_availableTime", "doctor_degree"]
+        fields = ["user_email", "user_fullname", "user_gender", "doctor_photo", "doctor_type", 'doctor_availableStartTime', 'doctor_availableEndTime', "doctor_degree"]
 
     def update(self, instance, validated_data):
         user_data = {}
@@ -131,7 +131,7 @@ class SignUpDoctorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Doctor
         fields = [
-            "user_email", "user_fullname", "user_gender", "user_role", "password","retype_password","doctor_photo", "doctor_type", "doctor_availableTime","doctor_degree" 
+            "user_email", "user_fullname", "user_gender", "user_role", "password","retype_password","doctor_photo", "doctor_type", 'doctor_availableStartTime', 'doctor_availableEndTime',"doctor_degree" 
         ]
     def validate(self, attrs):
         password = attrs.get('password')

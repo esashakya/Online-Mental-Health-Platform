@@ -11,7 +11,8 @@ export default function DoctorTable() {
     doctor_photo: "",
     doctor_type: "",
     doctor_degree: "",
-    doctor_availableTime: "",});
+    doctor_availableStartTime: "",
+    doctor_availableEndTime: "",});
 
   useEffect(() => {
     const fetchDoctors = async () => {
@@ -39,7 +40,8 @@ export default function DoctorTable() {
     const user_gender = e.target.doctorGender.value;
     const doctor_photo = e.target.picture.files[0];
     const doctor_type = e.target.type.value;
-    const doctor_availableTime = e.target.availableTime.value;
+    const doctor_availableStartTime = e.target.availableStartTime.value;
+    const doctor_availableEndTime = e.target.availableEndTime.value;
     const doctor_degree = e.target.degree.value;
     const password = e.target.doctorPassword.value;
     const retype_password = e.target.doctorRetypePassword.value;
@@ -52,7 +54,9 @@ export default function DoctorTable() {
     formData.append("user_role", user_role);
     formData.append("doctor_photo", doctor_photo);
     formData.append("doctor_type", doctor_type);
-    formData.append("doctor_availableTime", doctor_availableTime);
+    formData.append("doctor_availableStartTime", doctor_availableStartTime);
+
+    formData.append("doctor_availableEndTime", doctor_availableEndTime);
     formData.append("doctor_degree", doctor_degree);
     formData.append("password", password);
     formData.append("retype_password", retype_password);
@@ -70,7 +74,9 @@ export default function DoctorTable() {
       doctor_photo: doctor.doctor_photo || null,
       doctor_type: doctor.doctor_type || "",
       doctor_degree: doctor.doctor_degree || "",
-      doctor_availableTime: doctor.doctor_availableTime || "",
+      doctor_availableStartTime: doctor.doctor_availableStartTime || "",
+      doctor_availableEndTime: doctor.doctor_availableEndTime || "",
+
     });
   };
   
@@ -115,8 +121,11 @@ export default function DoctorTable() {
       updatedData.append("doctor_degree", newData.doctor_degree);
     }
   
-    if (newData.doctor_availableTime !== currentDoctor?.doctor_availableTime) {
-      updatedData.append("doctor_availableTime", newData.doctor_availableTime);
+    if (newData.doctor_availableEndTime !== currentDoctor?.doctor_availableEndTime) {
+      updatedData.append("doctor_availableEndTime", newData.doctor_availableEndTime);
+    }
+    if (newData.doctor_availableStartTime !== currentDoctor?.doctor_availableStartTime) {
+      updatedData.append("doctor_availableStartTime", newData.doctor_availableStartTime);
     }
   
     if (newData.doctor_photo && newData.doctor_photo !== currentDoctor?.doctor_photo) {
@@ -130,7 +139,8 @@ export default function DoctorTable() {
       updatedData.has("user_gender") ||
       updatedData.has("doctor_type") ||
       updatedData.has("doctor_degree") ||
-      updatedData.has("doctor_availableTime") ||
+      updatedData.has("doctor_availableEndTime") ||
+      updatedData.has("doctor_availableStartTime") ||
       updatedData.has("doctor_photo")
     ) {
       try {
@@ -208,7 +218,9 @@ export default function DoctorTable() {
                   <th scope="col">Photo</th>
                   <th scope="col">Type</th>
                   <th scope="col">Degree</th>
-                  <th scope="col">Available</th>
+                  <th scope="col">Start time</th>
+                  <th scope="col">End time</th>
+
                   <th colSpan="2">Make Changes</th>
                 </tr>
               </thead>
@@ -221,7 +233,8 @@ export default function DoctorTable() {
                     <td>{doctor.doctor_photo}</td>
                     <td>{doctor.doctor_type}</td>
                     <td>{doctor.doctor_degree}</td>
-                    <td>{doctor.doctor_availableTime}</td>
+                    <td>{doctor.doctor_availableStartTime}</td>
+                    <td>{doctor.doctor_availableEndTime}</td>
                     <td className="text-center">
                       <div className="d-flex flex-column justify-content-between">
                         <button
@@ -317,12 +330,22 @@ export default function DoctorTable() {
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Available Time</label>
+                    <label className="form-label">Available Start Time</label>
                     <input
                       type="time"
-                      name="doctor_availableTime"
+                      name="doctor_availableStartTime"
                       className="form-control"
-                      value={newData.doctor_availableTime}
+                      value={newData.doctor_availableStartTime}
+                      onChange={handleEdit}
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Available End Time</label>
+                    <input
+                      type="time"
+                      name="doctor_availableEndTime"
+                      className="form-control"
+                      value={newData.doctor_availableEndTime}
                       onChange={handleEdit}
                     />
                   </div>
@@ -481,12 +504,23 @@ export default function DoctorTable() {
                   </div>
                   <div className="mb-3">
                     <label htmlFor="title" className="form-label">
-                      Available
+                      Available Start Time
                     </label>
                     <input
                       type="time"
                       className="form-control"
-                      name="availableTime"
+                      name="availableStartTime"
+                      aria-required="true"
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label htmlFor="title" className="form-label">
+                      Available End Time
+                    </label>
+                    <input
+                      type="time"
+                      className="form-control"
+                      name="availableEndTime"
                       aria-required="true"
                     />
                   </div>

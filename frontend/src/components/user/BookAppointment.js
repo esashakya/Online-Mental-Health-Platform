@@ -51,9 +51,9 @@ const AppointmentForm = () => {
 
     const appointmentData = {
       user_id: user?.user_id,
-      doctor_id: parseInt(id, 10),  // Get doctor ID from URL
+      doctor_id: parseInt(id, 10),  // Get doctor ID
       
-      date_time: `${formData.date}T${formData.time}:00Z`, // Combine date & time in ISO format
+      date_time: formData.date, // Combine date & time 
       message: formData.message,
     };
     console.log(appointmentData);
@@ -63,7 +63,7 @@ const AppointmentForm = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Token ${localStorage.getItem("authToken")}`, // Send user token
+          Authorization: `Token ${localStorage.getItem("authToken")}`, 
         },
         body: JSON.stringify(appointmentData),
       });
@@ -183,15 +183,7 @@ const AppointmentForm = () => {
           <label htmlFor="time" className="form-label">
             Appointment Time
           </label>
-          <input
-            type="time"
-            className="form-control"
-            id="time"
-            name="time"
-            value={formData.time}
-            onChange={handleChange}
-            required
-          />
+          <p className="text-primary"> You will get notified soon about your appointment time. Please be patient with us.</p>
         </div>
         <div className="mb-3">
           <label htmlFor="message" className="form-label">
