@@ -27,8 +27,8 @@ import PreferredDoctor from "./components/user/PreferredDoctor";
 import BookAppointment from "./components/user/BookAppointment";
 import UserProfile from "./components/user/UserProfile";
 import AppointmentList from "./components/user/AppointmentList";
-
-
+import VideoCall from "./components/user/VideoCall";
+import CallLobby from "./components/user/CallLobby";
 
 
 function App() {
@@ -53,8 +53,10 @@ function App() {
               <Route exact path="/Mood" element={<Mood />}></Route>
               <Route exact path="/Profile" element={<UserProfile />}></Route>
               <Route exact path="/AppointmentList" element={<AppointmentList />}></Route>
-
+              <Route exact path="/Appointment/VideoCall" element={<VideoCall />}></Route>
               <Route exact path="/Join/Doctor" element={<JoinUs />}></Route>
+              <Route exact path="/Appointment/CallLobby" element={<CallLobby />}></Route>
+
               <Route exact path="/PreferredDoctor/:id" element={<PreferredDoctor />}></Route>
               <Route exact path="/BookAppointment/:id" element={<BookAppointment />}></Route>
 
