@@ -190,3 +190,5 @@ EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'untanglechaoswithus@gmail.com'
 EMAIL_HOST_PASSWORD = 'tesh urgb yjaf yrun'
+USE_TZ = True
+TIME_ZONE = 'Asia/Kathmandu'

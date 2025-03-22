@@ -2,25 +2,33 @@ import React, { useContext, useEffect, useState } from "react";
 import useAxios from "../../utils/useAxios";
 import AuthContext from '../../context/AuthContext';
 import msg from "sweetalert2";
-import DatePicker from "react-datepicker"; //to change the date swiftly
+import DatePicker from "react-datepicker"; //datepicker
 import "react-datepicker/dist/react-datepicker.css";
+import {Link} from 'react-router-dom'
+
+
 
 export default function AppointmentList() {
   const [appointmentList, setAppointmentList] = useState(null);
-  const [selectedDateAppointment, setSelectedDateAppointment] = useState(null);
+  const [selectedDateAppointment, setSelectedDateAppointment] = useState(null);  //for filtering the appointments according to status
+  const [filteredStatus, setFilteredStatus] = useState(null);
   const [newDateTime, setNewDateTime] = useState(new Date());
   const apiAxios = useAxios();
   const { user } = useContext(AuthContext);
+  const token = localStorage.getItem("authTokens")
+
+  
 
   const statusOptions = [
-    { value: 1, label: "In Call", colorClass: "bg-primary text-white" },
-    { value: 2, label: "Pending", colorClass: "bg-warning text-dark" },
-    { value: 3, label: "Not Attended", colorClass: "bg-danger text-white" },
-    { value: 4, label: "Approved", colorClass: "bg-info text-dark" },
-    { value: 5, label: "Completed", colorClass: "bg-success text-white" },
+    { value: 1, label: "In Call", colorClass: "bg-primary-subtle text-primary-emphasis" },
+    { value: 2, label: "Pending", colorClass: "bg-warning-subtle text-warning-emphasis" },
+    { value: 3, label: "Not Attended", colorClass: "bg-danger-subtle text-danger-emphasis" },
+    { value: 4, label: "Approved", colorClass: "bg-info-subtle text-info-emphasis" },
+    { value: 5, label: "Completed", colorClass: "bg-success-subtle text-success-emphasis" },
   ];
 
   useEffect(() => {
+    
     const fetchAppointments = async () => {
       try {
         const response = await apiAxios.get("/appointments/");
@@ -31,10 +39,40 @@ export default function AppointmentList() {
     };
 
     fetchAppointments();
-    const interval = setInterval(fetchAppointments, 5000); // Refresh every 5 seconds
+    const interval = setInterval(fetchAppointments, 5000); // Refresh  5 seconds
 
     return () => clearInterval(interval);
+    
   }, []);
+  
+  const isTodayAppointment = () => {
+    console.log(appointmentList);
+    if (!appointmentList || appointmentList.length === 0) return false;
+
+    //  YYYY-MM-DD in present
+    const today = new Date().toISOString().split("T")[0];
+
+    //checking the date
+    return appointmentList.some((appointment) => {
+      const appointmentDate = new Date(appointment.appointment_date)
+        .toISOString()
+        .split("T")[0];
+      
+      return appointmentDate === today && appointment.appointment_status !== 5;
+    });
+    
+  };
+  if (isTodayAppointment()) {
+    console.log("there is an appointment");
+  }
+  
+  
+  
+  const filteredAppointments = appointmentList
+    ? appointmentList.filter((appointment) =>
+        filteredStatus !== null ? appointment.appointment_status === filteredStatus : true      
+      )
+    : [];
 
   const handleStatusChange = async (appointmentId, newStatus) => {
     try {
@@ -78,7 +116,7 @@ export default function AppointmentList() {
             : appointment
         )
       );
-
+      
       msg.fire({
         title: "Appointment Rescheduled!",
         text: `The appointment date has been updated.`,
@@ -95,6 +133,31 @@ export default function AppointmentList() {
   return (
     <div className="container rounded p-5" style={{ backgroundColor: "#677bab" }}>
       <h3 className="text-center text-white">Current Appointments</h3>
+      <div className="d-flex justify-content-center mb-3">
+        {statusOptions.map((option) => (
+          <button
+            key={option.value}
+            className={`btn mx-1 ${option.colorClass} ${filteredStatus === option.value ? "fw-bold border border-dark" : ""}`}
+            onClick={() => setFilteredStatus(option.value)}
+          >
+            {option.label}
+          </button>
+        ))}
+        {isTodayAppointment() && (
+                  <button
+                    type="button"
+                    class="btn bg-primary-subtle text-primary-emphasis position-relative ms-auto mt-2 float-end" 
+                  >
+                    <Link  className="text-decoration-none" to = "/Appointment/CallLobby">Join Appointment</Link>
+                    <span className="position-absolute top-0 start-100 translate-middle p-2 bg-danger border border-light rounded-circle">
+                      <span className="visually-hidden">New Appointment</span>
+                    </span>
+                  </button>
+                )}
+      </div>
+      
+      <div style={{ maxHeight: "400px", overflowY: "auto" }}>
+      
       <table className="table table-striped table-hover">
         <thead className="text-center">
           <tr>
@@ -107,8 +170,8 @@ export default function AppointmentList() {
           </tr>
         </thead>
         <tbody className="text-center">
-          {appointmentList && appointmentList.length > 0 ? (
-            appointmentList.map((appointment, index) => (
+          {filteredAppointments && filteredAppointments.length > 0 ? (
+            filteredAppointments.slice(0, 10).map((appointment, index) => (
               <tr key={appointment.id}>
                 <th>{index + 1}</th>
                 <td>{appointment.therapist_name}</td>
@@ -132,7 +195,10 @@ export default function AppointmentList() {
                   <td>
                     <button
                       className="btn btn-sm btn-warning"
-                      onClick={() => setSelectedDateAppointment(appointment)}
+                      onClick={() => {
+                        setSelectedDateAppointment(appointment);
+                        setNewDateTime(new Date(appointment.appointment_date)); 
+                      }}
                     >
                       Reschedule
                     </button>
@@ -149,7 +215,7 @@ export default function AppointmentList() {
           )}
         </tbody>
       </table>
-
+      </div>
       {selectedDateAppointment && (
         <div className="modal show d-block" tabIndex="-1">
           <div className="modal-dialog">

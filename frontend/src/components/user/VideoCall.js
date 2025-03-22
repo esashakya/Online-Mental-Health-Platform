@@ -6,8 +6,7 @@ import msg from "sweetalert2";
 /* global AgoraRTC */
 
 export default function VideoCall() {
-  const {user} = useContext(AuthContext)
-
+  const { user } = useContext(AuthContext);
   const nav = useNavigate();
 
   const appId = '1d7a7b82261a4bfeb81b4fc429cb98af';
@@ -25,6 +24,18 @@ export default function VideoCall() {
   
   const localTracks = useRef([]); // to store
 
+  // Stop stream function
+  const stopStream = () => {
+    if (localTracks.current.length > 0) {
+      console.log("Stopping ");
+      localTracks.current[0]?.stop(); 
+      localTracks.current[1]?.stop(); 
+      localTracks.current[0]?.close(); 
+      localTracks.current[1]?.close();
+    }
+  };
+
+  
   const joinAndDisplayLocalStream = async () => {
     if (isJoined) return;
 
@@ -33,13 +44,10 @@ export default function VideoCall() {
       client.on('user-published', handleUserJoined);
       client.on('user-left', handleUserLeft);
 
-      uid = await client.join(appId, channel, token, uid); //get user id which is dynamically generated
+      uid = await client.join(appId, channel, token, uid); //get user id dynamically
       console.log(`UID: ${uid}`);
 
-     
       localTracks.current = await AgoraRTC.createMicrophoneAndCameraTracks();
-     
-
      
       if (videoRef.current && localTracks.current[1]) {   //video
         localTracks.current[1].play(videoRef.current);
@@ -64,10 +72,12 @@ export default function VideoCall() {
                 },
               });
       }
+
       if (localTracks.current[0]) {    //audio
         localTracks.current[0].play(); 
       }
-      await client.publish([localTracks.current[0], localTracks.current[1]]); 
+
+      await client.publish([localTracks.current[0], localTracks.current[1]]);
       console.log("registered");
 
       setIsJoined(true);
@@ -76,11 +86,12 @@ export default function VideoCall() {
     }
   };
 
+  // new user join function
   const handleUserJoined = async (user, mediaType) => {
     console.log(`User : ${user.uid}, MediaType: ${mediaType}`);
     await client.subscribe(user, mediaType);
 
-    setRemoteUsers((prevUsers) => ({    // Add old user and new users who joined call
+    setRemoteUsers((prevUsers) => ({    // Add old user and new users
       ...prevUsers,
       [user.uid]: user
     }));
@@ -97,7 +108,7 @@ export default function VideoCall() {
         } else {
           console.log(`Error  ${user.uid}`);
           msg.fire({
-            title: "Error in loading your video!",
+            title: "Error in loading your video",
             icon: "error",
             toast: true,
             timer: 5000,
@@ -123,19 +134,15 @@ export default function VideoCall() {
     }
   };
 
+ 
   const handleUserLeft = async () => {
     try {
       console.log("Leaving the call...");
-      
-      // stopping the video and audio
-      if (localTracks.current.length > 0) {
-        localTracks.current[0]?.stop();
-        localTracks.current[1]?.stop();
-      }
-  
+      stopStream();  // stopping the video and audio using function
+
       console.log("Leaving");
       await client.leave();
-       msg.fire({
+      msg.fire({
               title: "Hope you feel better :)",
               icon: "success",
               toast: true,
@@ -153,50 +160,63 @@ export default function VideoCall() {
                 msg.hideLoading();
               },
             });
-  
-      
-      setIsJoined(false);  //again change the status
+
+      setIsJoined(false);  //update the status
       setRemoteUsers({}); 
-      nav("/Appointment/CallLobby")
+      nav("/");
     } catch (error) {
       console.error("Error found in the call:", error);
     }
   };
 
+  
   const toggleCamera = async () => {
     if (!localTracks.current[1]) {
       console.log("Camera error");
       return;
     }
 
-    // change button uis
+    // change button UI
     setIsCameraMuted((prev) => !prev);
 
-    
     await localTracks.current[1].setEnabled(!isCameraMuted);
   };
 
+  
   const toggleMic = async () => {
     if (!localTracks.current[0]) {
       console.log("Mic track not available.");
       return;
     }
 
-    // change button uis
+    // change button UI
     setIsMicMuted((prev) => !prev);
 
-    // Ensure track is properly muted or unmuted
+    
     await localTracks.current[0].setMuted(!isMicMuted);
   };
 
+  
   useEffect(() => {
     joinAndDisplayLocalStream();
 
+    // cleanup 
     return () => {
-      if (localTracks.current.length > 0) {
-        localTracks.current[0]?.stop();
-        localTracks.current[1]?.stop();
-      }
+      stopStream();  
+    };
+  }, []);
+
+  // event listener
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      stopStream();
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      stopStream();
     };
   }, []);
 
@@ -220,7 +240,7 @@ export default function VideoCall() {
               </div>
           </div>
 
-          {/* User 2 */}
+          {/* Remote Users */}
           {Object.keys(remoteUsersState).map((uid) => (
             <div key={uid} className="col-md-6 col-sm-1 bg-dark align-items-center position-relative mb-5">
               <video
@@ -235,7 +255,7 @@ export default function VideoCall() {
           ))}
         </div>
 
-        {/* Icons*/}
+        {/* Control Buttons */}
         <div className="d-flex justify-content-center gap-3 mb-3">
           <button
             className="btn btn-light rounded-circle p-3"

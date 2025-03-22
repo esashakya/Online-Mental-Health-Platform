@@ -1,21 +1,29 @@
-import React, {useContext} from "react";
+import React, { useContext } from "react";
 import { jwtDecode } from "jwt-decode";
 import AuthContext from "../../context/AuthContext";
-import {Link} from 'react-router-dom'
+import { Link } from "react-router-dom";
 import { Outlet } from "react-router-dom";
 export default function Navbar() {
-  const {user,logoutRegisteredUser} = useContext(AuthContext)
-  const token = localStorage.getItem("authTokens")
+  const { user, logoutRegisteredUser } = useContext(AuthContext);
+  const token = localStorage.getItem("authTokens");
 
   return (
     <div>
       <nav className="navbar navbar-expand-lg bg-body-tertiary d-flex">
         <div className="container-fluid mt-3 mb-3">
           <a className="navbar-brand text-info-emphasis" href="#">
-           <h3>Untangle Chaos</h3> 
+            <h3>Untangle Chaos</h3>
           </a>
-          <button className="login-btn ms-2 d-lg-none bg-primary" ><Link className='signLink' to="/Login" style={{ color: 'white', textDecoration:'none' }}>Login</Link></button>
-          
+          <button className="login-btn ms-2 d-lg-none bg-primary">
+            <Link
+              className="signLink"
+              to="/Login"
+              style={{ color: "white", textDecoration: "none" }}
+            >
+              Login
+            </Link>
+          </button>
+
           <button
             className="navbar-toggler mb-2"
             type="button"
@@ -27,7 +35,7 @@ export default function Navbar() {
           >
             <span className="navbar-toggler-icon"></span>
           </button>
-          
+
           <div className="collapse navbar-collapse" id="navbarTogglerDemo02">
             <ul className="navbar-nav navCenter mb-lg-0 ">
               <li className="nav-item navData">
@@ -78,20 +86,45 @@ export default function Navbar() {
                   </li>
                 </ul>
               </li>
-              
             </ul>
-            {token == null ?(
-            <>
-              <button className="login-btn sm-ml-5 d-none d-lg-block bg-primary" ><Link className='signLink' to = "/Login" style={{ color: 'white', textDecoration:'none' }}>Login</Link></button>
-            </>)
-            :(
-            <>
-              <button className="login-btn sm-ml-5 d-none d-lg-block bg-primary" onClick={logoutRegisteredUser} ><Link className='signLink' to = "/Login" style={{ color: 'white', textDecoration:'none' }}>Logout</Link></button>
-            </>)
-            }
-            
+            {token == null ? (
+              <>
+                <button className="btn rounded sm-ml-5 d-none d-lg-block bg-primary">
+                  <Link
+                    className="signLink"
+                    to="/Login"
+                    style={{ color: "white", textDecoration: "none" }}
+                  >
+                    Login
+                  </Link>
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  className="btn rounded sm-ml-5 d-none d-lg-block bg-primary"
+                  onClick={logoutRegisteredUser}
+                >
+                  <Link
+                    className="signLink"
+                    to="/Login"
+                    style={{ color: "white", textDecoration: "none" }}
+                  >
+                    Logout
+                  </Link>
+                </button>
+                <button className="btn rounded sm-ml-5 d-none d-lg-block bg-primary ms-2">
+                  <Link
+                    className="signLink"
+                    to="/Profile"
+                    style={{ color: "white", textDecoration: "none" }}
+                  >
+                    <i className="bi bi-person-circle me-2"></i> Profile
+                  </Link>
+                </button>
+              </>
+            )}
           </div>
-          
         </div>
       </nav>
       {/* to render other components in website */}

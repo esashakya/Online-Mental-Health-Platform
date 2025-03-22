@@ -1,6 +1,9 @@
 from django.shortcuts import render
 import json  
+import secrets
+import string
 from datetime import datetime
+from django.utils.timezone import localtime
 from django.utils.dateparse import parse_date
 from rest_framework import viewsets, permissions
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -312,28 +315,53 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         
         # if status is approved send confirmation mail
         if previous_status != updated_instance.appointment_status and updated_instance.appointment_status == 4:
-            print("Sending emails...")
+            print("Sending emails")
             self.send_approval_email(updated_instance)
         elif previous_date != updated_instance.appointment_date:
+            print("Sending emails after updating the time")
             self.send_updated_date_email(updated_instance)
 
         return response
+    @staticmethod
+    def generate_random_code():
+        characters = string.ascii_letters + string.digits
+        code = ''.join(secrets.choice(characters) for i in range(8))   
+        return code
     def send_updated_date_email(self, appointment):
         user_email = appointment.user_id.user_email
         doctor_email = appointment.therapist_id.user.user_email
+        formatted_date = localtime(appointment.appointment_date).strftime('%Y-%m-%d %H:%M')
+        code = self.generate_random_code() 
+        print(code)
         subject = "Your timing has been updated. "
         message = f"""
         Hello {appointment.user_id.user_fullname},
 
-        Your appointment with Dr. {appointment.therapist_id.user.user_fullname} on {appointment.appointment_date.strftime('%Y-%m-%d %H:%M')} has been updated. There were few inconvenience which led to resheduling. We are sorry for any misconvenice.
+        Your appointment with Dr. {appointment.therapist_id.user.user_fullname} on {formatted_date} has been updated. There were few inconvenience which led to resheduling. We are sorry for any misconvenice.
         
-        If you have any queries related to timing, please contact the following number. Please visit your profile and enter your appointment in time.
-
+        If you have any queries related to timing, please contact the following number. Please check your profile in our website to join the appointment.
+        Join Code = {code}
+        
         Please be on time.
         5571584
         Thank you.
         """
         send_mail(subject, message, 'UntangleChaos@gmail.com', [user_email])
+        doctor_message =  f"""
+        Hello {appointment.therapist_id.user.user_fullname},
+
+        Your appointment with Dr. {appointment.user_id.user_fullname} on {formatted_date} has been updated. 
+        
+        If you have any queries related to timing, please contact the following number. 
+        Your Join Code for appointment is {code}
+        Please check your profile in our website to join the appointment.
+        Please be on time.
+        5571584
+        Thank you.
+        """
+        send_mail(subject, doctor_message, 'UntangleChaos@gmail.com', [doctor_email])
+
+
     def send_approval_email(self, appointment):
         user_email = appointment.user_id.user_email
         doctor_email = appointment.therapist_id.user.user_email

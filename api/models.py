@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.hashers import make_password, check_password
 from django.core.exceptions import ValidationError
 from django.db.models.signals import post_save
+from django.utils import timezone
 # Create your models here.
 
 class User(AbstractUser):
@@ -52,7 +53,7 @@ class Appointment(models.Model):
     ]
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='userAppointments')
     therapist_id = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name='doctorAppointments')
-    appointment_date = models.DateTimeField(auto_now_add=True)
+    appointment_date = models.DateTimeField(default=timezone.now)
     appointment_status = models.IntegerField(choices=options, default=2)
 
 class Review(models.Model):

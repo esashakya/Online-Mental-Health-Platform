@@ -16,7 +16,7 @@ export default function Blog()  {
     let userRole = null;
     let userName = null;
     if (userToken) {
-        const parsedToken = JSON.parse(userToken); // Convert from string to object
+        const parsedToken = JSON.parse(userToken); 
         const decodedToken = jwtDecode(parsedToken.access); // Decode JWT
         userRole = decodedToken.user_role; // Extract user role
         userName = decodedToken.user_fullname;
