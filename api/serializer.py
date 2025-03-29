@@ -167,6 +167,14 @@ class ForumSerializer(serializers.ModelSerializer):
         model = Forum
         fields = ['id','post_title','post_detail','post_date','anonymous','user_id']
 
+class MusicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Music
+        fields = ['id','music','type_music','mood_id']
+class MoodSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Mood
+        fields = ['id','type_mood','mood_date','user_id']
 class BlogSerializer(serializers.ModelSerializer):
     
     therapist_id = serializers.PrimaryKeyRelatedField(queryset=Doctor.objects.all())

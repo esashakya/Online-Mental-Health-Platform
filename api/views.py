@@ -6,7 +6,7 @@ from datetime import datetime
 from django.utils.timezone import localtime
 from django.utils.dateparse import parse_date
 from rest_framework import viewsets, permissions
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from api.models import *
 from api.serializer import *
 from django.shortcuts import get_object_or_404
@@ -51,7 +51,18 @@ class AddBlogView(generics.CreateAPIView):
     permission_classes = (AllowAny,)
     serializer_class = BlogSerializer    
     parser_classes = (MultiPartParser, FormParser)
-
+class AddMusicView(generics.CreateAPIView):
+    queryset = Music.objects.all()
+    permission_classes = (AllowAny,)
+    serializer_class = MusicSerializer    
+    parser_classes = (MultiPartParser, FormParser)
+class AddMoodView(generics.CreateAPIView):
+    parser_classes = [JSONParser] 
+    queryset = Mood.objects.all()
+    permission_classes = (AllowAny,)
+    serializer_class = MoodSerializer   
+     
+   
 class ForumViewSet(viewsets.ModelViewSet):
     queryset = Forum.objects.all()
     permission_classes = [IsAuthenticated] 
@@ -60,7 +71,45 @@ class ForumViewSet(viewsets.ModelViewSet):
         post = self.get_object()
         post.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+class MusicViewSet(viewsets.ModelViewSet):
+    queryset = Music.objects.all()
+    permission_classes = [IsAuthenticated] 
+    serializer_class = MusicSerializer
+    def destroy(self, request, *args, **kwargs):
+        post = self.get_object()
+        post.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+@api_view(['PUT','DELETE'])
+@parser_classes([MultiPartParser, FormParser])
+def update_music(request, pk):
+    print("Function  called")
+    try:
+        music = Music.objects.get(pk=pk)
+    except Music.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    if request.method == 'DELETE':
+        music.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    elif request.method == 'PUT':
+        print("Content type:",request.content_type)
+        print("Request Data:", request.data)
+        
 
+        music_data = request.data
+        
+        serializer = MusicSerializer(music,data=music_data,partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+class MoodViewSet(viewsets.ModelViewSet):
+    queryset = Mood.objects.all()
+    permission_classes = [IsAuthenticated] 
+    serializer_class = MoodSerializer
+    def destroy(self, request, *args, **kwargs):
+        post = self.get_object()
+        post.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 @api_view(['GET'])
 @permission_classes([AllowAny])  
 def get_doctors(request):
@@ -75,6 +124,12 @@ def get_doctors(request):
 def get_preferred_doctor(request,id):
     doctor = get_object_or_404(Doctor, id=id) 
     serializer = DoctorSerializer(doctor)
+    return Response(serializer.data)
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_preferred_blog(request,id):
+    blog = get_object_or_404(Blog, id=id) 
+    serializer = BlogSerializer(blog)
     return Response(serializer.data)
 
 # for doctor

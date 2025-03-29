@@ -22,6 +22,8 @@ import AdminPanel from "./components/admin/AdminPanel";
 import DoctorTable from "./components/admin/DoctorTable";
 import AdminForum from "./components/admin/AdminForum";
 import AdminBlog from "./components/admin/AdminBlog";
+import AdminMusic from "./components/admin/AdminMusic";
+
 import JoinUs from "./components/user/JoinUs";
 import PreferredDoctor from "./components/user/PreferredDoctor";
 import BookAppointment from "./components/user/BookAppointment";
@@ -29,6 +31,7 @@ import UserProfile from "./components/user/UserProfile";
 import AppointmentList from "./components/user/AppointmentList";
 import VideoCall from "./components/user/VideoCall";
 import CallLobby from "./components/user/CallLobby";
+import BlogPage from "./components/user/BlogPage";
 
 
 function App() {
@@ -58,6 +61,8 @@ function App() {
               <Route exact path="/Appointment/CallLobby" element={<CallLobby />}></Route>
 
               <Route exact path="/PreferredDoctor/:id" element={<PreferredDoctor />}></Route>
+              <Route exact path="/Blog/:id" element={<BlogPage />}></Route>
+
               <Route exact path="/BookAppointment/:id" element={<BookAppointment />}></Route>
 
 
@@ -75,6 +80,11 @@ function App() {
                 exact
                 path="RegisteredDoctorUsers"
                 element={<DoctorTable />}
+              ></Route>
+              <Route
+                exact
+                path="RegisteredMusics"
+                element={<AdminMusic />}
               ></Route>
               <Route
                 exact

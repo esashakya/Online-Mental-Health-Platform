@@ -1,32 +1,99 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect, useContext } from "react";
 import SearchBar from "./SearchBar";
 import Category from "./Category";
+import AuthContext from "../../context/AuthContext";
+
 export default function Music() {
   const customRef = useRef(null);
+  const [music, setMusic] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const { authTokens } = useContext(AuthContext);
 
-  
   const handleSlide = (direction) => {
     if (customRef.current) {
-      
       customRef.current.scrollBy({
         left: direction === "previous" ? -450 : 450,
         behavior: "smooth",
       });
     }
   };
+
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category);
+  };
+
+  const handleSearchChange = (event) => {
+    setSearchQuery(event.target.value);
+  };
+
+  useEffect(() => {
+    const fetchMusic = async () => {
+      try {
+        const accessToken = authTokens?.access;
+
+        const response = await fetch("http://127.0.0.1:8000/api/music/", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("Music Data:", data);
+
+        if (Array.isArray(data)) {
+          setMusic(data);
+        } else {
+          console.error("API did not return an array:", data);
+          setMusic([]);
+        }
+      } catch (error) {
+        console.error("Error fetching music:", error);
+        setMusic([]);
+      }
+    };
+
+    fetchMusic();
+  }, [authTokens]);
+
+  //for filtering
+  const filteredMusic = music.filter((item) => {
+    const typeMusicMatch =
+      selectedCategory === "All" || item.type_music === selectedCategory;
+
+    const searchMatch =
+      !searchQuery ||
+      (item.type_music &&
+        item.type_music.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    return typeMusicMatch && searchMatch;
+  });
+
   return (
     <div>
       <div className="fw-bold pt-3 text-center mt-1">
         <h1>Music Recommendation</h1>
       </div>
       <div className="musicReco">
-        <div className=" musicBg py-2 rounded">
-          <SearchBar />
-          <Category/>
-          <h4 className="text-start m-5 mb-0">Top 5 most played sounds</h4>
+        <div className="musicBg py-2 rounded">
+          <SearchBar
+            searchQuery={searchQuery}
+            onSearchChange={handleSearchChange}
+          />
+          <Category
+            selectedCategory={selectedCategory}
+            onCategoryChange={handleCategoryChange}
+          />
+          <h4 className="text-start m-5 mb-0">Musics To Help You Calm Down</h4>
           <hr className="blue-line mx-4"></hr>
-          
-          <div className="top-music-list ">
+
+          <div className="top-music-list">
             <button
               className="carousel-control-prev btn-slide"
               type="button"
@@ -37,72 +104,36 @@ export default function Music() {
             </button>
 
             <div className="music-list" ref={customRef}>
-              <div className="card recommend-music p-3">
-                <iframe
-                  width="360"
-                  height="315"
-                  src="https://www.youtube.com/embed/_BtXPQimVhg?si=5JfVsAs5OeyQj6bp"
-                  title="YouTube video player"
-                  className="w-100 music-item"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  allowFullScreen
-                ></iframe>
+              {filteredMusic.length > 0 ? (
+                filteredMusic.slice(0, 5).map((item, index) => (
+                  <div key={index} className="card recommend-music p-3">
+                    <iframe
+                      width="360"
+                      height="315"
+                      src={`https://www.youtube.com/embed/${item.music}`}
+                      title="YouTube video player"
+                      className="w-100 music-item"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      referrerPolicy="strict-origin-when-cross-origin"
+                      allowFullScreen
+                    ></iframe>
 
-                <div className="category-name fw-lighter text-center rounded">
-                  OCD
+                    <div className="category-name fw-lighter text-center rounded w-25">
+                      {item.type_music}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="d-flex justify-content-center align-items-center mb-3">
+                  <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
                 </div>
-              </div>
-              <div className="card  recommend-music p-3">
-                <iframe
-                  width="360"
-                  height="315"
-                  src="https://www.youtube.com/embed/QjDnjoaUJtI?si=ZifsWzLJEDeLPqNl"
-                  title="YouTube video player"
-                  className="w-100"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  allowFullScreen
-                ></iframe>
-                <div className="category-name fw-lighter text-center rounded">
-                  Anxiety
-                </div>
-              </div>
-              <div className="card  recommend-music p-3">
-                <iframe
-                  width="360"
-                  height="315"
-                  src="https://www.youtube.com/embed/kRn26hFq2VI?si=Ak2zld4wwg8k46A4&amp;controls=0"
-                  title="YouTube video player"
-                  className="w-100"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  allowFullScreen
-                ></iframe>
-
-                <div className="category-name fw-lighter text-center rounded">
-                  Anxiety
-                </div>
-              </div>
-              <div className="card  recommend-music p-3">
-                <iframe
-                  width="360"
-                  height="315"
-                  title="YouTube video player"
-                  src="https://www.youtube.com/embed/iwD9YHqcMPU?si=4MLA2YTGk-jn58rL"
-                  className="w-100 music-item"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  allowFullScreen
-                ></iframe>
-
-                <div className="category-name fw-lighter text-center rounded">
-                  Panic
-                </div>
-              </div>
+              )}
             </div>
+
             <button
-              className="carousel-control-next  btn-slide"
+              className="carousel-control-next btn-slide"
               type="button"
               id="next-slide"
               onClick={() => handleSlide("nextMusic")}

@@ -102,7 +102,7 @@ class Mood(models.Model):
         ("Happy","Happy"),
         ("Anxious","Anxious"),
         ("Sleepy","Sleepy"),
-        ("Panic","Panic"),
+        ("Chill","Chill"),
         ("Neutral","Neutral"),
     ]
     type_mood = models.CharField(max_length=11,choices=mood_options, default="Neutral")

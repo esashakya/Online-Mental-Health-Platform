@@ -3,7 +3,7 @@ import SearchBar from "./SearchBar";
 
 export default function Doctor() {
   const [doctor, setDoctor] = useState([]);
-
+  const [searchQuery, setSearchQuery] = useState("");
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
@@ -19,7 +19,20 @@ export default function Doctor() {
 
     fetchDoctors();
   }, []);
+  const handleSearchChange = (event) => {
+    setSearchQuery(event.target.value);
+  };
+  const filteredDoctors = doctor.filter((doctor) => {
+    const fullName = doctor?.user?.user_fullname?.toLowerCase() || "";
+    const email = doctor?.user?.user_email?.toLowerCase() || "";
+    const degree = doctor?.doctor_degree?.toLowerCase() || "";
 
+    return (
+      fullName.includes(searchQuery.toLowerCase()) ||
+      email.includes(searchQuery.toLowerCase()) ||
+      degree.includes(searchQuery.toLowerCase())
+    );
+  });
   return (
     <div>
       <div className="doctorsList text-center mt-4">
@@ -28,11 +41,11 @@ export default function Doctor() {
           Our doctors are here to help. Feel free to consult with any doctor.
         </p>
       </div>
-      <SearchBar/>
+      <SearchBar searchQuery={searchQuery} onSearchChange={handleSearchChange}/>
       <div className="container shadow-sm p-3 mb-5 bg-body-tertiary rounded">
         <div className="row mb-5">
-          {doctor.length > 0 ? (
-            doctor.map((doctor, index) => (
+          {filteredDoctors.length > 0 ? (
+            filteredDoctors.map((doctor, index) => (
               <div
                 key={index}
                 className="col-sm-4 d-flex justify-content-center"
@@ -74,7 +87,12 @@ export default function Doctor() {
               </div>
             ))
           ) : (
-            <p className="text-center">No doctors available.</p>
+            <div className="d-flex flex-column justify-content-center align-items-center mb-3">
+                  <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                  <h5>No Doctors Available</h5>
+                </div>
           )}
         </div>
       </div>
