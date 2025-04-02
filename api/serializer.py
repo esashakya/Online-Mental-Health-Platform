@@ -201,3 +201,17 @@ class AppointmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Appointment
         fields = ['id', 'user_id', 'therapist_id', 'appointment_date', 'appointment_status','user_fullname','therapist_name']  
+
+class ReviewSerializer(serializers.ModelSerializer):
+    user_name = serializers.ReadOnlyField(source="user_id.username") 
+    therapist_name = serializers.ReadOnlyField(source="therapist_id.user.user_fullname") 
+
+    class Meta:
+        model = Review
+        fields = ["id", "review_date", "review_post", "doctor_ratings", "user_id", "user_name", "therapist_id", "therapist_name"]
+
+    def validate_review_post(self, value):
+       
+        if len(value) < 10:
+            raise serializers.ValidationError("Review must be at least 10 characters long.")
+        return value

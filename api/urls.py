@@ -33,7 +33,10 @@ urlpatterns=[
     path("blog/add", views.AddBlogView.as_view()),
     path("music/add", views.AddMusicView.as_view()),
     path("mood/add", views.AddMoodView.as_view()),
-
+    path("make/payment", views.make_payment),
+    path("mood/create", views.add_mood),
+    path("get/reviews/", views.get_reviews),
+    path("add/reviews/", views.create_review),
     path('update/doctors/<int:pk>', update_doctor, name='update_doctor'),
     path('users/<int:pk>', update_user, name='update_user'),
     path('blogs/<int:pk>', update_blog, name='update_blog'),

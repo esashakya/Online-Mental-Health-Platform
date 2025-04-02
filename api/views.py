@@ -2,6 +2,10 @@ from django.shortcuts import render
 import json  
 import secrets
 import string
+from datetime import date
+import requests
+from rest_framework.pagination import PageNumberPagination
+from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime
 from django.utils.timezone import localtime
 from django.utils.dateparse import parse_date
@@ -29,6 +33,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.http import JsonResponse
 from django.core.mail import send_mail
+from django.http import JsonResponse
 # Create your views here.
 class TokenPairView(TokenObtainPairView):
     serializer_class = TokenSerializer
@@ -106,10 +111,32 @@ class MoodViewSet(viewsets.ModelViewSet):
     queryset = Mood.objects.all()
     permission_classes = [IsAuthenticated] 
     serializer_class = MoodSerializer
+    
     def destroy(self, request, *args, **kwargs):
         post = self.get_object()
         post.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def add_mood(request):
+    user = request.user
+    today = date.today()
+
+   
+    if Mood.objects.filter(user_id=user, mood_date=today).exists():
+        return Response(
+            {"message": "You have already submitted your mood for today."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+   
+    serializer = MoodSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save(user_id=user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 @api_view(['GET'])
 @permission_classes([AllowAny])  
 def get_doctors(request):
@@ -186,6 +213,37 @@ def get_users(request):
     # convert into json with the use of json
     serializer = UserSerializer(users, many=True)  
     return Response(serializer.data)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated]) 
+def create_review(request):
+    
+  
+    doctor_id = request.data.get('therapist_id')
+    review_post = request.data.get('review_post')
+    doctor_ratings = request.data.get('doctor_ratings')
+
+    
+    try:
+        doctor = Doctor.objects.get(id=doctor_id)
+    except Doctor.DoesNotExist:
+        return Response({"error": "Doctor not found."}, status=status.HTTP_404_NOT_FOUND)
+
+   
+    review_data = {
+        'review_post': review_post,
+        'doctor_ratings': doctor_ratings,
+        'user_id': request.user.id,  
+        'therapist_id': doctor.id
+    }
+
+  
+    serializer = ReviewSerializer(data=review_data)
+
+    if serializer.is_valid():
+       
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)  
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 @api_view(['PUT','DELETE'])
 @parser_classes([MultiPartParser, FormParser])
 def update_user(request, pk):
@@ -209,6 +267,27 @@ def update_user(request, pk):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+# for review posts
+@api_view(['GET'])
+@permission_classes([AllowAny])  
+def get_reviews(request):
+    doctor_id = request.query_params.get('doctor_id', None)
+    # fetches all the review posts
+    if doctor_id:
+        reviews = Review.objects.filter(therapist_id=doctor_id)
+    else:
+        reviews = Review.objects.all()
+    
+
+    
+    paginator = PageNumberPagination()
+    paginator.page_size = 10  
+    paginated_reviews = paginator.paginate_queryset(reviews, request)
+
+    
+    serializer = ReviewSerializer(reviews, many=True)  
+    return paginator.get_paginated_response(serializer.data)
+
 
 # for blog posts
 @api_view(['GET'])
@@ -447,5 +526,78 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         send_mail(doctor_subject, doctor_message, 'UntangleChaos@gmail.com', [doctor_email])
    
 
-    
-    
+
+
+
+@csrf_exempt
+def make_payment(request):
+
+    if request.method == "POST":
+        try:
+            
+            data = json.loads(request.body)
+            
+           
+            return_url = data.get('return_url')
+            purchase_order_id = data.get('purchase_order_id')
+            amount = data.get('amount')
+            website_url = data.get('return_url')
+
+           
+            print(return_url, purchase_order_id, amount)
+
+         
+            payload = json.dumps({
+                "return_url": return_url,
+                "website_url": website_url,
+                "amount": amount,
+                "purchase_order_id": purchase_order_id,
+                "purchase_order_name": "test",
+                "customer_info": {
+                    "name": "Untangle Chaos",
+                    "email": "eshakya2004@gmail.com",
+                    "phone": "9800000001"
+                }
+            })
+
+           
+            url = "https://dev.khalti.com/api/v2/epayment/initiate/"
+            headers = {
+                'Authorization': 'key 74e75d4a2bff46fbbbb26d693481ed14',
+                'Content-Type': 'application/json',
+            }
+
+        
+            response = requests.post(url, headers=headers, data=payload)
+
+           
+            if response.status_code == 200:
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'Payment initialization successful',
+                    'payment_url': response.json().get('payment_url'),
+                    'data': response.json()  
+                })
+            else:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Payment initialization failed',
+                    'details': response.text 
+                })
+
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid JSON data received',
+            })
+        except requests.RequestException as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'An error occurred while contacting Khalti API',
+                'details': str(e)
+            })
+    else:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Only POST requests are allowed.',
+        })
