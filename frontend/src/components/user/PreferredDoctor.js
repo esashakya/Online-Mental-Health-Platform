@@ -29,14 +29,12 @@ export default function PreferredDoctor() {
     fetchDoctorDetails();
   }, [id]);
 
-
   useEffect(() => {
     const fetchReviews = async () => {
       try {
         const response = await fetch("http://127.0.0.1:8000/api/get/reviews/");
         const reviewsData = await response.json();
 
-       
         const reviewsWithUserNames = await Promise.all(
           reviewsData.results.map(async (review) => {
             const userResponse = await fetch(
@@ -51,7 +49,6 @@ export default function PreferredDoctor() {
           })
         );
 
-       
         const filteredReviews = reviewsWithUserNames.filter((review) => {
           return review.therapist_id === parseInt(id);
         });
@@ -65,7 +62,34 @@ export default function PreferredDoctor() {
 
     fetchReviews();
   }, [id]);
+  const checkSlotAvailability = async (therapistId, slotDateTime) => {
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/appointments/check_availability/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            therapist_id: therapistId,
+            appointment_date: slotDateTime.toISOString(),
+          }),
+        }
+      );
 
+      if (!response.ok) {
+        throw new Error("Failed to check availability");
+      }
+
+      const data = await response.json();
+      return data.available;
+    } catch (error) {
+      console.error("Error checking availability:", error);
+      return false;
+    }
+  };
   const handleReview = async () => {
     if (newReview.trim() !== "") {
       if (newReview.trim().length < 10) {
@@ -77,7 +101,7 @@ export default function PreferredDoctor() {
         review_post: newReview,
         doctor_ratings: rating,
         therapist_id: id,
-        user_id: user.user_id
+        user_id: user.user_id,
       };
 
       try {
@@ -96,12 +120,11 @@ export default function PreferredDoctor() {
             ...reviews,
             {
               ...newReviewData,
-              user_fullname: user.user_fullname, 
+              user_fullname: user.user_fullname,
             },
           ]);
           setNewReview("");
-        }
-         else {
+        } else {
           console.error("Failed to submit review");
         }
       } catch (error) {
@@ -132,20 +155,34 @@ export default function PreferredDoctor() {
     return `${displayHour}:${minutes} ${period}`;
   };
 
-  const handleBookAppointment = () => {
-    if (selectedSlot) {
-      navigate(`/BookAppointment/${doctor.id}`, {
-        state: {
-          slotId: selectedSlot.id,
-          startTime: selectedSlot.start_time,
-          endTime: selectedSlot.end_time,
-        },
-      });
-    } else {
+  const handleBookAppointment = async () => {
+    if (!selectedSlot) {
       alert("Please select a time slot first");
+      return;
     }
-  };
 
+    // Combine the selected date with the time slot
+    const today = new Date();
+    const slotDate = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      parseInt(selectedSlot.start_time.split(":")[0]),
+      parseInt(selectedSlot.start_time.split(":")[1])
+    );
+
+    
+
+    navigate(`/BookAppointment/${doctor.id}`, {
+      state: {
+        slotId: selectedSlot.id,
+        startTime: selectedSlot.start_time,
+        endTime: selectedSlot.end_time,
+      },
+    });
+  };
+ 
+  
   if (!doctor)
     return (
       <div className="d-flex flex-column justify-content-center align-items-center mb-3">
@@ -215,7 +252,7 @@ export default function PreferredDoctor() {
                 <button
                   className="btn btn-primary px-4 py-2 rounded-pill"
                   onClick={handleBookAppointment}
-                  disabled={!selectedSlot || doctor.doctor_status != 1}
+                  disabled={!selectedSlot || doctor.doctor_status !== 1}
                 >
                   <i className="bi bi-calendar-check me-2"></i>
                   Book Appointment

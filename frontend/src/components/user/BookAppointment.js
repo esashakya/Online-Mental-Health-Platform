@@ -1,37 +1,25 @@
 import React, { useContext, useEffect, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import AuthContext from "../../context/AuthContext";
+import Swal from "sweetalert2";
 
-const msg = require("sweetalert2");
 const AppointmentForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { slotId, startTime, endTime } = location.state || {};
-
-  const [paymentStatus, setPaymentStatus] = useState(null);
-  const { user } = useContext(AuthContext);
+  const { authTokens, user } = useContext(AuthContext);
+  const accessToken = authTokens?.access;
   const [loading, setLoading] = useState(false);
-  const [purchaseOrderId, setPurchaseOrderId] = useState("");
   const { id } = useParams();
   const [doctor, setDoctor] = useState(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    date: "",
-    time: "",
-  });
-  useEffect(() => {
-    const queryParams = new URLSearchParams(location.search);
-    const status = queryParams.get("status");
+  const [isAvailable, setIsAvailable] = useState(false);
+  const [availabilityChecked, setAvailabilityChecked] = useState(false);
 
-    if (status === "Completed") {
-      setPaymentStatus("Completed");
-    } else {
-      setPaymentStatus("Pending");
-    }
-  }, [location]);
+  const [formData, setFormData] = useState({
+    date: "",
+  });
+
+  // fetching the specific doctor detail
   useEffect(() => {
     const fetchDoctorDetails = async () => {
       try {
@@ -40,11 +28,70 @@ const AppointmentForm = () => {
         setDoctor(data);
       } catch (error) {
         console.error("Error fetching doctor details:", error);
+        showError("Failed to load doctor information");
       }
     };
 
     fetchDoctorDetails();
   }, [id]);
+
+  // the availability of time is checked when date is selected
+  useEffect(() => {
+    const checkAvailability = async () => {
+      if (formData.date && doctor && startTime) {
+        try {
+          setLoading(true);
+          const dateTime = new Date(`${formData.date}T${startTime}`);
+
+          const available = await checkSlotAvailability(doctor.id, dateTime);
+          setIsAvailable(available);
+          setAvailabilityChecked(true);
+
+          if (!available) {
+            showWarning(
+              "This time slot is no longer available. Please choose another time."
+            );
+          }
+        } catch (error) {
+          console.error("Availability check failed:", error);
+          showError("Failed to check availability");
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    checkAvailability();
+  }, [formData.date, doctor, startTime]);
+
+  const checkSlotAvailability = async (therapistId, slotDateTime) => {
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/appointments/check_availability/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            therapist_id: therapistId,
+            appointment_date: slotDateTime.toISOString(),
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to check availability");
+      }
+
+      const data = await response.json();
+      return data.available;
+    } catch (error) {
+      console.error("Error checking availability:", error);
+      throw error;
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -52,128 +99,108 @@ const AppointmentForm = () => {
       ...prevState,
       [name]: value,
     }));
-  };
-  useEffect(() => {
-    // creating new purchaseid everytime the page is reloaded
-    const uniqueId = `AN-${uuidv4()}`;
-    setPurchaseOrderId(uniqueId);
-  }, []);
-  console.log("Value is", purchaseOrderId);
-  // const handleSubmit = (e) => {
-  //   e.preventDefault();
-  //   console.log('Appointment Details:', formData);
-  //   alert('Appointment submitted!');
-  // };
-  const handlePayment = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const response = await fetch("http://127.0.0.1:8000/api/make/payment", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          amount: 500,
-          purchase_order_id: purchaseOrderId,
-          return_url: window.location.href,
-        }),
-      });
-
-      const responseData = await response.json();
-
-      if (response.ok && responseData.status === "success") {
-        window.location.href = responseData.payment_url;
-      } else {
-        msg.fire({
-          title: "Payment Unsuccessful",
-          text: "Something went wrong. Please try again.",
-          icon: "error",
-          confirmButtonText: "Try again",
-          background: "#dc3545",
-          color: "#fff",
-        });
-      }
-    } catch (error) {
-      console.error("Error during payment initiation:", error);
+    //changing dynamically when date changes
+    if (name === "date") {
+      setIsAvailable(false);
+      setAvailabilityChecked(false);
     }
-    setLoading(false);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (paymentStatus !== "Completed") {
-      msg.fire({
-        title: "Payment not completed!",
-        text: "Please complete the payment before submitting the appointment.",
-        icon: "error",
-        confirmButtonText: "Okay",
-        background: "#dc3545",
-        color: "#fff",
-      });
+    
+    if (!availabilityChecked) {
+      showWarning("Please select a date and wait for availability check");
       return;
     }
-    const appointmentData = {
-      user_id: user?.user_id,
-      doctor_id: parseInt(id, 10),
-      slot_id: slotId,
-      date_time: formData.date,
-    };
-
-    console.log(appointmentData);
-    setLoading(true);
+    
+    if (!isAvailable) {
+      showWarning("This time slot is no longer available. Please choose another time.");
+      return;
+    }
+  
+    if (!formData.date || !startTime) {
+      showWarning("Please select both date and time");
+      return;
+    }
+  
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/book/", {
+     
+      const [hours, minutes] = startTime.split(':');
+      const appointmentDate = new Date(formData.date);
+      
+     
+      appointmentDate.setHours(parseInt(hours, 10));
+      appointmentDate.setMinutes(parseInt(minutes, 10));
+      appointmentDate.setSeconds(0);
+      
+    
+      const isoString = appointmentDate.toISOString();
+      
+      
+      
+      console.log("Formatted date:", isoString); 
+  
+      const appointmentData = {
+        user_id: user?.user_id,
+        therapist_id: parseInt(id, 10),
+        appointment_date: isoString,
+        appointment_status: 2, 
+      };
+  
+      setLoading(true);
+      const response = await fetch("http://127.0.0.1:8000/api/appointments/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Token ${localStorage.getItem("authToken")}`,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify(appointmentData),
       });
-      setLoading(false);
+  
       const result = await response.json();
-      console.log("API Response:", result);
-
+  
       if (response.ok) {
-        msg.fire({
-          title: "Appointment registered successfully.!",
-          text: "You will get confirmation email about your appointment shortly.",
-          icon: "success",
-          confirmButtonText: "Okay",
-          background: "#28a745",
-          color: "#fff",
-        });
-        setFormData({
-          name: "",
-          email: "",
-          phone: "",
-          date: "",
-          time: "",
-        });
-        setPaymentStatus(null);
+        showSuccess("Appointment booked successfully!");
         navigate("/Doctor");
       } else {
-        msg.fire({
-          title: "Something went wrong. Please try again.",
-          text: "Invalid data field, please check your entered data is correct or not",
-          icon: "error",
-          confirmButtonText: "Try again",
-          background: "#dc3545",
-          color: "#fff",
-        });
+        const errorMsg = result.detail || result.message || "Failed to book appointment";
+        console.error("Backend error:", result);
+        showError(errorMsg);
       }
     } catch (error) {
-      console.error("Error submitting appointment:", error);
-      msg.fire({
-        title: "Oops!Server error",
-        text: "Sorry for inconvenience. Please try again in few minutes",
-        icon: "error",
-        confirmButtonText: "Try Again",
-        background: "#dc3545",
-        color: "#fff",
-      });
+      console.error("Error handling date/time:", error);
+      showError("Invalid date/time selection. Please try again.");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const showSuccess = (message) => {
+    Swal.fire({
+      title: "Success!",
+      text: message,
+      icon: "success",
+      confirmButtonText: "OK",
+    });
+  };
+
+  const showError = (message) => {
+    Swal.fire({
+      title: "Error!",
+      text: message,
+      icon: "error",
+      confirmButtonText: "OK",
+    });
+  };
+
+  const showWarning = (message) => {
+    Swal.fire({
+      title: "Warning!",
+      text: message,
+      icon: "warning",
+      confirmButtonText: "OK",
+    });
   };
 
   if (!doctor) {
@@ -189,6 +216,7 @@ const AppointmentForm = () => {
   return (
     <div className="container mt-5">
       <h2 className="mb-3 fw-bold">Book an Appointment</h2>
+
       {loading && (
         <div className="d-flex justify-content-center mb-3">
           <div className="spinner-border text-primary" role="status">
@@ -196,29 +224,29 @@ const AppointmentForm = () => {
           </div>
         </div>
       )}
+
       <form onSubmit={handleSubmit}>
         <div className="mb-3">
-          <label htmlFor="name" className="form-label">
+          <label htmlFor="doctorName" className="form-label">
             Doctor's Name
           </label>
           <input
             type="text"
             className="form-control"
-            id="name"
-            name="name"
+            id="doctorName"
             value={doctor.user?.user_fullname || "Loading..."}
             disabled
           />
         </div>
+
         <div className="mb-3">
-          <label htmlFor="name" className="form-label">
-            Full Name
+          <label htmlFor="patientName" className="form-label">
+            Your Name
           </label>
           <input
             type="text"
             className="form-control"
-            id="name"
-            name="name"
+            id="patientName"
             value={user?.user_fullname || ""}
             disabled
           />
@@ -232,7 +260,6 @@ const AppointmentForm = () => {
             type="email"
             className="form-control"
             id="email"
-            name="email"
             value={user?.user_email || ""}
             disabled
           />
@@ -250,10 +277,12 @@ const AppointmentForm = () => {
             value={formData.date}
             onChange={handleChange}
             required
+            min={new Date().toISOString().split("T")[0]}
           />
         </div>
+
         <div className="mb-3">
-          <label htmlFor="time" className="form-label">
+          <label htmlFor="timeSlot" className="form-label">
             Selected Time Slot
           </label>
           {startTime && endTime ? (
@@ -270,39 +299,29 @@ const AppointmentForm = () => {
           )}
         </div>
 
+        {availabilityChecked && (
+          <div className="mb-3">
+            <div
+              className={`alert alert-${isAvailable ? "success" : "danger"}`}
+            >
+              {isAvailable
+                ? "This time slot is available for booking"
+                : "This time slot is no longer available"}
+            </div>
+          </div>
+        )}
+
         <div className="mb-3">
-          <label htmlFor="date" className="form-label">
-            Appointment Fee
-          </label>
-          <input
-            type="text"
-            className="form-control"
-            name="fee"
-            value="Rs.500"
-            disabled
-          />
+          <label className="form-label">Appointment Fee</label>
+          <input type="text" className="form-control" value="Rs.500" disabled />
         </div>
-        <div className="mb-3">
-          <label htmlFor="time" className="form-label">
-            Appointment Time
-          </label>
-          <p className="text-primary">
-            {" "}
-            You will get notified soon about your appointment time. Please be
-            patient with us.
-          </p>
-        </div>
-        <div className="mb-3">
-          <button
-            type="button"
-            className="btn bg-primary-subtle text-primary-emphasis"
-            onClick={handlePayment}
-          >
-            Pay with Khalti
-          </button>
-        </div>
-        <button type="submit" className="btn btn-primary d-flex ms-auto">
-          Submit Appointment
+
+        <button
+          type="submit"
+          className="btn btn-primary d-flex ms-auto"
+          disabled={loading || !isAvailable}
+        >
+          {loading ? "Processing..." : "Confirm Appointment"}
         </button>
       </form>
     </div>

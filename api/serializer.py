@@ -4,6 +4,8 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
+from datetime import date, timedelta
+
 from rest_framework.validators import UniqueValidator
 from rest_framework.fields import SerializerMethodField
 class UserSerializer(serializers.ModelSerializer): #serialize to json format
@@ -249,10 +251,22 @@ class SignUpDoctorSerializer(serializers.ModelSerializer):
 
         return doctor
 
+class CommentSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source='user.username', read_only=True)
+    
+    class Meta:
+        model = Comment
+        fields = ['id', 'content', 'created_at', 'user_name', 'anonymous']
+        read_only_fields = ['id', 'created_at', 'user_name']
+
 class ForumSerializer(serializers.ModelSerializer):
+    comments = CommentSerializer(many=True, read_only=True)
+    user_name = serializers.CharField(source='user.username', read_only=True)
+    
     class Meta:
         model = Forum
-        fields = ['id','post_title','post_detail','post_date','anonymous','user_id']
+        fields = ['id', 'post_title', 'post_detail', 'post_date', 
+                 'anonymous', 'user_id', 'user_name', 'comments']
 
 class MusicSerializer(serializers.ModelSerializer):
     class Meta:
@@ -288,6 +302,27 @@ class AppointmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Appointment
         fields = ['id', 'user_id', 'therapist_id', 'appointment_date', 'appointment_status','user_fullname','therapist_name']  
+    def validate(self, data):
+        
+        appointment_date = data.get('appointment_date')
+        therapist_id = data.get('therapist_id')
+        
+       
+        buffer_time = timedelta(minutes=15) 
+        
+        conflicting_appointments = Appointment.objects.filter(
+            therapist_id=therapist_id,
+            appointment_date__range=(
+                appointment_date - buffer_time,
+                appointment_date + buffer_time
+            ),
+            appointment_status__in=[1, 2, 4] 
+        ).exists()
+        
+        if conflicting_appointments:
+            raise ValidationError("This time slot is already booked or too close to another appointment.")
+        
+        return data
 
 class ReviewSerializer(serializers.ModelSerializer):
     user_name = serializers.ReadOnlyField(source="user_id.username") 

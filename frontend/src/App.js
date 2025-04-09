@@ -32,6 +32,9 @@ import AppointmentList from "./components/user/AppointmentList";
 import VideoCall from "./components/user/VideoCall";
 import CallLobby from "./components/user/CallLobby";
 import BlogPage from "./components/user/BlogPage";
+import Payment from "./components/user/Payment";
+import ForumPost from "./components/user/ForumPost";
+
 
 
 function App() {
@@ -59,6 +62,10 @@ function App() {
               <Route exact path="/Appointment/VideoCall" element={<VideoCall />}></Route>
               <Route exact path="/Join/Doctor" element={<JoinUs />}></Route>
               <Route exact path="/Appointment/CallLobby" element={<CallLobby />}></Route>
+              <Route exact path="/Appointment/Payment" element={<Payment />}></Route>
+              <Route exact path="/Forum/:id" element={<ForumPost />}></Route>
+
+
 
               <Route exact path="/PreferredDoctor/:id" element={<PreferredDoctor />}></Route>
               <Route exact path="/Blog/:id" element={<BlogPage />}></Route>

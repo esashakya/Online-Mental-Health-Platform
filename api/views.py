@@ -2,7 +2,8 @@ from django.shortcuts import render
 import json  
 import secrets
 import string
-from datetime import date
+from datetime import date, timedelta
+
 import requests
 from rest_framework.pagination import PageNumberPagination
 from django.views.decorators.csrf import csrf_exempt
@@ -76,6 +77,19 @@ class ForumViewSet(viewsets.ModelViewSet):
         post = self.get_object()
         post.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+       
+        forum_id = self.request.data.get('forum')
+        try:
+            forum = Forum.objects.get(pk=forum_id)
+            serializer.save(user=self.request.user, forum=forum)
+        except Forum.DoesNotExist:
+            raise serializers.ValidationError("Forum post does not exist")
 class MusicViewSet(viewsets.ModelViewSet):
     queryset = Music.objects.all()
     permission_classes = [IsAuthenticated] 
@@ -573,7 +587,9 @@ def make_payment(request):
                 }
             })
 
-           
+            print("Sending request to Khalti...")
+   
+    
             url = "https://dev.khalti.com/api/v2/epayment/initiate/"
             headers = {
                 'Authorization': 'key 74e75d4a2bff46fbbbb26d693481ed14',
@@ -582,7 +598,7 @@ def make_payment(request):
 
         
             response = requests.post(url, headers=headers, data=payload)
-
+            print("Khalti responded with:", response.status_code, response.text)
            
             if response.status_code == 200:
                 return JsonResponse({
@@ -614,3 +630,35 @@ def make_payment(request):
             'status': 'error',
             'message': 'Only POST requests are allowed.',
         })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def check_appointment_availability(request):
+    therapist_id = request.data.get('therapist_id')
+    appointment_date = request.data.get('appointment_date')
+    print(therapist_id,appointment_date)
+    if not therapist_id or not appointment_date:
+        return Response({'error': 'Missing required fields'}, status=400)
+    
+    try:
+        appointment_date = timezone.datetime.fromisoformat(appointment_date)
+    except (ValueError, TypeError):
+        return Response({'error': 'Invalid date format'}, status=400)
+    
+    buffer_time = timedelta(minutes=30)
+    
+    conflicting_appointments = Appointment.objects.filter(
+        therapist_id=therapist_id,
+        appointment_date__range=(
+            appointment_date - buffer_time,
+            appointment_date + buffer_time
+        ),
+        appointment_status__in=[1, 2, 4]
+    ).exists()
+    
+    return Response({
+        'available': not conflicting_appointments,
+        'requested_time': appointment_date,
+        'therapist_id': therapist_id
+    })

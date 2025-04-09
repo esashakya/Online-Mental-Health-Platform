@@ -127,5 +127,14 @@ class Music(models.Model):
     type_music = models.CharField(max_length=25,choices=music_options, default="Panic")
     mood_id = models.ForeignKey(Mood, on_delete=models.CASCADE, related_name='moodMusic') #mood foreign key
 
-    
+class Comment(models.Model):
+    forum = models.ForeignKey(Forum, on_delete=models.CASCADE, related_name='comments')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField(max_length=1000)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    anonymous = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['created_at']  
 

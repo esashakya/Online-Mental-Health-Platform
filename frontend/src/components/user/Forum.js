@@ -1,58 +1,53 @@
-import React, { useEffect, useState,useContext } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { Link } from "react-router-dom";
 import Typewriter from "typewriter-effect";
-import AuthContext from '../../context/AuthContext'
+import AuthContext from "../../context/AuthContext";
 import useAxios from "../../utils/useAxios";
 
 const msg = require("sweetalert2");
 
 export default function Forum() {
-    const apiAxios = useAxios();
+  const apiAxios = useAxios();
   const [post, setPost] = useState([]);
-  const {authTokens,user,addNewPost} = useContext(AuthContext)
+  const { authTokens, user, addNewPost } = useContext(AuthContext);
   useEffect(() => {
     const fetchPosts = async () => {
-        try{
-            const response = await apiAxios.get("/forum/")
-            console.log(" Res:", response.data); 
-            setPost(response.data)
-            console.log("error", response)
-        }catch(error){
-            console.log(error);
-        
-        }
-      
+      try {
+        const response = await apiAxios.get("/forum/");
+        console.log(" Res:", response.data);
+        setPost(response.data);
+        console.log("error", response);
+      } catch (error) {
+        console.log(error);
+      }
     };
-  
+
     fetchPosts();
   }, []);
   const handleNewPost = async (e) => {
     e.preventDefault();
-  
+
     const formData = new FormData(e.target);
     const postTitle = e.target.postTitle.value;
     const postDetail = e.target.postDetail.value;
     const anonymous = e.target.elements.anonymous.value === "1";
-  
+
     if (!postTitle || !postDetail) {
       console.log("Missing fields");
       return;
     }
-  
+
     try {
       const response = await apiAxios.post("/forum/", {
         post_title: postTitle,
         post_detail: postDetail,
         anonymous: anonymous,
-        user_id: user.user_id
+        user_id: user.user_id,
       });
-  
-      
+
       if (response.status === 201) {
-        
         setPost([response.data, ...post]);
-  
-        
+
         msg.fire({
           title: "Successfully uploaded your new post",
           icon: "success",
@@ -69,18 +64,17 @@ export default function Forum() {
           },
           willClose: () => {
             msg.hideLoading();
-          }
+          },
         });
-  
+
         // Refresh the page after 5 seconds
         setTimeout(() => {
           window.location.reload();
         }, 3000);
       }
-  
+
       // Reset the form after successful submission
       e.target.reset();
-  
     } catch (error) {
       // Handle errors here
       console.log("Error while adding:", error);
@@ -100,11 +94,11 @@ export default function Forum() {
         },
         willClose: () => {
           msg.hideLoading();
-        }
+        },
       });
     }
   };
-  
+
   return (
     <div>
       <div className="topicForum text-center mt-4">
@@ -157,7 +151,7 @@ export default function Forum() {
           </div>
         </div>
         <div className="posts">
-          {Array.isArray(post) && post.length > 0  ? (
+          {Array.isArray(post) && post.length > 0 ? (
             post.map((posts, index) => (
               <div key={index} className="postedData   p-3 ">
                 <div className="row mb-3">
@@ -175,10 +169,10 @@ export default function Forum() {
                 <div className="viewButton">
                   <button type="button" className="btn btn-primary">
                     <Link
-                      to="/Post"
-                      style={{ color: "white", textDecoration: "none" }}
+                      to={`/Forum/${posts.id}`}
+                      className="text-decoration-none text-white"
                     >
-                      View More
+                      Read More
                     </Link>
                   </button>
                 </div>
