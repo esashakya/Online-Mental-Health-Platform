@@ -163,40 +163,53 @@ def get_preferred_blog(request,id):
 @api_view(['PUT','DELETE'])
 @parser_classes([MultiPartParser, FormParser])
 def update_doctor(request, pk):
-    print("Function  called")
+    print("Function called")
     try:
         doctor = Doctor.objects.get(pk=pk)
     except Doctor.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
+    
     if request.method == 'DELETE':
         doctor.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
     elif request.method == 'PUT':
-        print("Content type:",request.content_type)
+        print("Content type:", request.content_type)
         print("Request Data:", request.data)
         
-
-        doctor_data = request.data
+        # Create a mutable copy of the request data
+        doctor_data = request.data.copy()
+        
         if 'user_email' in doctor_data or 'user_fullname' in doctor_data or 'user_gender' in doctor_data:
-            # if any of user data is updated,it is changed otherwise it is kept same
+            # if any of user data is updated, it is changed otherwise it is kept same
             user_data = {
                 'user_email': doctor_data.get('user_email', doctor.user.user_email),
                 'user_fullname': doctor_data.get('user_fullname', doctor.user.user_fullname),
                 'user_gender': doctor_data.get('user_gender', doctor.user.user_gender)
             }
 
-            
             user = doctor.user 
             user_serializer = UserSerializer(user, data=user_data, partial=True)
             # update the data
             if user_serializer.is_valid():
                 user_serializer.save()
 
-        serializer = DoctorSerializer(doctor,data=doctor_data,partial=True)
+        if 'time_slots' in doctor_data:
+            try:
+                time_slots = json.loads(doctor_data['time_slots'])
+                # Create a new mutable dictionary with the updated time_slots
+                updated_data = doctor_data.dict()
+                updated_data['time_slots'] = time_slots
+                doctor_data = updated_data
+            except json.JSONDecodeError:
+                return Response({"error": "Invalid time_slots format"}, 
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = DoctorUpdateSerializer(doctor, data=doctor_data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
-        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 # for user
 @api_view(['GET'])

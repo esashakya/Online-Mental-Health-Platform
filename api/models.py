@@ -34,14 +34,22 @@ class Doctor(models.Model):
         (1, "Therapist"),
         (2, "Psychiatrist"),
     ]
+    status = [
+        (1,"Working"),
+        (2,"On leave")
+    ]
     doctor_photo = models.ImageField(upload_to="Doctors/", default="Doctors/default.png")
     doctor_type = models.IntegerField(choices=doctor_role, default=1)
     doctor_experience = models.IntegerField(default=1)
-    doctor_availableStartTime = models.TimeField()
-    doctor_availableEndTime = models.TimeField()
+    doctor_status = models.IntegerField(choices=status, default =1)
 
     doctor_degree = models.TextField(max_length=250)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="doctorDetails")
+
+class DoctorWorkingTime(models.Model):
+    doctor_id = models.ForeignKey("Doctor", on_delete=models.CASCADE, related_name="time_slots")
+    start_time = models.TimeField()
+    end_time = models.TimeField()
 
 class Appointment(models.Model):
     options=[
@@ -65,7 +73,7 @@ class Review(models.Model):
 
     def clean(self):
         if len(self.review_post)<10:
-            raise ValidationError("Review must be longer than 10 characters")
+            raise ValidationError("Error: Review must be longer than 10 characters.")
     def save(self,*args,**kwargs):
         self.full_clean()
         super().save(*args,**kwargs)

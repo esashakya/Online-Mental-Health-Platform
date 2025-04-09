@@ -4,6 +4,8 @@ import SearchBar from "./SearchBar";
 export default function Doctor() {
   const [doctor, setDoctor] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [expandedDoctor, setExpandedDoctor] = useState(null);
+
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
@@ -19,9 +21,27 @@ export default function Doctor() {
 
     fetchDoctors();
   }, []);
+
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
   };
+
+  const toggleTimeSlots = (doctorId) => {
+    setExpandedDoctor(expandedDoctor === doctorId ? null : doctorId);
+  };
+
+  // Format time from "HH:MM:SS" to "HH:MM AM/PM"
+  const formatTime = (timeString) => {
+    if (!timeString) return "Not Available";
+    
+    const [hours, minutes] = timeString.split(':');
+    const hour = parseInt(hours, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    
+    return `${hour12}:${minutes} ${ampm}`;
+  };
+
   const filteredDoctors = doctor.filter((doctor) => {
     const fullName = doctor?.user?.user_fullname?.toLowerCase() || "";
     const email = doctor?.user?.user_email?.toLowerCase() || "";
@@ -33,6 +53,7 @@ export default function Doctor() {
       degree.includes(searchQuery.toLowerCase())
     );
   });
+
   return (
     <div>
       <div className="doctorsList text-center mt-4">
@@ -54,7 +75,7 @@ export default function Doctor() {
                   <div className="doctor-img">
                     <img
                       src={`http://127.0.0.1:8000${doctor.doctor_photo}`}
-                      className="card-img-top"
+                      className="card-img-top h-100 w-100 object-fit-cover"
                       alt="Doctor"
                     />
                   </div>
@@ -66,14 +87,38 @@ export default function Doctor() {
                     <p className="card-text fst-italic">
                       {doctor?.user?.user_email || "No Email"}
                     </p>
-                    <p className="card-text">
-                      <span>Available  Time:</span>
-                      {doctor.doctor_availableStartTime || "Not Available"} - {doctor.doctor_availableEndTime || "Not Available"}
-                    </p>
+                    
+                    <div className="mb-2">
+                      <button
+                        className="btn btn-outline-primary btn-sm"
+                        onClick={() => toggleTimeSlots(doctor.id)}
+                      >
+                        {expandedDoctor === doctor.id ? 'Hide Time Slots' : 'View Time Slots'}
+                      </button>
+                      
+                      {expandedDoctor === doctor.id && (
+                        <div className="mt-2">
+                          {doctor.time_slots && doctor.time_slots.length > 0 ? (
+                            <div className="d-flex flex-column gap-2">
+                              {doctor.time_slots.map((slot, slotIndex) => (
+                                <button
+                                  key={slotIndex}
+                                  className="btn btn-sm btn-outline-secondary"
+                                  disabled
+                                >
+                                  {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                                </button>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-muted small">No time slots available</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
                     
                     <p className="card-text">
-                    <span>Degree:</span>
-                      {doctor.doctor_degree || "Not Degree"}
+                      <span className="fw-semibold">Degree:</span> {doctor.doctor_degree || "Not Degree"}
                     </p>
                     <button
                       type="button"
@@ -88,11 +133,11 @@ export default function Doctor() {
             ))
           ) : (
             <div className="d-flex flex-column justify-content-center align-items-center mb-3">
-                  <div className="spinner-border text-primary" role="status">
-                    <span className="visually-hidden">Loading...</span>
-                  </div>
-                  <h5>No Doctors Available</h5>
-                </div>
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+              <h5>No Doctors Available</h5>
+            </div>
           )}
         </div>
       </div>

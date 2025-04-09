@@ -5,14 +5,16 @@ import AuthContext from "../../context/AuthContext";
 export default function DoctorTable() {
   const [doctors, setDoctor] = useState([]);
   const [editId, setEditId] = useState(null);
-  const [newData, setNewData] = useState({user_email: "",
+  const [newData, setNewData] = useState({
+    user_email: "",
     user_fullname: "",
     user_gender: "",
     doctor_photo: "",
     doctor_type: "",
     doctor_degree: "",
-    doctor_availableStartTime: "",
-    doctor_availableEndTime: "",});
+    doctor_status: "",
+    time_slots: [{ start_time: "", end_time: "" }],
+  });
 
   useEffect(() => {
     const fetchDoctors = async () => {
@@ -28,42 +30,116 @@ export default function DoctorTable() {
     };
     fetchDoctors();
   }, []);
+  const handleNewTimeSlotChange = (index, field, value) => {
+    const updatedTimeSlots = [...newDoctor.time_slots];
+    updatedTimeSlots[index][field] = value;
+    setNewDoctor((prev) => ({
+      ...prev,
+      time_slots: updatedTimeSlots,
+    }));
+  };
+  const removeNewTimeSlot = (index) => {
+    setNewDoctor((prev) => ({
+      ...prev,
+      time_slots: prev.time_slots.filter((_, i) => i !== index),
+    }));
+  };
+  const addNewTimeSlot = () => {
+    setNewDoctor((prev) => ({
+      ...prev,
+      time_slots: [...prev.time_slots, { start_time: "", end_time: "" }],
+    }));
+  };
+  const [newDoctor, setNewDoctor] = useState({
+    user_email: "",
+    user_fullname: "",
+    user_gender: "1",
+    doctor_photo: null,
+    doctor_type: "1",
+    doctor_status: "1",
+    doctor_degree: "",
+    password: "",
+    retype_password: "",
+    time_slots: [{ start_time: "", end_time: "" }],
+  });
 
+  const handleNewDoctorChange = (e) => {
+    const { name, value } = e.target;
+    setNewDoctor((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
   const { registerNewDoctor } = useContext(AuthContext);
 
   const handleNewDoctor = async (e) => {
-    // Prevent page refresh
     e.preventDefault();
 
-    const user_email = e.target.doctorEmail.value;
-    const user_fullname = e.target.doctorName.value;
-    const user_gender = e.target.doctorGender.value;
-    const doctor_photo = e.target.picture.files[0];
-    const doctor_type = e.target.type.value;
-    const doctor_availableStartTime = e.target.availableStartTime.value;
-    const doctor_availableEndTime = e.target.availableEndTime.value;
-    const doctor_degree = e.target.degree.value;
-    const password = e.target.doctorPassword.value;
-    const retype_password = e.target.doctorRetypePassword.value;
-    const user_role = 3;
+    try {
+        const formData = new FormData();
 
-    const formData = new FormData();
-    formData.append("user_email", user_email);
-    formData.append("user_fullname", user_fullname);
-    formData.append("user_gender", user_gender);
-    formData.append("user_role", user_role);
-    formData.append("doctor_photo", doctor_photo);
-    formData.append("doctor_type", doctor_type);
-    formData.append("doctor_availableStartTime", doctor_availableStartTime);
+        // Add all basic fields
+        formData.append("user_email", newDoctor.user_email);
+        formData.append("user_fullname", newDoctor.user_fullname);
+        formData.append("user_gender", newDoctor.user_gender);
+        
+        if (newDoctor.doctor_photo) {
+            formData.append("doctor_photo", newDoctor.doctor_photo);
+        }
+        formData.append("doctor_type", newDoctor.doctor_type);
+        formData.append("doctor_status", newDoctor.doctor_status);
+        formData.append("doctor_degree", newDoctor.doctor_degree);
+        formData.append("password", newDoctor.password);
+        formData.append("retype_password", newDoctor.retype_password);
 
-    formData.append("doctor_availableEndTime", doctor_availableEndTime);
-    formData.append("doctor_degree", doctor_degree);
-    formData.append("password", password);
-    formData.append("retype_password", retype_password);
+        // Prepare time slots as an array of objects
+        const timeSlotsData = newDoctor.time_slots
+            .filter(slot => slot.start_time && slot.end_time)
+            .map(slot => ({
+                start_time: formatTime(slot.start_time),
+                end_time: formatTime(slot.end_time)
+            }));
 
-    // Register the doctor if the email is valid
-    user_email.length > 0 && registerNewDoctor(formData);
-  };
+        if (timeSlotsData.length === 0) {
+            alert("Please add at least one valid time slot");
+            return;
+        }
+
+        // NEW APPROACH: Append each time slot individually
+        timeSlotsData.forEach((slot, index) => {
+            formData.append(`time_slots[${index}][start_time]`, slot.start_time);
+            formData.append(`time_slots[${index}][end_time]`, slot.end_time);
+        });
+
+        // Debug: log form data
+        for (let [key, value] of formData.entries()) {
+            console.log(key, value);
+        }
+
+        await registerNewDoctor(formData);
+        
+       
+       
+        
+    } catch (error) {
+        console.error("Error submitting form:", error);
+        alert("Error submitting form. Please check console for details.");
+    }
+};
+
+// Utility function to ensure time format
+const formatTime = (time) => {
+    if (!time) return "";
+    // If already in HH:MM:SS format, return as is
+    if (time.match(/^\d{2}:\d{2}:\d{2}$/)) return time;
+    // If in HH:MM format, add seconds
+    if (time.match(/^\d{2}:\d{2}$/)) return `${time}:00`;
+    return time;
+};
+
+
+
+
 
   const handleEditBtn = (doctor) => {
     setEditId(doctor.id);
@@ -73,13 +149,17 @@ export default function DoctorTable() {
       user_gender: doctor?.user?.user_gender || "1",
       doctor_photo: doctor.doctor_photo || null,
       doctor_type: doctor.doctor_type || "",
+      doctor_status: doctor.doctor_status || "",
       doctor_degree: doctor.doctor_degree || "",
-      doctor_availableStartTime: doctor.doctor_availableStartTime || "",
-      doctor_availableEndTime: doctor.doctor_availableEndTime || "",
-
+      time_slots:
+        doctor.time_slots?.length > 0
+          ? doctor.time_slots.map((slot) => ({
+              start_time: slot.start_time || "",
+              end_time: slot.end_time || "",
+            }))
+          : [{ start_time: "", end_time: "" }],
     });
   };
-  
 
   const handleEdit = (e) => {
     const { name, value } = e.target;
@@ -89,106 +169,113 @@ export default function DoctorTable() {
     }));
   };
 
+  const handleTimeSlotChange = (index, field, value) => {
+    const updatedTimeSlots = [...newData.time_slots];
+    updatedTimeSlots[index][field] = value;
+    setNewData((prev) => ({
+      ...prev,
+      time_slots: updatedTimeSlots,
+    }));
+  };
+
+  const addTimeSlot = () => {
+    setNewData((prev) => ({
+      ...prev,
+      time_slots: [...prev.time_slots, { start_time: "", end_time: "" }],
+    }));
+  };
+
+  const removeTimeSlot = (index) => {
+    setNewData((prev) => ({
+      ...prev,
+      time_slots: prev.time_slots.filter((_, i) => i !== index),
+    }));
+  };
+
   const handleEditDoctor = async (e, doctorId) => {
     e.preventDefault();
-    
+
     const updatedData = new FormData();
-    
-    // get the data of chosen doctor
     const currentDoctor = doctors.find((doctor) => doctor.id === doctorId);
-    const currentUser = currentDoctor?.user; //since user data is also nested in doctor model
-  
-    // only change edited data
+    const currentUser = currentDoctor?.user;
+
     if (newData.user_email !== currentUser?.user_email) {
       updatedData.append("user_email", newData.user_email);
     }
-    console.log(currentUser?.user_email)
-    console.log(newData.user_email)
-    console.log(updatedData)
     if (newData.user_fullname !== currentUser?.user_fullname) {
       updatedData.append("user_fullname", newData.user_fullname);
     }
-  
     if (newData.user_gender !== currentUser?.user_gender) {
       updatedData.append("user_gender", newData.user_gender);
     }
-
     if (newData.doctor_type !== currentDoctor?.doctor_type) {
       updatedData.append("doctor_type", newData.doctor_type);
     }
-  
+    if (newData.doctor_status !== currentDoctor?.doctor_status) {
+      updatedData.append("doctor_status", newData.doctor_status);
+    }
     if (newData.doctor_degree !== currentDoctor?.doctor_degree) {
       updatedData.append("doctor_degree", newData.doctor_degree);
     }
-  
-    if (newData.doctor_availableEndTime !== currentDoctor?.doctor_availableEndTime) {
-      updatedData.append("doctor_availableEndTime", newData.doctor_availableEndTime);
-    }
-    if (newData.doctor_availableStartTime !== currentDoctor?.doctor_availableStartTime) {
-      updatedData.append("doctor_availableStartTime", newData.doctor_availableStartTime);
-    }
-  
-    if (newData.doctor_photo && newData.doctor_photo !== currentDoctor?.doctor_photo) {
+    if (
+      newData.doctor_photo &&
+      newData.doctor_photo !== currentDoctor?.doctor_photo
+    ) {
       updatedData.append("doctor_photo", newData.doctor_photo);
     }
-  
-    // updatedData only stores the data which was edited
-    if (
-      updatedData.has("user_email") ||
-      updatedData.has("user_fullname") ||
-      updatedData.has("user_gender") ||
-      updatedData.has("doctor_type") ||
-      updatedData.has("doctor_degree") ||
-      updatedData.has("doctor_availableEndTime") ||
-      updatedData.has("doctor_availableStartTime") ||
-      updatedData.has("doctor_photo")
-    ) {
-      try {
-        const response = await fetch(`http://127.0.0.1:8000/api/update/doctors/${doctorId}`, {
+
+    const timeSlotsCleaned = newData.time_slots
+      .filter((slot) => slot.start_time && slot.end_time)
+      .map((slot) => ({
+        ...slot,
+        doctor_id: doctorId,
+      }));
+
+    updatedData.append("time_slots", JSON.stringify(timeSlotsCleaned));
+    console.log("Sending time slots:", JSON.stringify(newData.time_slots));
+
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/update/doctors/${doctorId}`,
+        {
           method: "PUT",
           body: updatedData,
-        });
-  
-        const data = await response.json();
-        console.log("Response status:", response.status);
-        console.log("Response data:", data);
-  
-        if (!response.ok) {
-          console.error("Update fail:", data);
-          
-        } else {
-          console.log("success:", data);
-          window.location.reload();
-          
-          
         }
-      } catch (error) {
-        console.error("Error while editing:", error);
+      );
+
+      const data = await response.json();
+      console.log("Response status:", response.status);
+      console.log("Response data:", data);
+
+      if (!response.ok) {
+        console.error("Update fail:", data);
+      } else {
+        console.log("success:", data);
+        window.location.reload();
       }
-    } else {
-      console.log("No changes made");
+    } catch (error) {
+      console.error("Error while editing:", error);
     }
   };
-  // delete
+
   const handleDeleteBtn = async (pk) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/update/doctors/${pk}`, {
-        method: "DELETE",
-      });
-  
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/update/doctors/${pk}`,
+        {
+          method: "DELETE",
+        }
+      );
+
       if (!response.ok) {
         throw new Error(`Error while deleting: ${response.status}`);
       }
       window.location.reload();
-      
       setDoctor((prev) => prev.filter((doctor) => doctor.id !== pk));
-      
     } catch (error) {
       console.error("Error:", error);
     }
   };
-  
-  
 
   return (
     <div>
@@ -217,10 +304,9 @@ export default function DoctorTable() {
                   <th scope="col">Gender</th>
                   <th scope="col">Photo</th>
                   <th scope="col">Type</th>
+                  <th scope="col">Status</th>
                   <th scope="col">Degree</th>
-                  <th scope="col">Start time</th>
-                  <th scope="col">End time</th>
-
+                  <th scope="col">Time Slots</th>
                   <th colSpan="2">Make Changes</th>
                 </tr>
               </thead>
@@ -229,12 +315,38 @@ export default function DoctorTable() {
                   <tr key={doctor.id}>
                     <td>{doctor?.user?.user_email}</td>
                     <td>{doctor?.user?.user_fullname}</td>
-                    <td>{doctor?.user?.user_gender}</td>
-                    <td>{doctor.doctor_photo}</td>
-                    <td>{doctor.doctor_type}</td>
+                    <td>
+                      {doctor?.user?.user_gender === "1"
+                        ? "Male"
+                        : doctor?.user?.user_gender === "2"
+                        ? "Female"
+                        : "Others"}
+                    </td>
+                    <td>
+                      <img
+                        src={`http://127.0.0.1:8000${doctor.doctor_photo}`}
+                        alt="Doctor"
+                        style={{
+                          width: "50px",
+                          height: "50px",
+                          objectFit: "cover",
+                        }}
+                      />
+                    </td>
+                    <td>
+                      {doctor.doctor_type === 1 ? "Therapist" : "Psychiatrist"}
+                    </td>
+                    <td>
+                      {doctor.doctor_status === 1 ? "Working" : "On leave"}
+                    </td>
                     <td>{doctor.doctor_degree}</td>
-                    <td>{doctor.doctor_availableStartTime}</td>
-                    <td>{doctor.doctor_availableEndTime}</td>
+                    <td>
+                      {doctor.time_slots?.map((slot, index) => (
+                        <div key={index}>
+                          {slot.start_time} - {slot.end_time}
+                        </div>
+                      ))}
+                    </td>
                     <td className="text-center">
                       <div className="d-flex flex-column justify-content-between">
                         <button
@@ -245,8 +357,12 @@ export default function DoctorTable() {
                         >
                           Edit
                         </button>
-
-                        <button className="btn btn-danger w-100" onClick={() => handleDeleteBtn(doctor.id)}>Delete</button>
+                        <button
+                          className="btn btn-danger w-100"
+                          onClick={() => handleDeleteBtn(doctor.id)}
+                        >
+                          Delete
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -255,6 +371,8 @@ export default function DoctorTable() {
             </table>
           </div>
         </div>
+
+        {/* Edit Doctor Modal */}
         <div
           className="modal fade"
           id="editDoctorModal"
@@ -311,13 +429,27 @@ export default function DoctorTable() {
                   </div>
                   <div className="mb-3">
                     <label className="form-label">Doctor Type</label>
-                    <input
-                      type="text"
+                    <select
                       name="doctor_type"
                       className="form-control"
                       value={newData.doctor_type}
                       onChange={handleEdit}
-                    />
+                    >
+                      <option value="1">Therapist</option>
+                      <option value="2">Psychiatrist</option>
+                    </select>
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Doctor Status</label>
+                    <select
+                      name="doctor_status"
+                      className="form-control"
+                      value={newData.doctor_status}
+                      onChange={handleEdit}
+                    >
+                      <option value="1">Working</option>
+                      <option value="2">On leave</option>
+                    </select>
                   </div>
                   <div className="mb-3">
                     <label className="form-label">Degree</label>
@@ -329,26 +461,53 @@ export default function DoctorTable() {
                       onChange={handleEdit}
                     />
                   </div>
+
                   <div className="mb-3">
-                    <label className="form-label">Available Start Time</label>
-                    <input
-                      type="time"
-                      name="doctor_availableStartTime"
-                      className="form-control"
-                      value={newData.doctor_availableStartTime}
-                      onChange={handleEdit}
-                    />
+                    <label className="form-label">Time Slots</label>
+                    {newData.time_slots.map((slot, index) => (
+                      <div key={index} className="d-flex mb-2">
+                        <input
+                          type="time"
+                          className="form-control me-2"
+                          value={slot.start_time}
+                          onChange={(e) =>
+                            handleTimeSlotChange(
+                              index,
+                              "start_time",
+                              e.target.value
+                            )
+                          }
+                        />
+                        <input
+                          type="time"
+                          className="form-control me-2"
+                          value={slot.end_time}
+                          onChange={(e) =>
+                            handleTimeSlotChange(
+                              index,
+                              "end_time",
+                              e.target.value
+                            )
+                          }
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-danger"
+                          onClick={() => removeTimeSlot(index)}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={addTimeSlot}
+                    >
+                      Add Time Slot
+                    </button>
                   </div>
-                  <div className="mb-3">
-                    <label className="form-label">Available End Time</label>
-                    <input
-                      type="time"
-                      name="doctor_availableEndTime"
-                      className="form-control"
-                      value={newData.doctor_availableEndTime}
-                      onChange={handleEdit}
-                    />
-                  </div>
+
                   <div className="mb-3">
                     <label className="form-label">Doctor Photo</label>
                     <input
@@ -381,6 +540,7 @@ export default function DoctorTable() {
           </div>
         </div>
 
+        {/* Add New Doctor Modal */}
         <div
           className="modal fade"
           id="staticBackdrop"
@@ -396,14 +556,10 @@ export default function DoctorTable() {
               style={{ backgroundColor: "#e3f2fd" }}
             >
               <div
-                className="modal-header "
+                className="modal-header"
                 style={{ backgroundColor: "#bbdefb" }}
               >
-                <h1
-                  className="modal-title fs-5"
-                  id="exampleModalLabel"
-                  style={{ color: "#0d47a1" }}
-                >
+                <h1 className="modal-title fs-5" style={{ color: "#0d47a1" }}>
                   Fill the contents below
                 </h1>
                 <button
@@ -416,114 +572,162 @@ export default function DoctorTable() {
               <div className="modal-body">
                 <form onSubmit={handleNewDoctor}>
                   <div className="mb-3">
-                    <label htmlFor="title" className="form-label">
-                      Enter Doctor's Email
-                    </label>
+                    <label className="form-label">Email</label>
+                    <input
+                      type="email"
+                      name="user_email"
+                      className="form-control"
+                      value={newDoctor.user_email}
+                      onChange={handleNewDoctorChange}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Full Name</label>
                     <input
                       type="text"
+                      name="user_fullname"
                       className="form-control"
-                      name="doctorEmail"
-                      aria-required="true"
+                      value={newDoctor.user_fullname}
+                      onChange={handleNewDoctorChange}
+                      required
                     />
                   </div>
                   <div className="mb-3">
-                    <label htmlFor="title" className="form-label">
-                      Enter Doctor's Full Name
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="doctorName"
-                      aria-required="true"
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label htmlFor="title" className="form-label">
-                      Enter Doctor's password
-                    </label>
+                    <label className="form-label">Password</label>
                     <input
                       type="password"
+                      name="password"
                       className="form-control"
-                      name="doctorPassword"
-                      aria-required="true"
+                      value={newDoctor.password}
+                      onChange={handleNewDoctorChange}
+                      required
                     />
                   </div>
                   <div className="mb-3">
-                    <label htmlFor="title" className="form-label">
-                      Retype Doctor's password
-                    </label>
+                    <label className="form-label">Retype Password</label>
                     <input
                       type="password"
+                      name="retype_password"
                       className="form-control"
-                      name="doctorRetypePassword"
-                      aria-required="true"
+                      value={newDoctor.retype_password}
+                      onChange={handleNewDoctorChange}
+                      required
                     />
                   </div>
                   <div className="mb-3">
-                    <label htmlFor="title" className="form-label">
-                      Enter Doctor's Gender
-                    </label>
-                    <select className="form-control" name="doctorGender">
-                      <option disabled>Choose the doctor gender</option>
+                    <label className="form-label">Gender</label>
+                    <select
+                      name="user_gender"
+                      className="form-control"
+                      value={newDoctor.user_gender}
+                      onChange={handleNewDoctorChange}
+                    >
                       <option value="1">Male</option>
                       <option value="2">Female</option>
                       <option value="3">Others</option>
                     </select>
                   </div>
                   <div className="mb-3">
-                    <label htmlFor="title" className="form-label">
-                      Enter Picture
-                    </label>
+                    <label className="form-label">Doctor Photo</label>
                     <input
                       type="file"
+                      name="doctor_photo"
                       className="form-control"
-                      name="picture"
-                      aria-required="true"
+                      onChange={(e) =>
+                        setNewDoctor((prev) => ({
+                          ...prev,
+                          doctor_photo: e.target.files[0],
+                        }))
+                      }
                     />
                   </div>
                   <div className="mb-3">
-                    <label htmlFor="title" className="form-label">
-                      Enter Doctor's Type
-                    </label>
-                    <select className="form-control" name="type">
-                      <option disabled>Choose the type of doctor</option>
+                    <label className="form-label">Doctor Type</label>
+                    <select
+                      name="doctor_type"
+                      className="form-control"
+                      value={newDoctor.doctor_type}
+                      onChange={handleNewDoctorChange}
+                    >
                       <option value="1">Therapist</option>
-                      <option value="2">Psychatrist</option>
+                      <option value="2">Psychiatrist</option>
                     </select>
                   </div>
                   <div className="mb-3">
-                    <label htmlFor="title" className="form-label">
-                      Enter Doctor's Highest Degree
-                    </label>
+                    <label className="form-label">Doctor Status</label>
+                    <select
+                      name="doctor_status"
+                      className="form-control"
+                      value={newDoctor.doctor_status}
+                      onChange={handleNewDoctorChange}
+                    >
+                      <option value="1">Working</option>
+                      <option value="2">On leave</option>
+                    </select>
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Degree</label>
                     <input
                       type="text"
+                      name="doctor_degree"
                       className="form-control"
-                      name="degree"
-                      aria-required="true"
+                      value={newDoctor.doctor_degree}
+                      onChange={handleNewDoctorChange}
+                      required
                     />
                   </div>
+
                   <div className="mb-3">
-                    <label htmlFor="title" className="form-label">
-                      Available Start Time
-                    </label>
-                    <input
-                      type="time"
-                      className="form-control"
-                      name="availableStartTime"
-                      aria-required="true"
-                    />
+                    <label className="form-label">Time Slots</label>
+                    {newDoctor.time_slots.map((slot, index) => (
+                      <div key={index} className="d-flex mb-2">
+                        <input
+                          type="time"
+                          className="form-control me-2"
+                          value={slot.start_time}
+                          onChange={(e) =>
+                            handleNewTimeSlotChange(
+                              index,
+                              "start_time",
+                              e.target.value
+                            )
+                          }
+                          required
+                        />
+                        <input
+                          type="time"
+                          className="form-control me-2"
+                          value={slot.end_time}
+                          onChange={(e) =>
+                            handleNewTimeSlotChange(
+                              index,
+                              "end_time",
+                              e.target.value
+                            )
+                          }
+                          required
+                        />
+                        {newDoctor.time_slots.length > 1 && (
+                          <button
+                            type="button"
+                            className="btn btn-danger"
+                            onClick={() => removeNewTimeSlot(index)}
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={addNewTimeSlot}
+                    >
+                      Add Time Slot
+                    </button>
                   </div>
-                  <div className="mb-3">
-                    <label htmlFor="title" className="form-label">
-                      Available End Time
-                    </label>
-                    <input
-                      type="time"
-                      className="form-control"
-                      name="availableEndTime"
-                      aria-required="true"
-                    />
-                  </div>
+
                   <div className="modal-footer">
                     <button
                       type="button"
@@ -533,7 +737,7 @@ export default function DoctorTable() {
                       Close
                     </button>
                     <button type="submit" className="btn btn-primary">
-                      Post
+                      Add Doctor
                     </button>
                   </div>
                 </form>

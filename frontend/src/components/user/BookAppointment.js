@@ -7,6 +7,8 @@ const msg = require("sweetalert2");
 const AppointmentForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { slotId, startTime, endTime } = location.state || {};
+
   const [paymentStatus, setPaymentStatus] = useState(null);
   const { user } = useContext(AuthContext);
   const [loading, setLoading] = useState(false);
@@ -82,7 +84,6 @@ const AppointmentForm = () => {
 
       if (response.ok && responseData.status === "success") {
         window.location.href = responseData.payment_url;
-        
       } else {
         msg.fire({
           title: "Payment Unsuccessful",
@@ -114,9 +115,9 @@ const AppointmentForm = () => {
     }
     const appointmentData = {
       user_id: user?.user_id,
-      doctor_id: parseInt(id, 10), // Get doctor ID
-
-      date_time: formData.date, // Combine date & time
+      doctor_id: parseInt(id, 10),
+      slot_id: slotId,
+      date_time: formData.date,
     };
 
     console.log(appointmentData);
@@ -175,12 +176,14 @@ const AppointmentForm = () => {
     }
   };
 
-  if (!doctor ) {
-    return <div className="d-flex justify-content-center mb-3">
-    <div className="spinner-border text-primary" role="status">
-      <span className="visually-hidden">Loading...</span>
-    </div>
-  </div>;
+  if (!doctor) {
+    return (
+      <div className="d-flex justify-content-center mb-3">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -249,6 +252,24 @@ const AppointmentForm = () => {
             required
           />
         </div>
+        <div className="mb-3">
+          <label htmlFor="time" className="form-label">
+            Selected Time Slot
+          </label>
+          {startTime && endTime ? (
+            <input
+              type="text"
+              className="form-control"
+              value={`${startTime} - ${endTime}`}
+              disabled
+            />
+          ) : (
+            <p className="text-danger">
+              No time slot selected. Please go back and select a slot.
+            </p>
+          )}
+        </div>
+
         <div className="mb-3">
           <label htmlFor="date" className="form-label">
             Appointment Fee

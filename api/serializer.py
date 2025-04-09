@@ -27,25 +27,46 @@ class UserSerializer(serializers.ModelSerializer): #serialize to json format
         user.set_password(validated_data['password'])
         user.save()
         return user
+
+class DoctorTimeSlotSerializer(serializers.ModelSerializer):
+    doctor_id = serializers.PrimaryKeyRelatedField(queryset=Doctor.objects.all(), write_only=True)
+
+    class Meta:
+        model = DoctorWorkingTime
+        fields = ["id", "doctor_id", "start_time", "end_time"]
+
 class DoctorSerializer(serializers.ModelSerializer):
-    user = UserSerializer()  
+    user = UserSerializer()
     doctor_photo = serializers.ImageField(required=False)
+    time_slots = DoctorTimeSlotSerializer(many=True, read_only=True)
+
     class Meta:
         model = Doctor
-        fields = ['id', 'user', 'doctor_photo', 'doctor_type','doctor_availableStartTime', 'doctor_availableEndTime','doctor_degree']
+        fields = ['id', 'user', 'doctor_photo', 'doctor_type', 'doctor_status', 'doctor_degree', 'time_slots']
+
+    def create(self, validated_data):
+        time_slots_data = validated_data.pop('time_slots', [])
+        doctor = Doctor.objects.create(**validated_data)
+
+        for slot_data in time_slots_data:
+            DoctorWorkingTime.objects.create(doctor=doctor, **slot_data)
+
+        return doctor
+      
 class DoctorUpdateSerializer(serializers.ModelSerializer):
     user_email = serializers.EmailField(required=False)
     user_fullname = serializers.CharField(required=False)
     user_gender = serializers.ChoiceField(choices=User.gender_options, required=False)
     doctor_photo = serializers.ImageField(required=False)  # Optional for updates
+    time_slots = DoctorTimeSlotSerializer(many=True, required=False)
 
     class Meta:
         model = Doctor
-        fields = ["user_email", "user_fullname", "user_gender", "doctor_photo", "doctor_type", 'doctor_availableStartTime', 'doctor_availableEndTime', "doctor_degree"]
+        fields = ["user_email", "user_fullname", "user_gender", "doctor_photo", "doctor_type","doctor_status", "time_slots" ,"doctor_degree"]
 
     def update(self, instance, validated_data):
         user_data = {}
-
+        time_slots_data = validated_data.pop('time_slots', None)
         # Handle user-related fields separately
         if "user_email" in validated_data:
             existing_user = User.objects.filter(user_email=validated_data["user_email"]).exclude(id=instance.user.id)
@@ -65,7 +86,20 @@ class DoctorUpdateSerializer(serializers.ModelSerializer):
         instance.user.save()
 
         # Update Doctor model
-        return super().update(instance, validated_data)
+        instance = super().update(instance, validated_data)
+        if time_slots_data is not None:
+           
+            instance.time_slots.all().delete()
+            
+            
+            for slot_data in time_slots_data:
+                DoctorWorkingTime.objects.create(
+                    doctor_id=instance,  
+                    start_time=slot_data['start_time'],
+                    end_time=slot_data['end_time']
+                )
+
+        return instance
 
 class TokenSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -115,24 +149,32 @@ class SignUpSerializer(serializers.ModelSerializer):
     
 User = get_user_model() 
 
+
+
 class SignUpDoctorSerializer(serializers.ModelSerializer):
     user_email = serializers.EmailField(write_only=True)
     user_fullname = serializers.CharField(write_only=True)
     user_gender = serializers.ChoiceField(choices=User.gender_options, write_only=True)
-    user_role = serializers.IntegerField(default=3, write_only=True) 
+    user_role = serializers.IntegerField(default=3, write_only=True)
     password = serializers.CharField(
-        write_only= True, 
+        write_only=True,
         required=True,
         validators=[validate_password]
     )
-    retype_password = serializers.CharField(write_only= True, 
-        required=True)
+    retype_password = serializers.CharField(write_only=True, required=True)
+    time_slots = serializers.ListField(
+        child=serializers.DictField(),
+        write_only=True,
+        required=True
+    )
 
     class Meta:
         model = Doctor
         fields = [
-            "user_email", "user_fullname", "user_gender", "user_role", "password","retype_password","doctor_photo", "doctor_type", 'doctor_availableStartTime', 'doctor_availableEndTime',"doctor_degree" 
+            "user_email", "user_fullname", "user_gender", "user_role", "password", "retype_password",
+            "doctor_photo", "doctor_type", "doctor_status", "doctor_degree", "time_slots"
         ]
+
     def validate(self, attrs):
         password = attrs.get('password')
         retype_password = attrs.get('retype_password')
@@ -140,28 +182,73 @@ class SignUpDoctorSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"password": "Password fields are not the same"}
             )
+        
+       
+        time_slots = []
+        i = 0
+        while True:
+            start_key = f'time_slots[{i}][start_time]'
+            end_key = f'time_slots[{i}][end_time]'
+            
+            if start_key not in self.initial_data:
+                break
+                
+            time_slots.append({
+                'start_time': self.initial_data[start_key],
+                'end_time': self.initial_data[end_key]
+            })
+            i += 1
+        
+        if time_slots:
+            attrs['time_slots'] = time_slots
+        
+        if not time_slots:
+            raise serializers.ValidationError(
+                {"time_slots": "At least one time slot is required"}
+            )
+            
+        # Validate each time slot
+        for slot in time_slots:
+            if not isinstance(slot, dict):
+                raise serializers.ValidationError(
+                    {"time_slots": "Each time slot must be a dictionary"}
+                )
+            if 'start_time' not in slot or 'end_time' not in slot:
+                raise serializers.ValidationError(
+                    {"time_slots": "Each time slot must have start_time and end_time"}
+                )
+                
         return attrs
+
     def create(self, validated_data):
-        #since the following columns are not present in doctor it is deleted but stored in variable for storing in user table
         user_data = {
             "user_email": validated_data.pop("user_email"),
             "user_fullname": validated_data.pop("user_fullname"),
             "user_gender": validated_data.pop("user_gender"),
-            "user_role": 3,  
+            "user_role": 3,
         }
-        validated_data.pop("retype_password")
         password = validated_data.pop("password")
-        validated_data.pop("user_role")
-
-        # Creating the user before creating the doctor
+        validated_data.pop("retype_password")
+        
+        # Create user
         user = User.objects.create(**user_data)
-        user.set_password(password)  
+        user.set_password(password)
         user.save()
-
-        # Creating the doctor fields
+        validated_data.pop("user_role", None) 
+        print("Validated Data (Doctor) after removing user_role:", validated_data)
+        time_slots_data = validated_data.pop('time_slots', [])
         doctor = Doctor.objects.create(user=user, **validated_data)
 
+        # Create time slots
+        for slot_data in time_slots_data:
+            DoctorWorkingTime.objects.create(
+                doctor_id=doctor,
+                start_time=slot_data['start_time'],
+                end_time=slot_data['end_time']
+            )
+
         return doctor
+
 class ForumSerializer(serializers.ModelSerializer):
     class Meta:
         model = Forum
