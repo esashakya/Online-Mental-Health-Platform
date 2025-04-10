@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import Typewriter from "typewriter-effect";
 import AuthContext from "../../context/AuthContext";
 import useAxios from "../../utils/useAxios";
-
+import { useNavigate, useLocation } from "react-router-dom";
+import Swal from "sweetalert2";
 const msg = require("sweetalert2");
 
 export default function Forum() {
@@ -30,7 +31,7 @@ export default function Forum() {
     const formData = new FormData(e.target);
     const postTitle = e.target.postTitle.value;
     const postDetail = e.target.postDetail.value;
-    const anonymous = e.target.elements.anonymous.value === "1";
+    const anonymous = e.target.elements.anonymous.value;
 
     if (!postTitle || !postDetail) {
       console.log("Missing fields");
@@ -98,7 +99,18 @@ export default function Forum() {
       });
     }
   };
-
+  const navigate = useNavigate()
+      if (!user) {
+        Swal.fire({
+          title: "You need to be logged in",
+          text: "Please log in to view forum posts.",
+          icon: "warning",
+          confirmButtonText: "Go to Login",
+        }).then(() => {
+          navigate("/login"); 
+        });
+      }
+   
   return (
     <div>
       <div className="topicForum text-center mt-4">

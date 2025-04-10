@@ -32,7 +32,8 @@ const ForumPost = () => {
       const response = await apiAxios.post("/comments/", {
         forum: parseInt(id),
         content: newComment,
-        anonymous: commentAnonymous
+        anonymous: commentAnonymous,
+        comment_category: "Forum"
       });
 
       setComments([...comments, response.data]);
@@ -70,7 +71,7 @@ const ForumPost = () => {
 
     fetchData();
   }, [id]);
-
+  console.log(post);
   if (!post || loading) return (
     <div className="d-flex flex-column justify-content-center align-items-center mb-3">
       <div className="spinner-border text-primary" role="status">

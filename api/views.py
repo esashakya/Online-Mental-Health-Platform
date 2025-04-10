@@ -3,13 +3,15 @@ import json
 import secrets
 import string
 from datetime import date, timedelta
-
+from django.utils import timezone
+import pytz
 import requests
 from rest_framework.pagination import PageNumberPagination
 from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime
 from django.utils.timezone import localtime
-from django.utils.dateparse import parse_date
+from django.utils.dateparse import parse_datetime
+
 from rest_framework import viewsets, permissions
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from api.models import *
@@ -81,15 +83,50 @@ class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated]
+    def get_queryset(self):
+        
+        forum_id = self.request.query_params.get('forum', None)
+        blog_id = self.request.query_params.get('blog', None)
 
+        
+        
+        if blog_id is not None:
+            return Comment.objects.filter(blog_id=blog_id, comment_category='Blog')
+
+        if forum_id is not None:
+            return Comment.objects.filter(forum_id=forum_id, comment_category='Forum')
+
+
+        return Comment.objects.none()
     def perform_create(self, serializer):
-       
+        blog_id = self.request.data.get('blog')
         forum_id = self.request.data.get('forum')
-        try:
-            forum = Forum.objects.get(pk=forum_id)
-            serializer.save(user=self.request.user, forum=forum)
-        except Forum.DoesNotExist:
-            raise serializers.ValidationError("Forum post does not exist")
+
+        if blog_id:
+            try:
+                blog = Blog.objects.get(pk=blog_id)
+                serializer.save(
+                    user=self.request.user,
+                    blog=blog,
+                    comment_category='Blog'
+                )
+            except Blog.DoesNotExist:
+                raise serializers.ValidationError({"blog": "Blog post does not exist"})
+        elif forum_id:
+            try:
+                forum = Forum.objects.get(pk=forum_id)
+                serializer.save(
+                    user=self.request.user,
+                    forum=forum,
+                    comment_category='Forum'
+                )
+            except Forum.DoesNotExist:
+                raise serializers.ValidationError({"forum": "Forum post does not exist"})
+        else:
+            raise serializers.ValidationError({
+                "error": "Either blog or forum ID must be provided"
+            })
+
 class MusicViewSet(viewsets.ModelViewSet):
     queryset = Music.objects.all()
     permission_classes = [IsAuthenticated] 
@@ -354,12 +391,13 @@ def update_blog(request, pk):
 def book_appointment(request):
     print("Received request data:", request.data)
     # get the data front frontend(request)
-    doctor_id = request.data.get('doctor_id')
-    date_time = request.data.get('date_time')
+    doctor_id = request.data.get('therapist_id')
+    date_time = request.data.get('appointment_date')
     user_id = request.data.get('user_id')  
+    appointment_status = request.data.get('appointment_status')
     # debug
-    if not doctor_id or not date_time or not user_id:
-        return JsonResponse({"error": "Missing doctor_id, date_time, or user_id"}, status=400)
+    if not doctor_id or not date_time or not user_id or not appointment_status:
+        return JsonResponse({"error": "Missing doctor_id, date_time, or user_id or appointment_status"}, status=400)
 
     
     try:
@@ -369,7 +407,20 @@ def book_appointment(request):
 
     # convering into django date time object
     try:
-        date_time = parse_date(date_time)
+       
+        date_time = parse_datetime(date_time)
+        if date_time is None:
+            return JsonResponse({"error": "Invalid datetime format"}, status=400)
+
+        
+        if timezone.is_naive(date_time):
+            date_time = timezone.make_aware(date_time, timezone.utc)
+
+       
+        local_tz = pytz.timezone("Asia/Kathmandu") 
+        local_time = date_time.astimezone(local_tz)
+
+
     except ValueError:
         return JsonResponse({"error": "Invalid date format"}, status=400)
 
@@ -384,10 +435,10 @@ def book_appointment(request):
         user_id=user,  
         therapist_id=doctor, 
         appointment_date=date_time,
-        appointment_status=2  #pending
+       
     )
     # sending gmail to doctor to inform about new appointment
-    subject = f"New Appointment Request: {user.user_fullname} - {date_time.strftime('%B %d, %Y at %I:%M %p')}"
+    subject = f"New Appointment Request: {user.user_fullname} - {local_time.strftime('%B %d, %Y at %I:%M %p')}"
     message = f"""
     Dear Dr. {doctor.user.user_fullname},
 
@@ -396,7 +447,7 @@ def book_appointment(request):
     We would like to inform you that a new appointment request has been made by one of your patients. Here are the details:
 
     - Patient Name: {user.user_fullname}
-    - Appointment Date & Time: {date_time.strftime('%B %d, %Y at %I:%M %p')}
+    - Appointment Date & Time: {local_time.strftime('%B %d, %Y at %I:%M %p')}
     - Patient Email: {user.user_email}
     - Appointment Status: Pending
 
@@ -407,6 +458,7 @@ def book_appointment(request):
     Best regards,
     UntangleChaos Team
     """
+
 
     # send the mail
     send_mail(
@@ -428,19 +480,19 @@ def approve_appointment(request):
         appointment = Appointment.objects.get(id=appointment_id)
 
         
-        if appointment.doctor.user != request.user:
+        if appointment.therapist_id.user != request.user:
             return Response({'error': 'Unauthorized'}, status=403)
 
         
-        appointment.status = 'confirmed' if approved else 'rejected'
+        appointment.status = 4 if approved else 3
         appointment.save()
 
       
         send_mail(
             'Appointment Update',
-            f'Your appointment has been {"approved" if approved else "rejected"} by Dr. {appointment.doctor.user.user_name}.',
+            f'Your appointment has been {"approved" if approved else "rejected"} by Dr. {appointment.therapist_id.user.user_fullname}.',
             'admin@yourclinic.com',
-            [appointment.user.user_email]
+            [appointment.user_id.user_email]
         )
 
         return Response({'message': f'Appointment {"approved" if approved else "rejected"}'})
@@ -468,12 +520,14 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(appointments, many=True)
         return Response(serializer.data)
     def update(self, request, *args, **kwargs):
+        print("Received data:", request.data)
+
         instance = self.get_object()
         previous_date = instance.appointment_date
         previous_status = instance.appointment_status  # Get the previous status
         response = super().update(request, *args, **kwargs)
         updated_instance = self.get_object()
-        
+       
         # if status is approved send confirmation mail
         if previous_status != updated_instance.appointment_status and updated_instance.appointment_status == 4:
             print("Sending emails")
@@ -481,6 +535,9 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         elif previous_date != updated_instance.appointment_date:
             print("Sending emails after updating the time")
             self.send_updated_date_email(updated_instance)
+        elif updated_instance.appointment_status == 5:
+            print ("Confirmed email")
+            self.send_confirmed_email(updated_instance)
 
         return response
     @staticmethod
@@ -497,15 +554,15 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         subject = "Your timing has been updated. "
         message = f"""
         Hello {appointment.user_id.user_fullname},
-
-        Your appointment with Dr. {appointment.therapist_id.user.user_fullname} on {formatted_date} has been updated. There were few inconvenience which led to resheduling. We are sorry for any misconvenice.
         
-        If you have any queries related to timing, please contact the following number. Please check your profile in our website to join the appointment.
-        Join Code = {code}
+        Your appointment with Dr. {appointment.therapist_id.user.user_fullname} is set to be on {formatted_date}. If you are comfortable on the selected date, please confirm your appointment with  your payment.
         
-        Please be on time.
+        
+        If you have any queries, feel free to contact us in below number.
         5571584
         Thank you.
+
+        Untangle Chaos Management Team
         """
         send_mail(subject, message, 'UntangleChaos@gmail.com', [user_email])
         doctor_message =  f"""
@@ -521,17 +578,56 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         Thank you.
         """
         send_mail(subject, doctor_message, 'UntangleChaos@gmail.com', [doctor_email])
+    def send_confirmed_email(self, appointment):
+        user_email = appointment.user_id.user_email
+        doctor_email = appointment.therapist_id.user.user_email
+        formatted_date = localtime(appointment.appointment_date).strftime('%Y-%m-%d %H:%M')
+        code = self.generate_random_code() 
+        print(code)
+        subject = "Your appointment has been confirmed! "
+        message = f"""
+        Hello {appointment.user_id.user_fullname},
+        Thank you for being patient with us.
+        Your appointment with Dr. {appointment.therapist_id.user.user_fullname} is set to be on {formatted_date}. Please visit your profile to join the appointment in selected date.
+        Join code for appoint is {code}
+        
+        
+        If you have any queries, feel free to contact us in below number.
+        5571584
+        Thank you.
 
+        Untangle Chaos Management Team
+        """
+        send_mail(subject, message, 'UntangleChaos@gmail.com', [user_email])
+        doctor_message =  f"""
+        Hello {appointment.therapist_id.user.user_fullname},
+
+        Your appointment has been confirmed on {formatted_date} for patient  {appointment.user_id.user_fullname}. 
+        
+        If you have any queries related to timing, please contact the following number. 
+        Your Join Code for appointment is {code}
+        Please check your profile in our website to join the appointment.
+        Please be on time.
+        5571584
+        Thank you.
+        """
+        send_mail(subject, doctor_message, 'UntangleChaos@gmail.com', [doctor_email])
 
     def send_approval_email(self, appointment):
         user_email = appointment.user_id.user_email
         doctor_email = appointment.therapist_id.user.user_email
-
+        formatted_date = localtime(appointment.appointment_date).strftime('%Y-%m-%d %H:%M')
+        appointment_id = appointment.id
+    
+       
+        payment_link = f"http://localhost:3000/Appointment/Payment?appointmentId={appointment_id}"
         subject = "Your Appointment Has Been Approved. Please check the updated timing"
         message = f"""
         Hello {appointment.user_id.user_fullname},
 
-        Your appointment with Dr. {appointment.therapist_id.user.user_fullname} on {appointment.appointment_date.strftime('%Y-%m-%d %H:%M')} has been approved. If you have any queries related to timing, please contact the following number.
+        Your appointment with Dr. {appointment.therapist_id.user.user_fullname} on {formatted_date} has been approved.  If you are comfortable on the selected date, please confirm your appointment with  your payment.
+        Link: {payment_link}
+        If you have any queries related to timing, please contact the following number.
 
         Please be on time.
         5571584

@@ -252,21 +252,21 @@ class SignUpDoctorSerializer(serializers.ModelSerializer):
         return doctor
 
 class CommentSerializer(serializers.ModelSerializer):
-    user_name = serializers.CharField(source='user.username', read_only=True)
+    user_fullname = serializers.CharField(source='user.user_fullname', read_only=True)
     
     class Meta:
         model = Comment
-        fields = ['id', 'content', 'created_at', 'user_name', 'anonymous']
-        read_only_fields = ['id', 'created_at', 'user_name']
+        fields = ['id', 'content', 'created_at', 'user_fullname', 'anonymous','comment_category','blog']
+        read_only_fields = ['id', 'created_at', 'user_fullname']
 
 class ForumSerializer(serializers.ModelSerializer):
     comments = CommentSerializer(many=True, read_only=True)
-    user_name = serializers.CharField(source='user.username', read_only=True)
+    user_fullname = serializers.CharField(source='user_id.user_fullname', read_only=True)
     
     class Meta:
         model = Forum
         fields = ['id', 'post_title', 'post_detail', 'post_date', 
-                 'anonymous', 'user_id', 'user_name', 'comments']
+                 'anonymous', 'user_id', 'user_fullname', 'comments']
 
 class MusicSerializer(serializers.ModelSerializer):
     class Meta:
@@ -306,22 +306,23 @@ class AppointmentSerializer(serializers.ModelSerializer):
         
         appointment_date = data.get('appointment_date')
         therapist_id = data.get('therapist_id')
-        
+        if appointment_date:
        
-        buffer_time = timedelta(minutes=15) 
-        
-        conflicting_appointments = Appointment.objects.filter(
-            therapist_id=therapist_id,
-            appointment_date__range=(
-                appointment_date - buffer_time,
-                appointment_date + buffer_time
-            ),
-            appointment_status__in=[1, 2, 4] 
-        ).exists()
-        
-        if conflicting_appointments:
-            raise ValidationError("This time slot is already booked or too close to another appointment.")
-        
+       
+            buffer_time = timedelta(minutes=15) 
+            
+            conflicting_appointments = Appointment.objects.filter(
+                therapist_id=therapist_id,
+                appointment_date__range=(
+                    appointment_date - buffer_time,
+                    appointment_date + buffer_time
+                ),
+                appointment_status__in=[1, 2, 4] 
+            ).exists()
+            
+            if conflicting_appointments:
+                raise ValidationError("This time slot is already booked or too close to another appointment.")
+            
         return data
 
 class ReviewSerializer(serializers.ModelSerializer):

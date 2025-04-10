@@ -38,7 +38,7 @@ export default function AppointmentList() {
     },
     {
       value: 5,
-      label: "Completed",
+      label: "Confirmed",
       colorClass: "bg-success-subtle text-success-emphasis",
     },
   ];
@@ -89,10 +89,10 @@ export default function AppointmentList() {
 
   const handleStatusChange = async (appointmentId, newStatus) => {
     try {
-      await apiAxios.patch(`/appointments/${appointmentId}/`, {
+      const response = await apiAxios.patch(`/appointments/${appointmentId}/`, {
         appointment_status: newStatus,
       });
-
+      console.log("Response from API:", response.data); 
       setAppointmentList((prevList) =>
         prevList.map((appointment) =>
           appointment.id === appointmentId
@@ -110,6 +110,7 @@ export default function AppointmentList() {
         });
       }
     } catch (error) {
+      console.error("Response error:", error.response?.data); 
       console.error("Error updating status:", error);
     }
   };

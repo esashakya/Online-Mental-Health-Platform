@@ -57,12 +57,14 @@ class Appointment(models.Model):
         (2,"Pending"),
         (3,"Not attended"),
         (4,"Approved"),
-        (5,"Completed")
+        (5,"Confirmed")
     ]
+    
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='userAppointments')
     therapist_id = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name='doctorAppointments')
     appointment_date = models.DateTimeField(default=timezone.now)
     appointment_status = models.IntegerField(choices=options, default=2)
+   
 
 class Review(models.Model):
     review_date = models.DateField(auto_now_add= True)
@@ -128,13 +130,23 @@ class Music(models.Model):
     mood_id = models.ForeignKey(Mood, on_delete=models.CASCADE, related_name='moodMusic') #mood foreign key
 
 class Comment(models.Model):
-    forum = models.ForeignKey(Forum, on_delete=models.CASCADE, related_name='comments')
+    comment_type =[
+        ("Forum","Forum"),
+        ("Blog","Blog"),
+        
+    ]
+    forum = models.ForeignKey(Forum, on_delete=models.CASCADE, related_name='comments', null=True, blank=True)
+    blog = models.ForeignKey(Blog, on_delete=models.CASCADE, related_name='blog_comments', null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField(max_length=1000)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     anonymous = models.BooleanField(default=False)
-
+    comment_category = models.CharField(
+        max_length=5,
+        choices=comment_type,
+        default="Forum"
+    ) 
     class Meta:
         ordering = ['created_at']  
 

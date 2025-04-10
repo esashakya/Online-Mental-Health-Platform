@@ -1,12 +1,14 @@
 import AuthContext from "../../context/AuthContext";
 import { jwtDecode } from "jwt-decode";
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import SearchBar from "./SearchBar";
 import Typewriter from "typewriter-effect";
 import React, { useState, useEffect, useContext } from "react";
+import Swal from "sweetalert2";
+const msg = require("sweetalert2");
 
 export default function Blog() {
-  const { authTokens } = useContext(AuthContext);
+  const { user, authTokens } = useContext(AuthContext);
   const [blogs, setBlog] = useState([]);
   const [doctors, setDoctor] = useState([]);
 
@@ -44,6 +46,17 @@ export default function Blog() {
     fetchBlogs();
     fetchDoctor();
   }, []);
+  const navigate = useNavigate();
+  if (!user) {
+    Swal.fire({
+      title: "You need to be logged in",
+      text: "Please log in to view blog posts.",
+      icon: "warning",
+      confirmButtonText: "Go to Login",
+    }).then(() => {
+      navigate("/login");
+    });
+  }
   return (
     <div>
       <div className="container">
@@ -73,7 +86,6 @@ export default function Blog() {
                   href="https://mail.google.com/mail/?view=cm&fs=1&to=finalyay1111@gmail.com"
                   className="btn btn-primary"
                 >
-                  {" "}
                   Hello Dr. {userName} ! Do you want to send a new blog?
                 </a>
               </button>
@@ -100,9 +112,15 @@ export default function Blog() {
                       <p>{blog.therapist_name} || Therapist</p>
 
                       <p>
-                        <span className="text-success">
-                          {doctor.doctor_degree}
-                        </span>{" "}
+                        {doctor ? (
+                          <span className="text-success">
+                            {doctor.doctor_degree}
+                          </span>
+                        ) : (
+                          <span className="text-muted">
+                            Degree not available
+                          </span>
+                        )}
                       </p>
                     </div>
                   </div>

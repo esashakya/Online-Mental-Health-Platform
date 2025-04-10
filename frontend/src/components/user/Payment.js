@@ -371,9 +371,10 @@
 // };
 
 // export default AppointmentForm;
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
+import AuthContext from "../../context/AuthContext";
 import { v4 as uuidv4 } from "uuid";
 
 const Payment = () => {
@@ -382,7 +383,21 @@ const Payment = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [paymentStatus, setPaymentStatus] = useState(null);
+  const { authTokens, user } = useContext(AuthContext);
+  const appointmentId = new URLSearchParams(location.search).get('appointmentId');
 
+  useEffect(() => {
+    if (!user) {
+      Swal.fire({
+        title: "You need to be logged in",
+        text: "Please log in to complete your payment.",
+        icon: "warning",
+        confirmButtonText: "Go to Login",
+      }).then(() => {
+        navigate("/login"); 
+      });
+    }
+  }, [user, navigate]);
   // Check payment status from URL query params
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
@@ -397,11 +412,46 @@ const Payment = () => {
         icon: "success",
         confirmButtonText: "Continue",
       });
+      updateAppointmentStatus(appointmentId, "Completed");
     } else {
       setPaymentStatus("Pending");
     }
   }, [location]);
-
+  const updateAppointmentStatus = async (appointmentId, status) => {
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/api/appointments/${appointmentId}/`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authTokens?.access}`,
+        },
+        body: JSON.stringify({
+          appointment_status: status === "Completed" ? 5 : 1, 
+        }),
+      });
+      
+      if (response.ok) {
+        Swal.fire({
+          title: "Appointment Status Updated",
+          text: `Your appointment status is now ${status}.`,
+          icon: "success",
+        });
+      } else {
+        Swal.fire({
+          title: "Error",
+          text: "Failed to update the appointment status.",
+          icon: "error",
+        });
+      }
+    } catch (error) {
+      console.error("Error updating appointment status:", error);
+      Swal.fire({
+        title: "Error",
+        text: "An error occurred while updating the status.",
+        icon: "error",
+      });
+    }
+  };
   // Generate unique purchase order ID
   useEffect(() => {
     const uniqueId = `AN-${uuidv4()}`;
@@ -465,7 +515,7 @@ const Payment = () => {
       }
     });
   };
-
+  
   return (
     <div className="container py-5">
       <div className="row justify-content-center">
