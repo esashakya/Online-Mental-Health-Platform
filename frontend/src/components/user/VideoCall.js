@@ -40,7 +40,7 @@ export default function VideoCall() {
     if (isJoined) return;
 
     try {
-      console.log("Entering the call");
+      console.log("user entering the call");
       client.on('user-published', handleUserJoined);
       client.on('user-left', handleUserLeft);
 
@@ -52,12 +52,12 @@ export default function VideoCall() {
       if (videoRef.current && localTracks.current[1]) {   //video
         localTracks.current[1].play(videoRef.current);
       } else {
-        console.log("Error found on video");
+        console.log("Error in accessing video");
         msg.fire({
-                title: "Error in loading your video!",
+                title: "Error in accessing your video",
                 icon: "error",
                 toast: true,
-                timer: 5000,
+                timer: 4000,
                 position: "top-right",
                 timerProgressBar: true,
                 showConfirmButton: false,
@@ -137,7 +137,7 @@ export default function VideoCall() {
  
   const handleUserLeft = async () => {
     try {
-      console.log("Leaving the call...");
+      
       stopStream();  // stopping the video and audio using function
 
       console.log("Leaving");
@@ -240,7 +240,7 @@ export default function VideoCall() {
               </div>
           </div>
 
-          {/* Remote Users */}
+         
           {Object.keys(remoteUsersState).map((uid) => (
             <div key={uid} className="col-md-6 col-sm-1 bg-dark align-items-center position-relative mb-5">
               <video

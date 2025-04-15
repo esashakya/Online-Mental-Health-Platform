@@ -112,8 +112,28 @@ class TokenSerializer(TokenObtainPairSerializer):
         token['user_role'] = user.user_role
 
         return token
+    def validate(self, attrs):
+        user_email = attrs.get("user_email")
+        password = attrs.get("password")
+
+        try:
+            user = User.objects.get(user_email=user_email)
+        except User.DoesNotExist:
+            raise serializers.ValidationError({
+                "user_email": "Email does not exist in our system. Please enter valid email address."
+            })
+
+        if not user.check_password(password):
+            raise serializers.ValidationError({
+                "password": "Incorrect password.Please try again."
+            })
+
+       
+        data = super().validate(attrs)
+        return data
 
 class SignUpSerializer(serializers.ModelSerializer):
+    user_email = serializers.EmailField(required=True)
     password = serializers.CharField(
         write_only= True, 
         required=True,
@@ -136,6 +156,12 @@ class SignUpSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"password": "Password fields are not the same"}
             )
+        email = attrs.get('user_email')
+        if User.objects.filter(user_email=email).exists():
+            raise serializers.ValidationError(
+                {"user_email": "This email exists in system"}
+            )
+            
         return attrs
     
     def create(self,validated_data):

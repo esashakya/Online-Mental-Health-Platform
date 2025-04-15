@@ -49,7 +49,7 @@ const AppointmentForm = () => {
 
           if (!available) {
             showWarning(
-              "This time slot is no longer available. Please choose another time."
+              "Your selected time slot is already booked for the chosen date. Please try again with another date or time."
             );
           }
         } catch (error) {
@@ -115,7 +115,7 @@ const AppointmentForm = () => {
     }
     
     if (!isAvailable) {
-      showWarning("This time slot is no longer available. Please choose another time.");
+      showWarning("Your selected time slot is already booked for the chosen date. Please try again with another date.");
       return;
     }
   
@@ -161,16 +161,16 @@ const AppointmentForm = () => {
       const result = await response.json();
   
       if (response.ok) {
-        showSuccess("Appointment booked successfully!");
+        showSuccess("Doctor Appointment booked successfully! Please wait for your confirmation email.");
         navigate("/Doctor");
       } else {
-        const errorMsg = result.detail || result.message || "Failed to book appointment";
-        console.error("Backend error:", result);
+        const errorMsg = result.detail || result.message || "Failed to book doctor appointment";
+        console.error("error:", result);
         showError(errorMsg);
       }
     } catch (error) {
-      console.error("Error handling date/time:", error);
-      showError("Invalid date/time selection. Please try again.");
+      console.error("Error in date", error);
+      showError("Invalid date");
     } finally {
       setLoading(false);
     }
@@ -305,15 +305,15 @@ const AppointmentForm = () => {
               className={`alert alert-${isAvailable ? "success" : "danger"}`}
             >
               {isAvailable
-                ? "This time slot is available for booking"
-                : "This time slot is no longer available"}
+                ? "This time slot is available for booking. Thank you for trusting on us."
+                : "We are sorry to inform you that this time slot is already booked. "}
             </div>
           </div>
         )}
 
         <div className="mb-3">
           <label className="form-label">Appointment Fee</label>
-          <input type="text" className="form-control" value="Rs.500" disabled />
+          <input type="text" className="form-control" value="Rs.5" disabled />
         </div>
 
         <button

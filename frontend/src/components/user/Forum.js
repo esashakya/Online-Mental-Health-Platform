@@ -10,7 +10,10 @@ const msg = require("sweetalert2");
 export default function Forum() {
   const apiAxios = useAxios();
   const [post, setPost] = useState([]);
+
+  
   const { authTokens, user, addNewPost } = useContext(AuthContext);
+  
   useEffect(() => {
     const fetchPosts = async () => {
       try {

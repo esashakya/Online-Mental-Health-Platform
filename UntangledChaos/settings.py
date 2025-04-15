@@ -65,7 +65,10 @@ CORS_ALLOW_HEADERS = ['Content-Type', 'Authorization']
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR,'frontend/build'],
+        'DIRS': [
+                BASE_DIR,'frontend/build',
+                BASE_DIR, 'api/templates'
+                 ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -133,6 +136,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
+    BASE_DIR / "frontend" / "build",
     BASE_DIR/"frontend"/"build"/"static",
 ]
 MEDIA_URL = '/media/'
@@ -142,7 +146,7 @@ MEDIA_ROOT = BASE_DIR /"media"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-# type of authentication
+
 REST_FRAMEWORK ={
     'DEFAULT_AUTHENTICATION_CLASSES':[
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -190,5 +194,6 @@ EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'untanglechaoswithus@gmail.com'
 EMAIL_HOST_PASSWORD = 'tesh urgb yjaf yrun'
+
 USE_TZ = True
 TIME_ZONE = 'Asia/Kathmandu'

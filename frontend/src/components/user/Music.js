@@ -41,7 +41,7 @@ export default function Music() {
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
+          throw new Error(` Status: ${response.status}`);
         }
 
         const data = await response.json();
@@ -50,11 +50,11 @@ export default function Music() {
         if (Array.isArray(data)) {
           setMusic(data);
         } else {
-          console.error("API did not return an array:", data);
+          console.error("music from backend:", data);
           setMusic([]);
         }
       } catch (error) {
-        console.error("Error fetching music:", error);
+        console.error("Error :", error);
         setMusic([]);
       }
     };
@@ -62,7 +62,7 @@ export default function Music() {
     fetchMusic();
   }, [authTokens]);
 
-  //for filtering
+  //for filtering and searching
   const filteredMusic = music.filter((item) => {
     const typeMusicMatch =
       selectedCategory === "All" || item.type_music === selectedCategory;

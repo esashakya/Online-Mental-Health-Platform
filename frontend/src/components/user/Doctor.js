@@ -1,11 +1,19 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import SearchBar from "./SearchBar";
+import { useNavigate } from "react-router-dom";
+
+import AuthContext from "../../context/AuthContext";
+
+const Swal = require("sweetalert2");
 
 export default function Doctor() {
   const [doctor, setDoctor] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedDoctor, setExpandedDoctor] = useState(null);
+  const {  user } = useContext(AuthContext);
+  const navigate = useNavigate();
 
+  
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
@@ -14,7 +22,7 @@ export default function Doctor() {
         console.log("doctors:", data);
         setDoctor(data);
       } catch (error) {
-        console.error("error due to:", error);
+        console.error("error caused due to:", error);
         setDoctor([]);
       }
     };
@@ -30,7 +38,7 @@ export default function Doctor() {
     setExpandedDoctor(expandedDoctor === doctorId ? null : doctorId);
   };
 
-  // Format time from "HH:MM:SS" to "HH:MM AM/PM"
+ 
   const formatTime = (timeString) => {
     if (!timeString) return "Not Available";
     
@@ -53,7 +61,18 @@ export default function Doctor() {
       degree.includes(searchQuery.toLowerCase())
     );
   });
-
+  useEffect(() => {
+      if (!user) {
+        Swal.fire({
+          title: "You need to be logged in",
+          text: "Please log in to view our doctors.",
+          icon: "warning",
+          confirmButtonText: "Go to Login",
+        }).then(() => {
+          navigate("/login"); 
+        });
+      }
+    }, [user, navigate]);
   return (
     <div>
       <div className="doctorsList text-center mt-4">

@@ -3,7 +3,7 @@ from django.urls import path
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from api import views
-from .views import get_doctors,update_doctor,get_users,update_user,get_blogs,AddMusicView,MusicViewSet,CommentViewSet,AddMoodView,update_music, MoodViewSet,update_blog,get_preferred_doctor,get_preferred_blog,AppointmentViewSet, book_appointment, approve_appointment,get_preferred_user
+from .views import get_doctors,update_doctor,get_users,update_user,get_blogs,AddMusicView,MusicViewSet,CommentViewSet,AddMoodView,update_music, MoodViewSet,update_blog,get_preferred_doctor,get_preferred_blog,AppointmentViewSet, book_appointment, approve_appointment,get_preferred_user, update_delete_review
 from rest_framework.routers import DefaultRouter
 
 
@@ -36,6 +36,8 @@ urlpatterns=[
     path("make/payment", views.make_payment),
     path("mood/create", views.add_mood),
     path("get/reviews/", views.get_reviews),
+    path('reviews/<int:pk>/', update_delete_review, name='update-delete-review'),
+
     path("add/reviews/", views.create_review),
     path('update/doctors/<int:pk>', update_doctor, name='update_doctor'),
     path('users/<int:pk>', update_user, name='update_user'),

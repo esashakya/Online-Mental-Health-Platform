@@ -17,7 +17,7 @@ export default function VideoCallLobby() {
       stream.getTracks().forEach((track) => {
         track.stop();  // Stop the video or audio
       });
-      console.log("Stream stopped successfully");
+      console.log("Video/audio stopped");
     }
   };
 
@@ -31,7 +31,7 @@ export default function VideoCallLobby() {
           videoRef.current.srcObject = mediaStream;
         }
       } catch (error) {
-        console.error("Error accessing media devices:", error);
+        console.error("error in mediastream:", error);
       }
     };
 

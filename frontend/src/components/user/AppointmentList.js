@@ -2,15 +2,21 @@ import React, { useContext, useEffect, useState } from "react";
 import useAxios from "../../utils/useAxios";
 import AuthContext from "../../context/AuthContext";
 import msg from "sweetalert2";
-import DatePicker from "react-datepicker"; //datepicker
+import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Link } from "react-router-dom";
 
 export default function AppointmentList() {
   const [appointmentList, setAppointmentList] = useState(null);
-  const [selectedDateAppointment, setSelectedDateAppointment] = useState(null); //for filtering the appointments according to status
+  const [selectedDateAppointment, setSelectedDateAppointment] = useState(null);
   const [filteredStatus, setFilteredStatus] = useState(null);
   const [newDateTime, setNewDateTime] = useState(new Date());
+  const [dateFilter, setDateFilter] = useState({
+    startDate: null,
+    endDate: null,
+  });
+  const [filterByDate, setFilterByDate] = useState(false);
+  
   const apiAxios = useAxios();
   const { user } = useContext(AuthContext);
   const token = localStorage.getItem("authTokens");
@@ -54,37 +60,49 @@ export default function AppointmentList() {
     };
 
     fetchAppointments();
-    const interval = setInterval(fetchAppointments, 5000); // Refresh  5 seconds
+    const interval = setInterval(fetchAppointments, 5000);
 
     return () => clearInterval(interval);
   }, []);
 
   const isTodayAppointment = () => {
-    console.log(appointmentList);
     if (!appointmentList || appointmentList.length === 0) return false;
-
-    //  YYYY-MM-DD in present
     const today = new Date().toISOString().split("T")[0];
-
-    //checking the date
     return appointmentList.some((appointment) => {
       const appointmentDate = new Date(appointment.appointment_date)
         .toISOString()
         .split("T")[0];
-
       return appointmentDate === today && appointment.appointment_status !== 5;
     });
   };
-  if (isTodayAppointment()) {
-    console.log("there is an appointment");
-  }
+
+  const handleDateFilterChange = (dates) => {
+    const [start, end] = dates;
+    setDateFilter({ startDate: start, endDate: end });
+  };
+
+  const toggleDateFilter = () => {
+    setFilterByDate(!filterByDate);
+    if (filterByDate) {
+      setDateFilter({ startDate: null, endDate: null });
+    }
+  };
 
   const filteredAppointments = appointmentList
-    ? appointmentList.filter((appointment) =>
-        filteredStatus !== null
-          ? appointment.appointment_status === filteredStatus
-          : true
-      )
+    ? appointmentList.filter((appointment) => {
+        const statusMatch = filteredStatus !== null 
+          ? appointment.appointment_status === filteredStatus 
+          : true;
+        
+        let dateMatch = true;
+        if (filterByDate && dateFilter.startDate && dateFilter.endDate) {
+          const appointmentDate = new Date(appointment.appointment_date);
+          dateMatch = appointmentDate >= dateFilter.startDate && 
+                     appointmentDate <= dateFilter.endDate;
+        }
+        
+        return statusMatch && dateMatch;
+      })
     : [];
 
   const handleStatusChange = async (appointmentId, newStatus) => {
@@ -92,7 +110,6 @@ export default function AppointmentList() {
       const response = await apiAxios.patch(`/appointments/${appointmentId}/`, {
         appointment_status: newStatus,
       });
-      console.log("Response from API:", response.data); 
       setAppointmentList((prevList) =>
         prevList.map((appointment) =>
           appointment.id === appointmentId
@@ -110,10 +127,10 @@ export default function AppointmentList() {
         });
       }
     } catch (error) {
-      console.error("Response error:", error.response?.data); 
       console.error("Error updating status:", error);
     }
   };
+
   const formatAppointmentDateTime = (dateString) => {
     const options = {
       year: 'numeric',
@@ -124,8 +141,18 @@ export default function AppointmentList() {
       hour12: true
     };
     
-    return new Date(dateString).toLocaleString('en-US', options);
+    const date = new Date(dateString);
+    let formattedDate = date.toLocaleString('en-US', options);
+    
+    if (filterByDate && dateFilter.startDate && dateFilter.endDate) {
+      if (date >= dateFilter.startDate && date <= dateFilter.endDate) {
+        formattedDate = <span className="fw-bold text-primary">{formattedDate}</span>;
+      }
+    }
+    
+    return formattedDate;
   };
+
   const handleReschedule = async () => {
     if (!selectedDateAppointment) return;
 
@@ -156,29 +183,37 @@ export default function AppointmentList() {
   };
 
   return (
-    <div
-      className="container rounded p-5"
-      style={{ backgroundColor: "#677bab" }}
-    >
+    <div className="container rounded p-5" style={{ backgroundColor: "#677bab" }}>
       <h3 className="text-center text-white">Current Appointments</h3>
-      <div className="d-flex justify-content-center mb-3">
-        {statusOptions.map((option) => (
+      
+      <div className="d-flex justify-content-between mb-3">
+        <div className="d-flex">
+          {statusOptions.map((option) => (
+            <button
+              key={option.value}
+              className={`btn mx-1 ${option.colorClass} ${
+                filteredStatus === option.value
+                  ? "fw-bold border border-dark"
+                  : ""
+              }`}
+              onClick={() => setFilteredStatus(option.value)}
+            >
+              {option.label}
+            </button>
+          ))}
+          
           <button
-            key={option.value}
-            className={`btn mx-1 ${option.colorClass} ${
-              filteredStatus === option.value
-                ? "fw-bold border border-dark"
-                : ""
-            }`}
-            onClick={() => setFilteredStatus(option.value)}
+            className={`btn mx-1 ${filterByDate ? "btn-primary" : "btn-secondary"}`}
+            onClick={toggleDateFilter}
           >
-            {option.label}
+            {filterByDate ? "Clear Date Filter" : "Filter by Date"}
           </button>
-        ))}
+        </div>
+
         {isTodayAppointment() && (
           <button
             type="button"
-            class="btn bg-primary-subtle text-primary-emphasis position-relative ms-auto mt-2 float-end"
+            className="btn bg-primary-subtle text-primary-emphasis position-relative mt-2"
           >
             <Link className="text-decoration-none" to="/Appointment/CallLobby">
               Join Appointment
@@ -189,6 +224,34 @@ export default function AppointmentList() {
           </button>
         )}
       </div>
+
+      {(filteredStatus !== null || filterByDate) && (
+        <button
+          className="btn btn-sm btn-outline-danger mb-3"
+          onClick={() => {
+            setFilteredStatus(null);
+            setFilterByDate(false);
+            setDateFilter({ startDate: null, endDate: null });
+          }}
+        >
+          Clear All Filters
+        </button>
+      )}
+
+      {filterByDate && (
+        <div className="mb-3">
+          <label className="form-label">Select Date Range:</label>
+          <DatePicker
+            selectsRange
+            startDate={dateFilter.startDate}
+            endDate={dateFilter.endDate}
+            onChange={handleDateFilterChange}
+            isClearable={true}
+            className="form-control"
+            placeholderText="Select a date range"
+          />
+        </div>
+      )}
 
       <div style={{ maxHeight: "400px", overflowY: "auto" }}>
         <table className="table table-striped table-hover">
@@ -255,13 +318,14 @@ export default function AppointmentList() {
             ) : (
               <tr>
                 <td colSpan="6" className="text-center">
-                  No appointments
+                  No appointments match your filters
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
+
       {selectedDateAppointment && (
         <div className="modal show d-block" tabIndex="-1">
           <div className="modal-dialog">

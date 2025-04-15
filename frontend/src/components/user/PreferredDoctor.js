@@ -2,12 +2,14 @@ import { useParams } from "react-router-dom";
 import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../../context/AuthContext";
+const Swal = require("sweetalert2");
 
 export default function PreferredDoctor() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [doctor, setDoctor] = useState(null);
   const { authTokens, user } = useContext(AuthContext);
+  const [editingReview, setEditingReview] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [newReview, setNewReview] = useState("");
   const [error, setError] = useState("");
@@ -22,7 +24,7 @@ export default function PreferredDoctor() {
         const data = await response.json();
         setDoctor(data);
       } catch (error) {
-        console.error("Error fetching doctor details:", error);
+        console.error("error in :", error);
       }
     };
 
@@ -35,16 +37,30 @@ export default function PreferredDoctor() {
         const response = await fetch("http://127.0.0.1:8000/api/get/reviews/");
         const reviewsData = await response.json();
 
+ 
+        if (!user) {
+          console.log("User not loaded yet, will try again");
+          return;
+        }
+
         const reviewsWithUserNames = await Promise.all(
           reviewsData.results.map(async (review) => {
             const userResponse = await fetch(
               `http://127.0.0.1:8000/api/get/user/${review.user_id}`
             );
             const userData = await userResponse.json();
+            
+            
+            const userId = parseInt(review.user_id);
+            const currentUserId = parseInt(user.user_id);
+            const canEdit = userId === currentUserId;
+            
+            console.log(`Review ${review.id} - User: ${userId}, Current: ${currentUserId}, CanEdit: ${canEdit}`);
 
             return {
               ...review,
               user_fullname: userData.user_fullname,
+              canEdit: canEdit
             };
           })
         );
@@ -55,13 +71,17 @@ export default function PreferredDoctor() {
 
         setReviews(filteredReviews);
       } catch (error) {
-        setError("Error fetching reviews or user data");
+        setError("error on reviews");
         console.error("Error:", error);
       }
     };
 
-    fetchReviews();
-  }, [id]);
+    
+    if (user) {
+      fetchReviews();
+    }
+  }, [id, user]); 
+
   const checkSlotAvailability = async (therapistId, slotDateTime) => {
     try {
       const response = await fetch(
@@ -90,47 +110,124 @@ export default function PreferredDoctor() {
       return false;
     }
   };
-  const handleReview = async () => {
+
+  const handleReviewSubmit = async () => {
     if (newReview.trim() !== "") {
       if (newReview.trim().length < 10) {
         setError("Review must be at least 10 characters long.");
         return;
       }
       setError("");
-      const reviewData = {
-        review_post: newReview,
-        doctor_ratings: rating,
-        therapist_id: id,
-        user_id: user.user_id,
-      };
 
       try {
-        const response = await fetch("http://127.0.0.1:8000/api/add/reviews/", {
-          method: "POST",
+        if (editingReview) {
+          
+          const response = await fetch(`http://127.0.0.1:8000/api/reviews/${editingReview.id}/`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+              review_post: newReview,
+              doctor_ratings: rating,
+            }),
+          });
+
+          if (response.ok) {
+            const updatedReview = await response.json();
+            setReviews(reviews.map(review => 
+              review.id === editingReview.id ? 
+              { ...updatedReview, user_fullname: user.user_fullname, canEdit: true } : 
+              review
+            ));
+            resetReviewForm();
+            Swal.fire("Success!", "Review updated successfully!", "success");
+          } else {
+            throw new Error("Failed to update review");
+          }
+        } else {
+          // Create new review
+          const response = await fetch("http://127.0.0.1:8000/api/add/reviews/", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+              review_post: newReview,
+              doctor_ratings: rating,
+              therapist_id: parseInt(id),
+              user_id: parseInt(user.user_id),
+            }),
+          });
+
+          if (response.ok) {
+            const newReviewData = await response.json();
+            setReviews([
+              ...reviews,
+              {
+                ...newReviewData,
+                user_fullname: user.user_fullname,
+                canEdit: true
+              },
+            ]);
+            resetReviewForm();
+            Swal.fire("Success!", "Review submitted successfully!", "success");
+          } else {
+            throw new Error("Failed to submit review");
+          }
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        Swal.fire("Error", error.message, "error");
+      }
+    }
+  };
+
+  const handleEditReview = (review) => {
+    setEditingReview(review);
+    setNewReview(review.review_post);
+    setRating(review.doctor_ratings);
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    try {
+      const result = await Swal.fire({
+        title: "Are you sure?",
+        text: "The chosen comment will get deleted permanently.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes"
+      });
+
+      if (result.isConfirmed) {
+        const response = await fetch(`http://127.0.0.1:8000/api/reviews/${reviewId}/`, {
+          method: "DELETE",
           headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify(reviewData),
+            "Authorization": `Bearer ${accessToken}`
+          }
         });
 
         if (response.ok) {
-          const newReviewData = await response.json();
-          setReviews([
-            ...reviews,
-            {
-              ...newReviewData,
-              user_fullname: user.user_fullname,
-            },
-          ]);
-          setNewReview("");
+          setReviews(reviews.filter(review => review.id !== reviewId));
+          Swal.fire("Deleted", "Your selected review has been deleted successfully", "success");
         } else {
-          console.error("Failed to submit review");
+          throw new Error("Failed to delete review");
         }
-      } catch (error) {
-        console.error("Error submitting review:", error);
       }
+    } catch (error) {
+      console.error("Error deleting review:", error);
+      Swal.fire("Error", error.message, "error");
     }
+  };
+
+  const resetReviewForm = () => {
+    setEditingReview(null);
+    setNewReview("");
+    setRating(1);
   };
 
   const renderStars = (rating) => {
@@ -171,8 +268,6 @@ export default function PreferredDoctor() {
       parseInt(selectedSlot.start_time.split(":")[1])
     );
 
-    
-
     navigate(`/BookAppointment/${doctor.id}`, {
       state: {
         slotId: selectedSlot.id,
@@ -182,7 +277,6 @@ export default function PreferredDoctor() {
     });
   };
  
-  
   if (!doctor)
     return (
       <div className="d-flex flex-column justify-content-center align-items-center mb-3">
@@ -266,7 +360,7 @@ export default function PreferredDoctor() {
       <div className="card shadow-lg p-4" style={{ borderRadius: "15px" }}>
         <h4 className="text-primary mb-1">Patient Reviews</h4>
         <div className="mt-4">
-          <h5 className="text-primary mb-3">Add Your Review</h5>
+          <h5 className="text-primary mb-3">{editingReview ? "Edit Your Review" : "Add Your Review"}</h5>
           <div className="mb-3">
             <label className="form-label">Rating</label>
             <div className="d-flex align-items-center">
@@ -293,13 +387,23 @@ export default function PreferredDoctor() {
             ></textarea>
             {error && <div className="text-danger small mt-1">{error}</div>}
           </div>
-          <button
-            className="btn btn-primary px-4 py-2 rounded-pill mb-2"
-            onClick={handleReview}
-            disabled={!newReview.trim()}
-          >
-            Submit Review
-          </button>
+          <div className="d-flex gap-2">
+            <button
+              className="btn btn-primary px-4 py-2 rounded-pill mb-2"
+              onClick={handleReviewSubmit}
+              disabled={!newReview.trim()}
+            >
+              {editingReview ? "Update Review" : "Submit Review"}
+            </button>
+            {editingReview && (
+              <button
+                className="btn btn-outline-secondary px-4 py-2 rounded-pill mb-2"
+                onClick={resetReviewForm}
+              >
+                Cancel
+              </button>
+            )}
+          </div>
         </div>
         {reviews.length > 0 ? (
           <div className="row g-3">
@@ -316,6 +420,22 @@ export default function PreferredDoctor() {
                     <div>{renderStars(review.doctor_ratings)}</div>
                   </div>
                   <p className="mb-0">{review.review_post}</p>
+                  {review.canEdit && (
+                    <div className="d-flex justify-content-end gap-2 mt-3">
+                      <button
+                        className="btn btn-sm btn-outline-primary"
+                        onClick={() => handleEditReview(review)}
+                      >
+                        <i className="bi bi-pencil"></i> Edit
+                      </button>
+                      <button
+                        className="btn btn-sm btn-outline-danger"
+                        onClick={() => handleDeleteReview(review.id)}
+                      >
+                        <i className="bi bi-trash"></i> Delete
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -324,7 +444,7 @@ export default function PreferredDoctor() {
           <div className="text-center py-4">
             <i className="bi bi-chat-square-text fs-1 text-muted"></i>
             <p className="text-muted mt-2">
-              No reviews yet. Be the first to review!
+              No reviews yet. Be the first person to write review..
             </p>
           </div>
         )}

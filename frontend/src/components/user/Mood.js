@@ -1,6 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import Typewriter from 'typewriter-effect';
 import AuthContext from "../../context/AuthContext";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import { Link } from "react-router-dom";
 import { Bar } from 'react-chartjs-2'; 
@@ -14,7 +15,8 @@ export default function Mood() {
   const[userMoodData, setUserMoodData] = useState([]);
   const { authTokens, user } = useContext(AuthContext);
   const [mood, setMood] = useState([]);
-
+  const navigate = useNavigate()
+  
   const accessToken = authTokens?.access;
   const userId = user?.user_id;
 
@@ -23,7 +25,7 @@ export default function Mood() {
     console.log("Selected mood:", moodType);
 
     if (!accessToken) {
-      console.error("Access token is missing");
+      console.error("user is not logged in");
       return;
     }
 
@@ -179,18 +181,18 @@ export default function Mood() {
   };
 
   if (!user || !accessToken) {
-    return (
-      <div className="d-flex justify-content-center mt-5">
-        <div className="text-center p-5 shadow-lg rounded bg-success-subtle text-success-emphasis ">
-          <i className="bi bi-lock-fill fs-1 mb-4"></i>
-          <h2 className="fs-3 mb-3">Please log in to select your mood</h2>
-          <p className="fs-5 mb-4">Log in to interact with this feature. Thank you!</p>
-          <Link to="/login" className="fw-bold fs-5">
-            Go to Login
-          </Link>
-        </div>
-      </div>
-    );
+    
+   
+             msg.fire({
+               title: "You need to be logged in",
+               text: "Please log in to interact with mood tracker feature",
+               icon: "warning",
+               confirmButtonText: "Go to Login",
+             }).then(() => {
+               navigate("/login"); 
+             });
+           
+  
   }
 
   return (

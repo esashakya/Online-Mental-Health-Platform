@@ -11,7 +11,9 @@ from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime
 from django.utils.timezone import localtime
 from django.utils.dateparse import parse_datetime
-
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 from rest_framework import viewsets, permissions
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from api.models import *
@@ -138,7 +140,7 @@ class MusicViewSet(viewsets.ModelViewSet):
 @api_view(['PUT','DELETE'])
 @parser_classes([MultiPartParser, FormParser])
 def update_music(request, pk):
-    print("Function  called")
+    print("function  used")
     try:
         music = Music.objects.get(pk=pk)
     except Music.DoesNotExist:
@@ -177,7 +179,7 @@ def add_mood(request):
    
     if Mood.objects.filter(user_id=user, mood_date=today).exists():
         return Response(
-            {"message": "You have already submitted your mood for today."},
+            {"message": "You can only submit mood once per day"},
             status=status.HTTP_400_BAD_REQUEST
         )
 
@@ -308,6 +310,30 @@ def create_review(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)  
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+@api_view(['PUT', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def update_delete_review(request, pk):
+    try:
+        review = Review.objects.get(pk=pk, user_id=request.user.id)
+    except Review.DoesNotExist:
+        return Response(
+            {"error": "Review not found or you don't have permission to modify it."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    if request.method == 'DELETE':
+        review.delete()
+        return Response(
+            {"message": "Review deleted successfully."},
+            status=status.HTTP_204_NO_CONTENT
+        )
+
+    elif request.method == 'PUT':
+        serializer = ReviewSerializer(review, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 @api_view(['PUT','DELETE'])
 @parser_classes([MultiPartParser, FormParser])
 def update_user(request, pk):
@@ -437,39 +463,29 @@ def book_appointment(request):
         appointment_date=date_time,
        
     )
-    # sending gmail to doctor to inform about new appointment
-    subject = f"New Appointment Request: {user.user_fullname} - {local_time.strftime('%B %d, %Y at %I:%M %p')}"
-    message = f"""
-    Dear Dr. {doctor.user.user_fullname},
-
-    We hope this email finds you well.
-
-    We would like to inform you that a new appointment request has been made by one of your patients. Here are the details:
-
-    - Patient Name: {user.user_fullname}
-    - Appointment Date & Time: {local_time.strftime('%B %d, %Y at %I:%M %p')}
-    - Patient Email: {user.user_email}
-    - Appointment Status: Pending
-
-    Please review and confirm your availability for the scheduled time.
-
-    Thank you for your time and attention. Should you have any questions, feel free to reach out.
-
-    Best regards,
-    UntangleChaos Team
-    """
-
-
-    # send the mail
-    send_mail(
-        subject,
-        message,
-        'UntangleChaos@gmail.com',  
-        [doctor.user.user_email] 
-    )
+  
+    html_content = render_to_string('email/appointment_email.html', {
+        'doctor_name': doctor.user.user_fullname,
+        'patient_name': user.user_fullname,
+        'appointment_time': local_time.strftime('%B %d, %Y at %I:%M %p'),
+        'patient_email': user.user_email,
+        'status': 'Pending'
+    })
     
+    
+    text_content = strip_tags(html_content)
 
-    return JsonResponse({"message": "Appointment registered successfully", "appointment_id": appointment.id}, status=201)
+    
+    email = EmailMultiAlternatives(
+        subject=f"New Appointment: {user.user_fullname}",
+        body=text_content,
+        from_email='UntangleChaos@gmail.com',
+        to=[doctor.user.user_email],
+    )
+    email.attach_alternative(html_content, "text/html")  
+    email.send()
+
+    return JsonResponse({"message": "Appointment booked!"}, status=201)
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def approve_appointment(request):

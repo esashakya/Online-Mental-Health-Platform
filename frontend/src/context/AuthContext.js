@@ -73,7 +73,30 @@ export const AuthProvider = ({ children }) => {
           msg.hideLoading();
         },
       });
-    } else {
+    } else if (response.status === 401 || response.status === 400) {
+      const errorKey = Object.keys(data)[0];
+      const errorText = data[errorKey][0];
+    
+      msg.fire({
+        title: "Login Failed!",
+        icon: "error",
+        toast: true,
+        timer: 5000,
+        position: "top-right",
+        timerProgressBar: true,
+        showConfirmButton: false,
+        background: "#dc3545",
+        color: "#ffffff",
+        text: errorText,
+        didOpen: () => {
+          msg.showLoading();
+        },
+        willClose: () => {
+          msg.hideLoading();
+        },
+      });
+    }
+    else {
       msg.fire({
         title: "Invalid Username or password !",
         icon: "error",
@@ -402,7 +425,8 @@ export const AuthProvider = ({ children }) => {
     email,
     user_fullname,
     password,
-    retype_password
+    retype_password,
+    userGender
   ) => {
     const response = await fetch("http://127.0.0.1:8000/api/register/", {
       method: "POST",
@@ -414,9 +438,10 @@ export const AuthProvider = ({ children }) => {
         user_fullname: user_fullname,
         password,
         retype_password: retype_password,
+        user_gender: userGender
       }),
     });
-    
+    const data = await response.json();
     if (response.status === 201) {
       navigate("/login");
       msg.fire({
@@ -437,25 +462,74 @@ export const AuthProvider = ({ children }) => {
           msg.hideLoading();
         },
       });
-    } else if (response.status === 400) {
-      msg.fire({
-        title: "Error Occured in input fields ",
-        icon: "error",
-        toast: true,
-        timer: 5000,
-        position: "top-right",
-        timerProgressBar: true,
-        showConfirmButton: false,
-        background: "#dc3545",
-        color: "#ffffff",
-        text: "The entered creddentials are incorrect. Please try again",
-        didOpen: () => {
-          msg.showLoading();
-        },
-        willClose: () => {
-          msg.hideLoading();
-        },
-      });
+    }else if (response.status === 400) {
+      // email error
+      if (data.user_email && data.user_email[0] === "user with this user email already exists.") {
+        msg.fire({
+          title: "Given email exists in our system!",
+          icon: "error",
+          toast: true,
+          timer: 6000,
+          position: "top-right",
+          timerProgressBar: true,
+          showConfirmButton: false,
+          background: "#dc3545",
+          color: "#ffffff",
+          text: "This email address is already registered in system. Please try again with different email address.",
+        });
+      } 
+      //  password  error
+      else if (data.password && data.password[0] === "Password fields are not the same") {
+        msg.fire({
+          title: "Password Mismatch",
+          icon: "error",
+          toast: true,
+          timer: 5000,
+          position: "top-right",
+          timerProgressBar: true,
+          showConfirmButton: false,
+          background: "#dc3545",
+          color: "#ffffff",
+          text: "Passwords you provided do not match with each other. Please try again with correct passwords.",
+        });
+      } 
+      else if (
+        data.user_email &&
+        data.user_email[0] === "Enter a valid email address."
+      ) {
+        msg.fire({
+          title: "Invalid Email Format",
+          icon: "error",
+          toast: true,
+          timer: 5000,
+          position: "top-right",
+          timerProgressBar: true,
+          showConfirmButton: false,
+          background: "#dc3545",
+          color: "#ffffff",
+          text: "Please provide your valid email address. Example: youremail@gmail.com",
+        });
+      }
+      
+      //  400 error
+      else {
+        
+        const errorMessage = data[Object.keys(data)[0]]?.[0] || "Please check your input and try again.";
+        msg.fire({
+          title: "Invalid Input",
+          icon: "error",
+          toast: true,
+          timer: 5000,
+          position: "top-right",
+          timerProgressBar: true,
+          showConfirmButton: false,
+          background: "#dc3545",
+          color: "#ffffff",
+          text: errorMessage,
+        });
+      }
+    
+    
     } else {
       msg.fire({
         title: "An Error Occured " + response.status,

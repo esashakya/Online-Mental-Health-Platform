@@ -9,7 +9,7 @@ export default function Login() {
     //gather the information from input tag
     const userEmail = e.target.userEmail.value  
     const userPassword = e.target.userPassword.value   
-    // check if user has entered 
+    // checking if user has entered and calling the function to login
     userEmail.length > 0 && loginRegisteredUser(userEmail,userPassword)
     
 
