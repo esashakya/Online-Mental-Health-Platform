@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>New Approved Appointment</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #f4f7fa;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 30px auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background-color: #4a6fa5;
+            color: #fff;
+            padding: 25px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .content p {
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        .details {
+            background-color: #eef2f7;
+            padding: 20px;
+            border-left: 5px solid #4a6fa5;
+            border-radius: 5px;
+        }
+        .details p {
+            margin: 8px 0;
+        }
+        .footer {
+            background-color: #f0f4f8;
+            text-align: center;
+            font-size: 13px;
+            padding: 20px;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+
+<div class="email-container">
+    <div class="header">
+        <h1>New Approved Appointment</h1>
+    </div>
+    <div class="content">
+        <p>Hello Dr. {{ doctor_name }},</p>
+        <p>You have a new approved appointment with <strong>{{ patient_name }}</strong>:</p>
+
+        <div class="details">
+            <p><strong>Appointment Date & Time:</strong> {{ appointment_time }}</p>
+            <p><strong>Appointment Code:</strong> {{ appointment_code }}</p>
+        </div>
+
+        <p>Please check your profile on the website to manage your schedule accordingly.</p>
+
+        <p>Thank you for being a part of UntangleChaos.</p>
+        <p>Warm regards,<br><strong>UntangleChaos Team</strong></p>
+    </div>
+
+    <div class="footer">
+        &copy; {{ current_year }} UntangleChaos. All rights reserved.
+    </div>
+</div>
+
+</body>
+</html>

@@ -331,7 +331,35 @@ hr.blue-line{
   opacity: 1;
   transform: translateY(0); 
 }
+.mood-tracker-container {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
 
+.mood-card {
+  background-color: #fff;
+  border: none;
+}
+
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #4361ee, #3f37c9);
+}
+
+.mood-icon-card.selected {
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.chart-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+
+@media (max-width: 768px) {
+  .mood-card {
+    margin: 1rem;
+  }
+}
 
 /* exercise */
 @keyframes grow-shrink {

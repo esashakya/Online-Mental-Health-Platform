@@ -145,7 +145,7 @@ class SignUpSerializer(serializers.ModelSerializer):
     
     class Meta:
         model=User
-        fields=['user_email','user_fullname','password','retype_password']
+        fields=['user_email','user_fullname','password','retype_password','user_gender']
         extra_kwargs = {
             'user_fullname':{'required': True}
         }
@@ -169,6 +169,7 @@ class SignUpSerializer(serializers.ModelSerializer):
         user = User.objects.create(
             user_fullname = validated_data['user_fullname'],
             user_email = validated_data['user_email'],
+            user_gender = validated_data['user_gender'],
 
         )
         user.set_password(validated_data['password'])
@@ -316,25 +317,26 @@ class BlogSerializer(serializers.ModelSerializer):
 class AppointmentSerializer(serializers.ModelSerializer):
     
     user_id = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
-
-     # get the user name
+    
+    # get the user name
     user_fullname = serializers.CharField(source='user_id.user_fullname', read_only=True)
 
     therapist_id = serializers.PrimaryKeyRelatedField(queryset=Doctor.objects.all())
 
-     # get the therapist name
+    # get the therapist name
     therapist_name = serializers.CharField(source='therapist_id.user.user_fullname', read_only=True)
-    
+
+ 
+    code = serializers.CharField(read_only=True)  
+
     class Meta:
         model = Appointment
-        fields = ['id', 'user_id', 'therapist_id', 'appointment_date', 'appointment_status','user_fullname','therapist_name']  
+        fields = ['id', 'user_id', 'therapist_id', 'appointment_date', 'appointment_status', 'user_fullname', 'therapist_name', 'code']
+    
     def validate(self, data):
-        
         appointment_date = data.get('appointment_date')
         therapist_id = data.get('therapist_id')
         if appointment_date:
-       
-       
             buffer_time = timedelta(minutes=15) 
             
             conflicting_appointments = Appointment.objects.filter(
@@ -343,13 +345,14 @@ class AppointmentSerializer(serializers.ModelSerializer):
                     appointment_date - buffer_time,
                     appointment_date + buffer_time
                 ),
-                appointment_status__in=[1, 2, 4] 
+                appointment_status__in=[1, 2, 4]  
             ).exists()
             
             if conflicting_appointments:
                 raise ValidationError("This time slot is already booked or too close to another appointment.")
-            
+        
         return data
+
 
 class ReviewSerializer(serializers.ModelSerializer):
     user_name = serializers.ReadOnlyField(source="user_id.username") 

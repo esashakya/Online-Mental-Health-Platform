@@ -139,7 +139,7 @@ export default function BlogPage() {
                 <textarea
                   className="form-control"
                   rows="3"
-                  placeholder="Share your thoughts about this article..."
+                  placeholder="Enter your thoughts for this blog..."
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   required

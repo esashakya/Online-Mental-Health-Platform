@@ -1,31 +1,50 @@
 import React, { useState, useContext, useEffect } from 'react';
 import Typewriter from 'typewriter-effect';
 import AuthContext from "../../context/AuthContext";
-import { useNavigate, useLocation } from "react-router-dom";
-
-import { Link } from "react-router-dom";
-import { Bar } from 'react-chartjs-2'; 
+import { useNavigate } from "react-router-dom";
+import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, BarElement, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 
-const msg = require("sweetalert2");
+const Swal = require("sweetalert2");
 ChartJS.register(CategoryScale, LinearScale, PointElement, BarElement, Title, Tooltip, Legend);
 
 export default function Mood() {
   const [currentMood, setCurrentMood] = useState(null);
-  const[userMoodData, setUserMoodData] = useState([]);
+  const [userMoodData, setUserMoodData] = useState([]);
   const { authTokens, user } = useContext(AuthContext);
   const [mood, setMood] = useState([]);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   
   const accessToken = authTokens?.access;
   const userId = user?.user_id;
 
+  const moodTypes = [
+    { id: "Happy", icon: "bi-emoji-laughing-fill", color: "#4CAF50", hoverColor: "#2E7D32" },
+    { id: "Sad", icon: "bi-emoji-frown-fill", color: "#F44336", hoverColor: "#C62828" },
+    { id: "Anxious", icon: "bi-emoji-smile-upside-down-fill", color: "#FFEB3B", hoverColor: "#FBC02D" },
+    { id: "Cry", icon: "bi-emoji-tear-fill", color: "#2196F3", hoverColor: "#1565C0" },
+    { id: "Chill", icon: "bi-emoji-sunglasses-fill", color: "#00BCD4", hoverColor: "#00838F" },
+    { id: "Neutral", icon: "bi-emoji-neutral-fill", color: "#9E9E9E", hoverColor: "#616161" }
+  ];
+
   const saveCurrentMood = async (moodType) => {
     setCurrentMood(moodType);
-    console.log("Selected mood:", moodType);
-
+    
     if (!accessToken) {
-      console.error("user is not logged in");
+      Swal.fire({
+        title: 'Authentication Required',
+        text: 'Please log in to track your mood',
+        icon: 'info',
+        confirmButtonText: 'Go to Login',
+        confirmButtonColor: '#4361ee',
+        background: '#fff',
+        color: '#333',
+        showClass: {
+          popup: 'animate__animated animate__fadeIn'
+        }
+      }).then(() => {
+        navigate("/login");
+      });
       return;
     }
 
@@ -44,75 +63,101 @@ export default function Mood() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        msg.fire({
-          title: 'You have already tracked your mood for today :)',
-          text: 'You are doing great. We are here for you if you required any help',
-          icon: 'error',
-          confirmButtonText: 'Okay',
+        Swal.fire({
+          title: 'You have already tracked your mood',
+          text: 'Mood has already been tracked for today. ',
+          icon: 'info',
+          confirmButtonText: 'Got it',
+          confirmButtonColor: '#4361ee',
           background: '#fff',
-          color: '#000',
+          color: '#333',
+          showClass: {
+            popup: 'animate__animated animate__fadeIn'
+          }
         });
-        throw new Error(`Failed to save mood: ${errorData.message || 'Unknown error'}`);
         
+        return;
       }
 
-      msg.fire({
-        title: 'Mood tracked successfully!',
-        text: 'Please be patient with yourself. I am proud of you.',
+      Swal.fire({
+        title: 'Mood Tracked Successfully',
+        text: 'Your mood has been saved successfully.We are proud of you for your progress. Small steps lead to great progress.',
         icon: 'success',
-        confirmButtonText: 'Okay',
+        confirmButtonText: 'Continue',
+        confirmButtonColor: '#4361ee',
         background: '#fff',
-        color: '#000',
+        color: '#333',
+        showClass: {
+          popup: 'animate__animated animate__fadeIn'
+        }
       });
 
-      const data = await response.json();
-      console.log("Mood saved:", data);
+      
+      fetchMoodHistory();
     } catch (error) {
       console.error("Error:", error);
+      Swal.fire({
+        title: 'Something Went Wrong',
+        text: 'Unable to save your mood. Please try again later.',
+        icon: 'error',
+        confirmButtonText: 'Okay',
+        confirmButtonColor: '#4361ee',
+        background: '#fff',
+        color: '#333'
+      });
+    }
+  };
+
+  const fetchMoodHistory = async () => {
+    if (!accessToken) return;
+    
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/mood/", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (Array.isArray(data)) {
+        setMood(data);
+        const userMood = data.filter((item) => item.user_id === userId);
+        setUserMoodData(userMood);
+      } else {
+        console.error("Unexpected response format", data);
+        setMood([]);
+        setUserMoodData([]);
+      }
+    } catch (error) {
+      console.error("Error fetching mood history:", error);
+      setMood([]);
+      setUserMoodData([]);
     }
   };
 
   useEffect(() => {
-    const fetchMoodHistory = async () => {
-      if (!accessToken) return;
-      
-      try {
-        const response = await fetch("http://127.0.0.1:8000/api/mood/", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log("Mood Data:", data);
-
-        if (Array.isArray(data)) {
-          setMood(data);
-          const userMood = data.filter((item) => item.user_id === userId);
-          setUserMoodData(userMood);
-        } else {
-          console.error("Unexpected response format", data);
-          setMood([]);
-          setUserMoodData([]);
-        }
-      } catch (error) {
-        console.error("Error fetching mood history:", error);
-        setMood([]);
-        setUserMoodData([]);
-      }
-    };
-
     fetchMoodHistory();
-  }, [accessToken, userId]);
+    
+    if (!user || !accessToken) {
+      Swal.fire({
+               title: "You need to be logged in",
+               text: "Please log in to use mood tracker feature",
+               icon: "warning",
+               confirmButtonText: "Go to Login",
+             }).then(() => {
+               navigate("/login"); 
+             });
+    }
+  }, [accessToken, userId, user, navigate]);
   
-
+  // Process mood data for the chart
   const moodData = userMoodData.reduce((acc, curr) => {
     const date = curr.mood_date;
     if (!acc[date]) {
@@ -123,36 +168,68 @@ export default function Mood() {
   }, {});
  
   const chartLabels = Object.keys(moodData)
-  .sort((a, b) => new Date(b) - new Date(a))   //in descending order
-  .slice(0, 7); //only to display first 7 
+    .sort((a, b) => new Date(a) - new Date(b))  
+    .slice(-7); // last 7 days
+    
   const chartData = {
-    labels: chartLabels,
-    datasets: Object.keys(moodData[chartLabels[0]] || {}).map(moodType => ({
-      label: moodType,
-      data: chartLabels.map(date => moodData[date][moodType] || 0),
-      backgroundColor: moodType === 'Happy' ? '#4CAF50' : 
-                       moodType === 'Sad' ? '#F44336' :
-                       moodType === 'Anxious' ? '#FFEB3B' : 
-                       moodType === 'Cry' ? '#2196F3' : 
-                       moodType === 'Chill' ? '#00BCD4' : '#9E9E9E',  
-      borderColor: moodType === 'Happy' ? '#388E3C' : 
-                   moodType === 'Sad' ? '#D32F2F' :
-                   moodType === 'Anxious' ? '#FBC02D' : 
-                   moodType === 'Cry' ? '#1976D2' : 
-                   moodType === 'Chill' ? '#00897B' : '#616161',  
-      borderWidth: 1,
-    })),
+    labels: chartLabels.map(date => {
+      const d = new Date(date);
+      return `${d.getDate()}/${d.getMonth() + 1}`; 
+    }),
+    datasets: Object.keys(moodTypes.reduce((obj, item) => {
+      obj[item.id] = true;
+      return obj;
+    }, {})).map(moodType => {
+      const mood = moodTypes.find(m => m.id === moodType) || {};
+      return {
+        label: moodType,
+        data: chartLabels.map(date => moodData[date]?.[moodType] || 0),
+        backgroundColor: mood.color || '#9E9E9E',
+        borderColor: mood.hoverColor || '#616161',
+        borderWidth: 1,
+        borderRadius: 6,
+      };
+    }),
   };
 
   const chartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          usePointStyle: true,
+          boxWidth: 10,
+          padding: 20,
+          font: {
+            family: "'Inter', sans-serif",
+            size: 12
+          }
+        }
+      },
       tooltip: {
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        titleColor: '#333',
+        bodyColor: '#666',
+        borderColor: '#ddd',
+        borderWidth: 1,
+        padding: 12,
+        cornerRadius: 8,
         callbacks: {
           label: function (tooltipItem) {
             return `${tooltipItem.dataset.label}: ${tooltipItem.raw}`;  
           },
         },
+        titleFont: {
+          family: "'Inter', sans-serif",
+          size: 14,
+          weight: 'bold'
+        },
+        bodyFont: {
+          family: "'Inter', sans-serif",
+          size: 13
+        }
       },
     },
     scales: {
@@ -161,88 +238,152 @@ export default function Mood() {
           display: true,
           text: 'Date',
           font: {
+            family: "'Inter', sans-serif",
             size: 14,
             weight: 'bold',
           },
+          padding: {top: 10, bottom: 0}
         },
+        grid: {
+          display: false
+        },
+        ticks: {
+          font: {
+            family: "'Inter', sans-serif",
+            size: 12
+          }
+        }
       },
       y: {
         title: {
           display: true,
-          text: 'Mood Count',
+          text: 'Frequency',
           font: {
+            family: "'Inter', sans-serif",
             size: 14,
             weight: 'bold',
           },
+          padding: {top: 0, bottom: 10}
         },
         beginAtZero: true,
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)'
+        },
+        ticks: {
+          precision: 0,
+          font: {
+            family: "'Inter', sans-serif",
+            size: 12
+          }
+        }
       },
     },
+    animation: {
+      duration: 1000,
+      easing: 'easeOutQuart'
+    }
   };
 
-  if (!user || !accessToken) {
-    
-   
-             msg.fire({
-               title: "You need to be logged in",
-               text: "Please log in to interact with mood tracker feature",
-               icon: "warning",
-               confirmButtonText: "Go to Login",
-             }).then(() => {
-               navigate("/login"); 
-             });
-           
-  
-  }
-
   return (
-    <div>
-      <div className="container d-flex justify-content-center align-items-center">
-        <div className="mood-box p-3 m-4 text-center bg-primary-subtle text-primary-emphasis rounded w-75">
-          <div className="fw-light fs-2">
-            <i className="bi bi-person-raised-hand"></i>
-            <Typewriter
-              options={{
-                autoStart: true,
-                loop: true,
-                delay: 100,
-                deleteSpeed: 100,
-                strings: ["Hey! How are you feeling today?"],
-              }}
-            />
-          </div>
-          <div className="mood-icons d-flex flex-wrap flex-row mt-3 fs-1">
-            <div className="sad col-4 col-sm-2" onClick={() => saveCurrentMood("Sad")}>
-              <i className="bi bi-emoji-frown-fill"></i>
-              <p className="fs-6 fw-lighter">Sad</p>
+    <div className="mood-tracker-container py-5">
+      <div className="container">
+        <div className="mood-card shadow-lg rounded-4 overflow-hidden">
+          <div className="row g-0">
+            <div className="col-lg-4 bg-success d-flex align-items-center justify-content-center p-4">
+              <div className="text-center text-white py-4">
+                <h2 className="display-6 fw-bold mb-3">Mood Tracker</h2>
+                <div className="mood-prompt mb-3">
+                  <i className="bi bi-heart-pulse mb-3 fs-1"></i>
+                  <div className="fs-5 fw-light">
+                    <Typewriter
+                      options={{
+                        autoStart: true,
+                        loop: true,
+                        delay: 50,
+                        deleteSpeed: 30,
+                        strings: [
+                          "How are you feeling today?", 
+                          "Track your emotional journey...",
+                          "Your wellness matters to us.",
+                          "Self-awareness starts here."
+                        ],
+                      }}
+                    />
+                  </div>
+                </div>
+                
+                <div className="d-none d-lg-block">
+                  <div className="quote-box p-3 bg-white bg-opacity-10 rounded-3 mt-4">
+                    <p className="fst-italic mb-1">"There is hope, even when your brain tells you there isn’t."</p>
+                    <small className="d-block text-end">— John Green</small>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="happy col-4 col-sm-2" onClick={() => saveCurrentMood("Happy")}>
-              <i className="bi bi-emoji-laughing-fill"></i>
-              <p className="fs-6 fw-lighter">Happy</p>
+            
+            <div className="col-lg-8">
+              <div className="p-4 p-lg-5">
+                <h3 className="mb-4 fw-normal text-dark">Choose your mood for today</h3>
+                
+                <div className="mood-icons-container mb-5">
+                  <div className="row g-3 justify-content-center">
+                    {moodTypes.map((mood) => (
+                      <div className="col-4 col-md-2" key={mood.id}>
+                        <div 
+                          className={`mood-icon-card p-3 rounded-4 text-center ${currentMood === mood.id ? 'selected' : ''}`} 
+                          onClick={() => saveCurrentMood(mood.id)}
+                          style={{
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            backgroundColor: currentMood === mood.id ? mood.color : 'rgba(0,0,0,0.03)',
+                            color: currentMood === mood.id ? '#fff' : '#212529',
+                          }}
+                          onMouseEnter={(e) => {
+                            if (currentMood !== mood.id) {
+                              e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)';
+                              e.currentTarget.style.transform = 'translateY(-3px)';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (currentMood !== mood.id) {
+                              e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.03)';
+                              e.currentTarget.style.transform = 'translateY(0)';
+                            }
+                          }}
+                        >
+                          <i className={`bi ${mood.icon} fs-1 mb-2`} style={{ color: currentMood === mood.id ? '#fff' : mood.color }}></i>
+                          <p className="mb-0 fw-medium">{mood.id}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="mood-chart-container">
+                  <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h3 className="fw-normal text-dark m-0">Mood history</h3>
+                    <div className="badge bg-light text-secondary px-3 py-2">Last 7 days</div>
+                  </div>
+                  
+                  <div className="chart-wrapper" style={{ height: '300px' }}>
+                    {userMoodData.length > 0 ? (
+                      <Bar data={chartData} options={chartOptions} />
+                    ) : (
+                      <div className="h-100 d-flex flex-column align-items-center justify-content-center text-center p-4">
+                        <i className="bi bi-graph-up text-secondary opacity-50 fs-1 mb-3"></i>
+                        <h5 className="text-secondary">Track your first mood..</h5>
+                        <p className="text-secondary opacity-75 mb-0">Your progress will be displayed here</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="anxious col-4 col-sm-2" onClick={() => saveCurrentMood("Anxious")}>
-              <i className="bi bi-emoji-smile-upside-down-fill"></i>
-              <p className="fs-6 fw-lighter">Anxious</p>
-            </div>
-            <div className="cry col-4 col-sm-2" onClick={() => saveCurrentMood("Cry")}>
-              <i className="bi bi-emoji-tear-fill"></i>
-              <p className="fs-6 fw-lighter">Cry</p>
-            </div>
-            <div className="chill col-4 col-sm-2" onClick={() => saveCurrentMood("Chill")}>
-              <i className="bi bi-emoji-sunglasses-fill"></i>
-              <p className="fs-6 fw-lighter">Chill</p>
-            </div>
-            <div className="neutral col-4 col-sm-2" onClick={() => saveCurrentMood("Neutral")}>
-              <i className="bi bi-emoji-neutral-fill"></i>
-              <p className="fs-6 fw-lighter">Neutral</p>
-            </div>
-          </div>
-          <div className="chart-container mt-5">
-          <Bar data={chartData} options={chartOptions} />
           </div>
         </div>
-        
       </div>
+      
+      
     </div>
   );
 }

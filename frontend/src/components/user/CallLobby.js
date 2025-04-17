@@ -5,81 +5,135 @@ import { useNavigate } from "react-router-dom";
 import AuthContext from '../../context/AuthContext';
 
 export default function VideoCallLobby() {
-  const { user } = useContext(AuthContext);
+  const { user, authTokens } = useContext(AuthContext);
   const nav = useNavigate();
   const videoRef = useRef(null);
   const [room, setRoom] = useState("");
   const [stream, setStream] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  
   const stopStream = () => {
     if (stream) {
       stream.getTracks().forEach((track) => {
-        track.stop();  // Stop the video or audio
+        track.stop();
       });
       console.log("Video/audio stopped");
     }
   };
 
   useEffect(() => {
-    
     const startPreview = async () => {
       try {
-        const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+          video: true, 
+          audio: true 
+        });
         setStream(mediaStream);
         if (videoRef.current) {
           videoRef.current.srcObject = mediaStream;
         }
       } catch (error) {
-        console.error("error in mediastream:", error);
+        console.error("Error in media stream:", error);
+        Swal.fire({
+          title: "Camera/Mic Access Required",
+          text: "Please enable camera and microphone access to join the call",
+          icon: "warning"
+        });
       }
     };
 
     startPreview();
 
-   
     return () => {
-      stopStream();   //unmount
+      stopStream();
     };
   }, []);
 
-  const handleJoin = async (e) => {
-    e.preventDefault();
-    let room = e.target.roomCode.value.toUpperCase();
-    let response = await fetch(`http://127.0.0.1:8000/get/AppointmentToken/?channel=${room}`);
-    let data = await response.json();
+  const validateAppointmentCode = async (roomCode) => {
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/appointments/validate_room_code/?channel=${roomCode}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${authTokens.access}` 
+          }
+        }
+      );
 
-    console.log("room", room);
-    console.log("data", data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to validate room code');
+      }
 
-    let uid = data.uid;
-    let token = data.token;
-
-    sessionStorage.setItem('uid', uid);
-    sessionStorage.setItem('token', token);
-    sessionStorage.setItem('room', room);
-
-    Swal.fire({
-      title: `Joining the call as ${user.user_fullname} in room ${room}`,
-      icon: "success",
-      toast: true,
-      timer: 5000,
-      position: "top-right",
-      timerProgressBar: true,
-      showConfirmButton: false,
-      background: "#28a745",
-      color: "#ffffff",
-      text: "Hope you have a great day!",
-    });
-
-    
-    stopStream();
-
-   
-    nav('/Appointment/VideoCall', '_self');
+      return await response.json();
+    } catch (error) {
+      throw error;
+    }
   };
 
-  //to stop the stream camera when returning from page
+  const handleJoin = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    const roomCode = e.target.roomCode.value;
+
+    try {
+      // First validate the appointment code
+      const validation = await validateAppointmentCode(roomCode);
+      
+      if (!validation.valid) {
+        throw new Error(validation.error || 'Invalid appointment code');
+      }
+
+      // If valid, get the token and join the call
+      let response = await fetch(
+        `http://127.0.0.1:8000/get/AppointmentToken/?channel=${roomCode}`,
+        
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to get call token');
+      }
+
+      let data = await response.json();
+      let uid = data.uid;
+      let token = data.token;
+
+      sessionStorage.setItem('uid', uid);
+      sessionStorage.setItem('token', token);
+      sessionStorage.setItem('room', roomCode);
+      sessionStorage.setItem('appointmentData', JSON.stringify(validation));
+      console.log("Token:", token);
+console.log("Channel:", roomCode);
+console.log("UID:", uid);
+
+
+      Swal.fire({
+        title: `Joining the call as ${user.user_fullname}`,
+      
+        icon: "success",
+        timer: 5000,
+        position: "top-right",
+        timerProgressBar: true,
+        showConfirmButton: false,
+        background: "#28a745",
+        color: "#ffffff"
+      });
+
+      stopStream();
+      nav('/Appointment/VideoCall', '_self');
+    } catch (error) {
+      console.error("Error joining call:", error);
+      Swal.fire({
+        title: "Cannot Join Call",
+        text: error.message,
+        icon: "error",
+        confirmButtonText: "OK"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     const handleBeforeUnload = () => {
       stopStream();
@@ -117,18 +171,43 @@ export default function VideoCallLobby() {
             <video ref={videoRef} className="rounded border shadow-sm" height="200" autoPlay muted style={{ objectFit: "cover" }}></video>
           </div>
 
-          {/* entering the username and room code */}
           <form onSubmit={handleJoin} className="ms-3">
             <div className="mb-3">
               <label className="form-label text-dark fw-semibold">Enter Your Name</label>
-              <input type="text" name="name" className="form-control  text-dark rounded-3" value={user.user_fullname} readOnly />
+              <input 
+                type="text" 
+                name="name" 
+                className="form-control text-dark rounded-3" 
+                value={user.user_fullname} 
+                readOnly 
+              />
             </div>
             <div className="mb-3">
-              <label className="form-label text-dark fw-semibold">Room Code</label>
-              <input type="text" name="roomCode" className="form-control bg-white text-dark rounded-3" value={room} onChange={(e) => setRoom(e.target.value)} required />
+              <label className="form-label text-dark fw-semibold">Appointment Code</label>
+              <input 
+                type="text" 
+                name="roomCode" 
+                className="form-control bg-white text-dark rounded-3" 
+                value={room} 
+                onChange={(e) => setRoom(e.target.value)} 
+                required 
+                placeholder="Enter your appointment code"
+              />
             </div>
-            <button type="submit" className="btn w-100 fw-bold text-white" style={{ background: "linear-gradient(to right, #00c6ff, #0072ff)", transition: "0.3s" }}>
-              Join Call
+            <button 
+              type="submit" 
+              className="btn w-100 fw-bold text-white" 
+              style={{ background: "linear-gradient(to right, #00c6ff, #0072ff)", transition: "0.3s" }}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Validating...
+                </>
+              ) : (
+                "Join Call"
+              )}
             </button>
           </form>
         </div>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Appointment Confirmed</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #f4f7fa;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 30px auto;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        .header {
+            background-color: #4a6fa5;
+            padding: 25px;
+            text-align: center;
+            color: white;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 30px 25px;
+        }
+        .content p {
+            font-size: 16px;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        .details {
+            background-color: #eef2f7;
+            padding: 15px 20px;
+            border-left: 4px solid #4a6fa5;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .details p {
+            margin: 8px 0;
+            font-size: 15px;
+        }
+        .code {
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #4a6fa5;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 15px;
+            text-decoration: none;
+        }
+        .footer {
+            background-color: #f0f4f8;
+            text-align: center;
+            padding: 20px;
+            font-size: 13px;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+
+<div class="email-container">
+    <div class="header">
+        <h1>Appointment Confirmed</h1>
+    </div>
+    <div class="content">
+        <p>Dear {{ patient_name }},</p>
+        <p>Thank you for your patience. Your appointment with <strong>Dr. {{ doctor_name }}</strong> has been successfully confirmed.</p>
+
+        <div class="details">
+            <p><strong>Date & Time:</strong> {{ appointment_time }}</p>
+            <p><strong>Your Email:</strong> {{ patient_email }}</p>
+            <p><strong>Join Code:</strong> <span class="code">{{ code }}</span></p>
+        </div>
+
+        <p>You can join the appointment through your profile on the scheduled date.You will notice join appointment button on specific date chosen for appointment</p>
+
+        <p style="text-align: center;">
+            <a href="http://localhost:3000/Profile" class="button">Join Appointment</a>
+        </p>
+
+        <p>If you have any questions, reach out to us at <strong>5571584</strong>.</p>
+
+        <p>Warm regards,<br><strong>UntangleChaos Team</strong></p>
+    </div>
+    <div class="footer">
+        &copy; {{ current_year }} UntangleChaos. All rights reserved.
+    </div>
+</div>
+
+</body>
+</html>

@@ -14,6 +14,7 @@ const AppointmentForm = () => {
   const [doctor, setDoctor] = useState(null);
   const [isAvailable, setIsAvailable] = useState(false);
   const [availabilityChecked, setAvailabilityChecked] = useState(false);
+  const [appointmentCode, setAppointmentCode] = useState(null);
 
   const [formData, setFormData] = useState({
     date: "",
@@ -161,6 +162,7 @@ const AppointmentForm = () => {
       const result = await response.json();
   
       if (response.ok) {
+        setAppointmentCode(result.code); 
         showSuccess("Doctor Appointment booked successfully! Please wait for your confirmation email.");
         navigate("/Doctor");
       } else {

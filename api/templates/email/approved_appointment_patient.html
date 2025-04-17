@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Appointment Approved</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #f4f7fa;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 30px auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background-color: #4a6fa5;
+            color: #fff;
+            padding: 25px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .content p {
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        .details {
+            background-color: #eef2f7;
+            padding: 20px;
+            border-left: 5px solid #4a6fa5;
+            border-radius: 5px;
+        }
+        .details p {
+            margin: 8px 0;
+        }
+        .button {
+            display: inline-block;
+            margin: 20px 0;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .footer {
+            background-color: #f0f4f8;
+            text-align: center;
+            font-size: 13px;
+            padding: 20px;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+
+<div class="email-container">
+    <div class="header">
+        <h1>Appointment Approved</h1>
+    </div>
+    <div class="content">
+        <p>Hello {{ patient_name }},</p>
+        <p>Your appointment with Dr. {{ doctor_name }} has been approved for the following time:</p>
+
+        <div class="details">
+            <p><strong>Appointment Date & Time:</strong> {{ appointment_time }}</p>
+            <p><strong>Join Code:</strong> {{ appointment_code }}</p>
+        </div>
+
+        <p>If you're comfortable with this timing, please confirm by making your payment below:</p>
+
+        <p style="text-align: center;">
+            <a href="{{ payment_link }}" class="button">Confirm Appointment & Pay</a>
+        </p>
+
+        <p>If you have any questions, feel free to contact us at <strong>5571584</strong>.</p>
+        <p>Thank you,<br><strong>UntangleChaos Team</strong></p>
+    </div>
+
+    <div class="footer">
+        &copy; {{ current_year }} UntangleChaos. All rights reserved.
+    </div>
+</div>
+
+</body>
+</html>

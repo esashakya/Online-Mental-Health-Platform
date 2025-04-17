@@ -239,6 +239,7 @@ export default function Forum() {
                     className="form-control"
                     aria-required="true"
                     name="postTitle"
+                    required
                   />
                 </div>
                 <div className="mb-3">
@@ -251,6 +252,7 @@ export default function Forum() {
                     className="form-control"
                     rows="5"
                     aria-required="true"
+                    required
                   ></textarea>
                 </div>
                 <div className="mb-3">

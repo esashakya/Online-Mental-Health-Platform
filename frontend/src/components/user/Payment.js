@@ -522,18 +522,18 @@ const Payment = () => {
         <div className="col-md-6">
           <div className="card shadow">
             <div className="card-body text-center p-5">
-              <h2 className="mb-4">Complete Your Payment</h2>
+              <h2 className="mb-4">Payment</h2>
               <p className="lead mb-4">
-                You'll be redirected to our secure payment gateway
+                You'll be redirected to <span className="text-success">Khalti</span> payment gateway
               </p>
 
               <div className="payment-details mb-4 p-3 bg-light rounded">
                 <h5>Payment Summary</h5>
                 <p className="mb-1">
-                  Appointment Fee: <strong>Rs.500</strong>
+                  Appointment Fee: <strong>Rs.5</strong>
                 </p>
                 <p>
-                  Service: <strong>Doctor Consultation</strong>
+                  Service: <strong>Therapy Session</strong>
                 </p>
                 {purchaseOrderId && (
                   <p className="mt-2 small">
@@ -571,14 +571,7 @@ const Payment = () => {
                 Cancel Payment
               </button>
 
-              <div className="mt-4 text-muted small">
-                <p>Your payment is secured with 256-bit SSL encryption</p>
-                <div className="d-flex justify-content-center gap-3">
-                  <i className="bi bi-shield-lock fs-4"></i>
-                  <i className="bi bi-credit-card fs-4"></i>
-                  <i className="bi bi-patch-check fs-4"></i>
-                </div>
-              </div>
+              
             </div>
           </div>
         </div>

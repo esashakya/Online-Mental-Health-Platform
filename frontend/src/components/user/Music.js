@@ -1,15 +1,18 @@
 import React, { useRef, useState, useEffect, useContext } from "react";
 import SearchBar from "./SearchBar";
 import Category from "./Category";
-import AuthContext from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
+import AuthContext from "../../context/AuthContext";
+const Swal = require("sweetalert2");
 export default function Music() {
   const customRef = useRef(null);
   const [music, setMusic] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
-  const { authTokens } = useContext(AuthContext);
-
+  const { authTokens,user } = useContext(AuthContext);
+    const navigate = useNavigate();
+  
   const handleSlide = (direction) => {
     if (customRef.current) {
       customRef.current.scrollBy({
@@ -74,7 +77,18 @@ export default function Music() {
 
     return typeMusicMatch && searchMatch;
   });
-
+  useEffect(() => {
+    if (!user) {
+      Swal.fire({
+        title: "You need to be logged in",
+        text: "Please log in to use our music recommendation feature.",
+        icon: "warning",
+        confirmButtonText: "Go to Login",
+      }).then(() => {
+        navigate("/login"); 
+      });
+    }
+  }, [user, navigate]);
   return (
     <div>
       <div className="fw-bold pt-3 text-center mt-1">

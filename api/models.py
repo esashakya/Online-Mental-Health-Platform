@@ -1,4 +1,7 @@
 from django.db import models
+import string 
+import secrets
+
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.hashers import make_password, check_password
 from django.core.exceptions import ValidationError
@@ -52,19 +55,31 @@ class DoctorWorkingTime(models.Model):
     end_time = models.TimeField()
 
 class Appointment(models.Model):
-    options=[
-        (1,"In Call"),
-        (2,"Pending"),
-        (3,"Not attended"),
-        (4,"Approved"),
-        (5,"Confirmed")
+    options = [
+        (1, "Completed"),
+        (2, "Pending"),
+        (3, "Not attended"),
+        (4, "Approved"),
+        (5, "Confirmed")
     ]
-    
+
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='userAppointments')
     therapist_id = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name='doctorAppointments')
     appointment_date = models.DateTimeField(default=timezone.now)
     appointment_status = models.IntegerField(choices=options, default=2)
-   
+    code = models.CharField(max_length=8, unique=True, blank=True, null=True) 
+
+    def save(self, *args, **kwargs):
+        
+        if not self.code:
+            self.code = self.generate_random_code()
+        super(Appointment, self).save(*args, **kwargs)
+
+    def generate_random_code(self):
+        characters = string.ascii_letters + string.digits
+        code = ''.join(secrets.choice(characters) for i in range(8))   
+        return code
+
 
 class Review(models.Model):
     review_date = models.DateField(auto_now_add= True)

@@ -16,21 +16,20 @@ export default function AppointmentList() {
     endDate: null,
   });
   const [filterByDate, setFilterByDate] = useState(false);
-  
+
   const apiAxios = useAxios();
   const { user } = useContext(AuthContext);
-  const token = localStorage.getItem("authTokens");
 
   const statusOptions = [
-    {
-      value: 1,
-      label: "In Call",
-      colorClass: "bg-primary-subtle text-primary-emphasis",
-    },
     {
       value: 2,
       label: "Pending",
       colorClass: "bg-warning-subtle text-warning-emphasis",
+    },
+    {
+      value: 1,
+      label: "Completed",
+      colorClass: "bg-primary-subtle text-primary-emphasis",
     },
     {
       value: 3,
@@ -61,18 +60,15 @@ export default function AppointmentList() {
 
     fetchAppointments();
     const interval = setInterval(fetchAppointments, 5000);
-
     return () => clearInterval(interval);
   }, []);
 
   const isTodayAppointment = () => {
-    if (!appointmentList || appointmentList.length === 0) return false;
+    if (!appointmentList) return false;
     const today = new Date().toISOString().split("T")[0];
-    return appointmentList.some((appointment) => {
-      const appointmentDate = new Date(appointment.appointment_date)
-        .toISOString()
-        .split("T")[0];
-      return appointmentDate === today && appointment.appointment_status !== 5;
+    return appointmentList.some((appt) => {
+      const date = new Date(appt.appointment_date).toISOString().split("T")[0];
+      return date === today && appt.appointment_status !== 1 && appt.appointment_status !== 3 && appt.appointment_status !== 4  && appt.appointment_status !== 2;
     });
   };
 
@@ -83,45 +79,38 @@ export default function AppointmentList() {
 
   const toggleDateFilter = () => {
     setFilterByDate(!filterByDate);
-    if (filterByDate) {
-      setDateFilter({ startDate: null, endDate: null });
-    }
+    if (filterByDate) setDateFilter({ startDate: null, endDate: null });
   };
 
-  const filteredAppointments = appointmentList
-    ? appointmentList.filter((appointment) => {
-        const statusMatch = filteredStatus !== null 
-          ? appointment.appointment_status === filteredStatus 
+  const filteredAppointments =
+    appointmentList?.filter((appt) => {
+      const statusMatch =
+        filteredStatus !== null
+          ? appt.appointment_status === filteredStatus
           : true;
-        
-        let dateMatch = true;
-        if (filterByDate && dateFilter.startDate && dateFilter.endDate) {
-          const appointmentDate = new Date(appointment.appointment_date);
-          dateMatch = appointmentDate >= dateFilter.startDate && 
-                     appointmentDate <= dateFilter.endDate;
-        }
-        
-        return statusMatch && dateMatch;
-      })
-    : [];
+      const dateMatch =
+        filterByDate && dateFilter.startDate && dateFilter.endDate
+          ? new Date(appt.appointment_date) >= dateFilter.startDate &&
+            new Date(appt.appointment_date) <= dateFilter.endDate
+          : true;
+      return statusMatch && dateMatch;
+    }) || [];
 
-  const handleStatusChange = async (appointmentId, newStatus) => {
+  const handleStatusChange = async (id, newStatus) => {
     try {
-      const response = await apiAxios.patch(`/appointments/${appointmentId}/`, {
+      await apiAxios.patch(`/appointments/${id}/`, {
         appointment_status: newStatus,
       });
-      setAppointmentList((prevList) =>
-        prevList.map((appointment) =>
-          appointment.id === appointmentId
-            ? { ...appointment, appointment_status: newStatus }
-            : appointment
+      setAppointmentList((prev) =>
+        prev.map((appt) =>
+          appt.id === id ? { ...appt, appointment_status: newStatus } : appt
         )
       );
 
       if (newStatus === 4) {
         msg.fire({
           title: "Appointment Approved!",
-          text: `The appointment has been approved.`,
+          text: "The appointment has been approved.",
           icon: "success",
           confirmButtonText: "Okay",
         });
@@ -132,46 +121,36 @@ export default function AppointmentList() {
   };
 
   const formatAppointmentDateTime = (dateString) => {
-    const options = {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    };
-    
     const date = new Date(dateString);
-    let formattedDate = date.toLocaleString('en-US', options);
-    
-    if (filterByDate && dateFilter.startDate && dateFilter.endDate) {
-      if (date >= dateFilter.startDate && date <= dateFilter.endDate) {
-        formattedDate = <span className="fw-bold text-primary">{formattedDate}</span>;
-      }
-    }
-    
-    return formattedDate;
+    const options = {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    };
+    return date.toLocaleString("en-US", options);
   };
 
   const handleReschedule = async () => {
     if (!selectedDateAppointment) return;
-
     try {
       await apiAxios.patch(`/appointments/${selectedDateAppointment.id}/`, {
         appointment_date: newDateTime.toISOString(),
       });
 
       setAppointmentList((prevList) =>
-        prevList.map((appointment) =>
-          appointment.id === selectedDateAppointment.id
-            ? { ...appointment, appointment_date: newDateTime }
-            : appointment
+        prevList.map((appt) =>
+          appt.id === selectedDateAppointment.id
+            ? { ...appt, appointment_date: newDateTime }
+            : appt
         )
       );
 
       msg.fire({
         title: "Appointment Rescheduled!",
-        text: `The appointment date has been updated.`,
+        text: "The appointment date has been updated.",
         icon: "success",
         confirmButtonText: "Okay",
       });
@@ -183,153 +162,178 @@ export default function AppointmentList() {
   };
 
   return (
-    <div className="container rounded p-5" style={{ backgroundColor: "#677bab" }}>
-      <h3 className="text-center text-white">Current Appointments</h3>
-      
-      <div className="d-flex justify-content-between mb-3">
-        <div className="d-flex">
-          {statusOptions.map((option) => (
-            <button
-              key={option.value}
-              className={`btn mx-1 ${option.colorClass} ${
-                filteredStatus === option.value
-                  ? "fw-bold border border-dark"
-                  : ""
-              }`}
-              onClick={() => setFilteredStatus(option.value)}
-            >
-              {option.label}
-            </button>
-          ))}
-          
-          <button
-            className={`btn mx-1 ${filterByDate ? "btn-primary" : "btn-secondary"}`}
-            onClick={toggleDateFilter}
-          >
-            {filterByDate ? "Clear Date Filter" : "Filter by Date"}
-          </button>
-        </div>
-
-        {isTodayAppointment() && (
-          <button
-            type="button"
-            className="btn bg-primary-subtle text-primary-emphasis position-relative mt-2"
-          >
-            <Link className="text-decoration-none" to="/Appointment/CallLobby">
-              Join Appointment
-            </Link>
-            <span className="position-absolute top-0 start-100 translate-middle p-2 bg-danger border border-light rounded-circle">
-              <span className="visually-hidden">New Appointment</span>
-            </span>
-          </button>
-        )}
-      </div>
-
-      {(filteredStatus !== null || filterByDate) && (
-        <button
-          className="btn btn-sm btn-outline-danger mb-3"
-          onClick={() => {
-            setFilteredStatus(null);
-            setFilterByDate(false);
-            setDateFilter({ startDate: null, endDate: null });
-          }}
+    <div className="container py-5">
+      <div className="bg-light rounded shadow-sm ">
+        <div
+          className="card-header bg-gradient py-3 mb-2"
+          style={{ backgroundColor: "#3a4a6d" }}
         >
-          Clear All Filters
-        </button>
-      )}
-
-      {filterByDate && (
-        <div className="mb-3">
-          <label className="form-label">Select Date Range:</label>
-          <DatePicker
-            selectsRange
-            startDate={dateFilter.startDate}
-            endDate={dateFilter.endDate}
-            onChange={handleDateFilterChange}
-            isClearable={true}
-            className="form-control"
-            placeholderText="Select a date range"
-          />
+          <h3 className="text-center text-white mb-0 fw-bold">
+            <i className="bi bi-calendar-check me-2"></i>
+            Current Appointments
+          </h3>
         </div>
-      )}
 
-      <div style={{ maxHeight: "400px", overflowY: "auto" }}>
-        <table className="table table-striped table-hover">
-          <thead className="text-center">
-            <tr>
-              <th>Sn.</th>
-              <th>Doctor's Name</th>
-              <th>Patient's Name</th>
-              <th>Appointment Date</th>
-              <th>Appointment Status</th>
-              {user.user_role === 3 && <th>Actions</th>}
-            </tr>
-          </thead>
-          <tbody className="text-center">
-            {filteredAppointments && filteredAppointments.length > 0 ? (
-              filteredAppointments.slice(0, 10).map((appointment, index) => (
-                <tr key={appointment.id}>
-                  <th>{index + 1}</th>
-                  <td>{appointment.therapist_name}</td>
-                  <td>{appointment.user_fullname}</td>
-                  <td>
-                    {formatAppointmentDateTime(appointment.appointment_date)}
-                  </td>
-                  <td>
-                    <select
-                      className={`form-select ${
-                        statusOptions.find(
-                          (opt) => opt.value === appointment.appointment_status
-                        )?.colorClass
-                      }`}
-                      value={appointment.appointment_status}
-                      disabled={user.user_role === 1}
-                      onChange={(e) =>
-                        handleStatusChange(
-                          appointment.id,
-                          parseInt(e.target.value)
-                        )
-                      }
-                    >
-                      {statusOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  {user.user_role === 3 && (
-                    <td>
-                      <button
-                        className="btn btn-sm btn-warning"
-                        onClick={() => {
-                          setSelectedDateAppointment(appointment);
-                          setNewDateTime(
-                            new Date(appointment.appointment_date)
-                          );
-                        }}
-                      >
-                        Reschedule
-                      </button>
-                    </td>
-                  )}
-                </tr>
-              ))
-            ) : (
+        <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2 p-4">
+          <div className="d-flex flex-wrap gap-2">
+            {statusOptions.map((option) => (
+              <button
+                key={option.value}
+                className={`btn btn-sm ${option.colorClass} ${
+                  filteredStatus === option.value
+                    ? "fw-bold border border-dark"
+                    : ""
+                }`}
+                onClick={() => setFilteredStatus(option.value)}
+              >
+                {option.label}
+              </button>
+            ))}
+            <button
+              className={`btn btn-sm ${
+                filterByDate ? "btn-outline-primary" : "btn-outline-secondary"
+              }`}
+              onClick={toggleDateFilter}
+            >
+              {filterByDate ? "Clear Date Filter" : "Filter by Date"}
+            </button>
+          </div>
+
+          {isTodayAppointment() && (
+            <Link
+              to="/Appointment/CallLobby"
+              className="btn btn-outline-danger position-relative"
+            >
+              Join Appointment
+              <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                !
+              </span>
+            </Link>
+          )}
+        </div>
+
+        <div className="row align-items-end mb-3">
+          {filterByDate && (
+            <div className="col-12 col-sm-auto mb-2 mb-sm-0 ms-3">
+              <label className="form-label fw-semibold me-1">
+                Select Date Range:
+              </label>
+              <DatePicker
+                selectsRange
+                startDate={dateFilter.startDate}
+                endDate={dateFilter.endDate}
+                onChange={handleDateFilterChange}
+                isClearable={true}
+                className="form-control"
+                placeholderText="Select a date range"
+              />
+            </div>
+          )}
+
+          {(filteredStatus !== null || filterByDate) && (
+            <div className="col-12 col-sm-auto ms-5">
+              <button
+                className="btn btn-sm btn-outline-danger"
+                onClick={() => {
+                  setFilteredStatus(null);
+                  setFilterByDate(false);
+                  setDateFilter({ startDate: null, endDate: null });
+                }}
+              >
+                Clear All Filters
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div
+          className="table-responsive"
+          style={{ maxHeight: "500px", overflowY: "auto" }}
+        >
+          <table className="table table-hover table-striped align-middle ">
+            <thead className="table-light text-center">
               <tr>
-                <td colSpan="6" className="text-center">
-                  No appointments match your filters
-                </td>
+                <th>Sn.</th>
+                <th>Doctor</th>
+                <th>Patient</th>
+                <th>Date & Time</th>
+                <th>Status</th>
+                {user.user_role === 3 && <th>Actions</th>}
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="text-center">
+              {filteredAppointments.length > 0 ? (
+                filteredAppointments.map((appt, index) => (
+                  <tr key={appt.id}>
+                    <td>{index + 1}</td>
+                    <td>{appt.therapist_name}</td>
+                    <td>{appt.user_fullname}</td>
+                    <td>{formatAppointmentDateTime(appt.appointment_date)}</td>
+                    <td>
+                      <select
+                        className={`form-select form-select-sm ${
+                          statusOptions.find(
+                            (opt) => opt.value === appt.appointment_status
+                          )?.colorClass || ""
+                        }`}
+                        value={appt.appointment_status}
+                        disabled={user.user_role === 1}
+                        onChange={(e) =>
+                          handleStatusChange(appt.id, parseInt(e.target.value))
+                        }
+                      >
+                        {statusOptions
+                          .filter((option) => {
+                            
+                            if (option.value === appt.appointment_status)
+                              return true;
+
+                           
+                            if (user.user_role === 3) {
+                              return option.value === 3 || option.value === 4 || option.value === 1;
+                            }
+
+                            
+                            return true;
+                          })
+                          .map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                      </select>
+                    </td>
+                    {user.user_role === 3 && (
+                      <td>
+                        <button
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={() => {
+                            setSelectedDateAppointment(appt);
+                            setNewDateTime(new Date(appt.appointment_date));
+                          }}
+                        >
+                          Reschedule
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="6" className="text-muted text-center py-3">
+                    No appointments match your filters.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {selectedDateAppointment && (
         <div className="modal show d-block" tabIndex="-1">
-          <div className="modal-dialog">
-            <div className="modal-content">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content shadow">
               <div className="modal-header">
                 <h5 className="modal-title">Reschedule Appointment</h5>
                 <button
@@ -350,7 +354,7 @@ export default function AppointmentList() {
               </div>
               <div className="modal-footer">
                 <button
-                  className="btn btn-secondary"
+                  className="btn btn-outline-secondary"
                   onClick={() => setSelectedDateAppointment(null)}
                 >
                   Cancel

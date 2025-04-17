@@ -10,7 +10,9 @@ const msg = require("sweetalert2");
 export default function Blog() {
   const { user, authTokens } = useContext(AuthContext);
   const [blogs, setBlog] = useState([]);
+  const [filteredBlogs, setFilteredBlogs] = useState([]);
   const [doctors, setDoctor] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const userToken = localStorage.getItem("authTokens");
   // get user role from token
@@ -29,9 +31,11 @@ export default function Blog() {
         const data = await response.json();
         console.log("blogs:", data);
         setBlog(data);
+        setFilteredBlogs(data);
       } catch (error) {
         console.error("error due to:", error);
         setBlog([]);
+        setFilteredBlogs([]);
       }
     };
     const fetchDoctor = async () => {
@@ -46,6 +50,18 @@ export default function Blog() {
     fetchBlogs();
     fetchDoctor();
   }, []);
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    if (query.trim() === "") {
+      setFilteredBlogs(blogs); 
+    } else {
+      const filtered = blogs.filter(blog =>
+        blog.blog_title.toLowerCase().includes(query.toLowerCase())
+      );
+      setFilteredBlogs(filtered);
+    }
+  };
+
   const navigate = useNavigate();
   if (!user) {
     Swal.fire({
@@ -74,7 +90,10 @@ export default function Blog() {
             />
           </p>
         </div>
-        <SearchBar />
+        <SearchBar 
+          searchQuery={searchQuery} 
+          onSearchChange={(e) => handleSearch(e.target.value)} 
+        />
         {userRole == 3 ? (
           <>
             <div
@@ -93,8 +112,8 @@ export default function Blog() {
           </>
         ) : null}
         <div className="row g-4 bg-white mt-3 px-3">
-          {blogs.length > 0 ? (
-            blogs.map((blog, index) => {
+          {filteredBlogs.length > 0 ? (
+            filteredBlogs.map((blog, index) => {
               const doctor = doctors.find(
                 (doc) => doc.id === blog.therapist_id
               );

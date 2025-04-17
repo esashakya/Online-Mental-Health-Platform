@@ -518,7 +518,8 @@ def approve_appointment(request):
 
 class AppointmentViewSet(viewsets.ModelViewSet):
     serializer_class = AppointmentSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
+   
 
     def get_queryset(self):
         
@@ -562,108 +563,215 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         code = ''.join(secrets.choice(characters) for i in range(8))   
         return code
     def send_updated_date_email(self, appointment):
+        user = appointment.user_id
+        doctor = appointment.therapist_id
         user_email = appointment.user_id.user_email
         doctor_email = appointment.therapist_id.user.user_email
         formatted_date = localtime(appointment.appointment_date).strftime('%Y-%m-%d %H:%M')
-        code = self.generate_random_code() 
+        code = appointment.code
         print(code)
-        subject = "Your timing has been updated. "
-        message = f"""
-        Hello {appointment.user_id.user_fullname},
-        
-        Your appointment with Dr. {appointment.therapist_id.user.user_fullname} is set to be on {formatted_date}. If you are comfortable on the selected date, please confirm your appointment with  your payment.
-        
-        
-        If you have any queries, feel free to contact us in below number.
-        5571584
-        Thank you.
+        user_html = render_to_string('email/updated_appointment_patient.html', {
+            'doctor_name': doctor.user.user_fullname,
+            'patient_name': user.user_fullname,
+            'appointment_time': formatted_date,
+            'patient_email': user.user_email,
+        })
+        user_text = strip_tags(user_html)
 
-        Untangle Chaos Management Team
-        """
-        send_mail(subject, message, 'UntangleChaos@gmail.com', [user_email])
-        doctor_message =  f"""
-        Hello {appointment.therapist_id.user.user_fullname},
+        user_email = EmailMultiAlternatives(
+            subject="Your Appointment Has Been Rescheduled",
+            body=user_text,
+            from_email='UntangleChaos@gmail.com',
+            to=[user.user_email],
+        )
+        user_email.attach_alternative(user_html, "text/html")
+        user_email.send()
 
-        Your appointment with Dr. {appointment.user_id.user_fullname} on {formatted_date} has been updated. 
-        
-        If you have any queries related to timing, please contact the following number. 
-        Your Join Code for appointment is {code}
-        Please check your profile in our website to join the appointment.
-        Please be on time.
-        5571584
-        Thank you.
-        """
-        send_mail(subject, doctor_message, 'UntangleChaos@gmail.com', [doctor_email])
+        doctor_html = render_to_string('email/updated_appointment_doctor.html', {
+            'doctor_name': doctor.user.user_fullname,
+            'patient_name': user.user_fullname,
+            'appointment_time': formatted_date,
+            'code': code,
+        })
+        doctor_text = strip_tags(doctor_html)
+
+        doctor_email = EmailMultiAlternatives(
+            subject=f"Updated Appointment with {user.user_fullname}",
+            body=doctor_text,
+            from_email='UntangleChaos@gmail.com',
+            to=[doctor.user.user_email],
+        )
+        doctor_email.attach_alternative(doctor_html, "text/html")
+        doctor_email.send()
     def send_confirmed_email(self, appointment):
+        user = appointment.user_id
+        doctor = appointment.therapist_id.user
         user_email = appointment.user_id.user_email
         doctor_email = appointment.therapist_id.user.user_email
         formatted_date = localtime(appointment.appointment_date).strftime('%Y-%m-%d %H:%M')
-        code = self.generate_random_code() 
+        code = appointment.code
         print(code)
         subject = "Your appointment has been confirmed! "
-        message = f"""
-        Hello {appointment.user_id.user_fullname},
-        Thank you for being patient with us.
-        Your appointment with Dr. {appointment.therapist_id.user.user_fullname} is set to be on {formatted_date}. Please visit your profile to join the appointment in selected date.
-        Join code for appoint is {code}
-        
-        
-        If you have any queries, feel free to contact us in below number.
-        5571584
-        Thank you.
+        html_content_patient = render_to_string('email/confirmed_appointment_patient.html', {
+            'patient_name': user.user_fullname,
+            'doctor_name': doctor.user_fullname,
+            'appointment_time': formatted_date,
+            'patient_email': user_email,
+            'code': code,
+            'current_year': localtime().year
+        })
+        text_content_patient = strip_tags(html_content_patient)
+        patient_email = EmailMultiAlternatives(
+            subject=subject,
+            body=text_content_patient,
+            from_email='UntangleChaos@gmail.com',
+            to=[user_email],
+        )
+        patient_email.attach_alternative(html_content_patient, "text/html")
+        patient_email.send()
 
-        Untangle Chaos Management Team
-        """
-        send_mail(subject, message, 'UntangleChaos@gmail.com', [user_email])
-        doctor_message =  f"""
-        Hello {appointment.therapist_id.user.user_fullname},
 
-        Your appointment has been confirmed on {formatted_date} for patient  {appointment.user_id.user_fullname}. 
-        
-        If you have any queries related to timing, please contact the following number. 
-        Your Join Code for appointment is {code}
-        Please check your profile in our website to join the appointment.
-        Please be on time.
-        5571584
-        Thank you.
-        """
-        send_mail(subject, doctor_message, 'UntangleChaos@gmail.com', [doctor_email])
+        # Doctor Email
+        html_content_doctor = render_to_string('email/confirmed_appointment_doctor.html', {
+            'doctor_name': doctor.user_fullname,
+            'patient_name': user.user_fullname,
+            'appointment_time': formatted_date,
+            'code': code,
+            'current_year': localtime().year
+        })
+        text_content_doctor = strip_tags(html_content_doctor)
 
-    def send_approval_email(self, appointment):
-        user_email = appointment.user_id.user_email
-        doctor_email = appointment.therapist_id.user.user_email
-        formatted_date = localtime(appointment.appointment_date).strftime('%Y-%m-%d %H:%M')
-        appointment_id = appointment.id
-    
-       
-        payment_link = f"http://localhost:3000/Appointment/Payment?appointmentId={appointment_id}"
-        subject = "Your Appointment Has Been Approved. Please check the updated timing"
-        message = f"""
-        Hello {appointment.user_id.user_fullname},
-
-        Your appointment with Dr. {appointment.therapist_id.user.user_fullname} on {formatted_date} has been approved.  If you are comfortable on the selected date, please confirm your appointment with  your payment.
-        Link: {payment_link}
-        If you have any queries related to timing, please contact the following number.
-
-        Please be on time.
-        5571584
-        Thank you.
-        """
-        send_mail(subject, message, 'UntangleChaos@gmail.com', [user_email])
-
-        # Email for doctor
-        doctor_subject = "New Approved Appointment"
-        doctor_message = f"""
-        Hello Dr. {appointment.therapist_id.user.user_fullname},
-
-        You have a new approved appointment with {appointment.therapist_id.user.user_fullname} on {appointment.appointment_date.strftime('%Y-%m-%d %H:%M')}.
-
-        Please check your schedule in website.
-
-        Thank you.
-        """
-        send_mail(doctor_subject, doctor_message, 'UntangleChaos@gmail.com', [doctor_email])
+        doctor_email_msg = EmailMultiAlternatives(
+            subject=subject,
+            body=text_content_doctor,
+            from_email='UntangleChaos@gmail.com',
+            to=[doctor_email],
+        )
+        doctor_email_msg.attach_alternative(html_content_doctor, "text/html")
+        doctor_email_msg.send()
    
+    def send_approval_email(self, appointment):
+        user = appointment.user_id
+        doctor = appointment.therapist_id.user
+        user_email = user.user_email
+        doctor_email = doctor.user_email
+
+        formatted_date = localtime(appointment.appointment_date).strftime('%B %d, %Y at %I:%M %p')
+        appointment_id = appointment.id
+        appointment_code = appointment.code
+
+        payment_link = f"http://localhost:3000/Appointment/Payment?appointmentId={appointment_id}&code={appointment_code}"
+        subject = "Your Appointment Has Been Approved. Please Check the Updated Timing"
+
+        # Patient HTML Email
+        html_content_patient = render_to_string('email/approved_appointment_patient.html', {
+            'patient_name': user.user_fullname,
+            'doctor_name': doctor.user_fullname,
+            'appointment_time': formatted_date,
+            'payment_link': payment_link,
+            'appointment_code': appointment_code,
+            'current_year': localtime().year
+        })
+        text_content_patient = strip_tags(html_content_patient)
+
+        email_patient = EmailMultiAlternatives(
+            subject=subject,
+            body=text_content_patient,
+            from_email='UntangleChaos@gmail.com',
+            to=[user_email],
+        )
+        email_patient.attach_alternative(html_content_patient, "text/html")
+        email_patient.send()
+
+        # Doctor HTML Email
+        doctor_subject = "New Approved Appointment"
+        html_content_doctor = render_to_string('email/approved_appointment_doctor.html', {
+            'doctor_name': doctor.user_fullname,
+            'patient_name': user.user_fullname,
+            'appointment_time': formatted_date,
+            'appointment_code': appointment_code,
+            'current_year': localtime().year
+        })
+        text_content_doctor = strip_tags(html_content_doctor)
+
+        email_doctor = EmailMultiAlternatives(
+            subject=doctor_subject,
+            body=text_content_doctor,
+            from_email='UntangleChaos@gmail.com',
+            to=[doctor_email],
+        )
+        email_doctor.attach_alternative(html_content_doctor, "text/html")
+        email_doctor.send()
+    
+    
+    @action(detail=False, methods=['GET'])
+    def validate_room_code(self, request):
+        
+        code = request.query_params.get('channel', None)
+        print (code)
+        
+        if not code:
+            return Response({
+                'error': 'Room code is required',
+                'valid': False
+            }, status=400)
+        
+       
+        try:
+            appointment = Appointment.objects.get(code=code)
+            
+          
+            valid_statuses = [1, 5]  
+            
+            if appointment.appointment_status not in valid_statuses:
+                return Response({
+                    'error': 'This appointment is not ready for a video call yet',
+                    'valid': False,
+                    'status': appointment.get_appointment_status_display()
+                }, status=403)
+            
+            
+            current_user = request.user
+            if current_user != appointment.user_id and current_user != appointment.therapist_id.user:
+                return Response({
+                    'error': 'You are not authorized to join this appointment',
+                    'valid': False
+                }, status=403)
+                
+        
+            now = timezone.now()
+            appointment_date = appointment.appointment_date
+            
+        
+            today = now.date()
+            appointment_day = appointment_date.date()
+            
+            if appointment_day != today:
+                return Response({
+                    'error': 'This appointment is not scheduled for today',
+                    'valid': False,
+                    'scheduled_date': appointment_date.strftime('%Y-%m-%d')
+                }, status=403)
+            
+        
+        
+            
+            return Response({
+                'valid': True,
+            
+                
+                'appointment_id': appointment.id,
+                'user_name': appointment.user_id.user_fullname,
+                'doctor_name': appointment.therapist_id.user.user_fullname,
+                'appointment_time': appointment.appointment_date.strftime('%Y-%m-%d %H:%M')
+            })
+            
+        except Appointment.DoesNotExist:
+            return Response({
+                'error': 'Invalid room code. No appointment found with this code',
+                'valid': False
+            }, status=404)
+
 
 
 
@@ -766,7 +874,7 @@ def check_appointment_availability(request):
             appointment_date - buffer_time,
             appointment_date + buffer_time
         ),
-        appointment_status__in=[1, 2, 4]
+        appointment_status__in=[ 2, 4]
     ).exists()
     
     return Response({
