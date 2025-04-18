@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import SearchBar from "../user/SearchBar";
 import AuthContext from "../../context/AuthContext";
+const msg = require("sweetalert2");
 
 export default function DoctorTable() {
   const [doctors, setDoctor] = useState([]);
@@ -15,13 +16,40 @@ export default function DoctorTable() {
     doctor_status: "",
     time_slots: [{ start_time: "", end_time: "" }],
   });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [presentPage, setPresentPage] = useState(1);
+  const [dataPerPage] = useState(5);
+
+
+  const filteredDoctors = doctors.filter(
+    (doctor) =>
+      doctor?.user?.user_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      doctor?.user?.user_fullname?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      doctor.doctor_degree?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+ 
+  const indexOfLastData = presentPage * dataPerPage;
+  const indexOfFirstData = indexOfLastData - dataPerPage;
+  const currentData = filteredDoctors.slice(indexOfFirstData, indexOfLastData);
+
+  const paginate = (pageNumber) => setPresentPage(pageNumber);
+  const nextPage = () => {
+    if (presentPage < Math.ceil(filteredDoctors.length / dataPerPage)) {
+      setPresentPage(presentPage + 1);
+    }
+  };
+  const prevPage = () => {
+    if (presentPage > 1) {
+      setPresentPage(presentPage - 1);
+    }
+  };
 
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
         const response = await fetch("http://127.0.0.1:8000/api/doctors/");
         const data = await response.json();
-        console.log("doctors:", data);
         setDoctor(data);
       } catch (error) {
         console.error("error due to:", error);
@@ -105,19 +133,21 @@ export default function DoctorTable() {
             return;
         }
 
-        // NEW APPROACH: Append each time slot individually
+   
         timeSlotsData.forEach((slot, index) => {
             formData.append(`time_slots[${index}][start_time]`, slot.start_time);
             formData.append(`time_slots[${index}][end_time]`, slot.end_time);
         });
 
-        // Debug: log form data
+   
         for (let [key, value] of formData.entries()) {
             console.log(key, value);
         }
 
         await registerNewDoctor(formData);
-        
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
        
        
         
@@ -127,12 +157,12 @@ export default function DoctorTable() {
     }
 };
 
-// Utility function to ensure time format
+
 const formatTime = (time) => {
     if (!time) return "";
-    // If already in HH:MM:SS format, return as is
+  
     if (time.match(/^\d{2}:\d{2}:\d{2}$/)) return time;
-    // If in HH:MM format, add seconds
+
     if (time.match(/^\d{2}:\d{2}$/)) return `${time}:00`;
     return time;
 };
@@ -251,13 +281,30 @@ const formatTime = (time) => {
         console.error("Update fail:", data);
       } else {
         console.log("success:", data);
-        window.location.reload();
+      showToast("Update successful","Success");
+
+        
       }
+      window.location.reload();
     } catch (error) {
       console.error("Error while editing:", error);
+      showToast("Please try again after few minutes","error");
+
     }
   };
-
+  const showToast = (title, type) => {
+      msg.fire({
+        title,
+        icon: type,
+        toast: true,
+        timer: 5000,
+        position: "top-right",
+        timerProgressBar: true,
+        showConfirmButton: false,
+        background: type === "error" ? "#dc3545" : "#28a745",
+        color: "#ffffff",
+      });
+    };
   const handleDeleteBtn = async (pk) => {
     try {
       const response = await fetch(
@@ -270,130 +317,150 @@ const formatTime = (time) => {
       if (!response.ok) {
         throw new Error(`Error while deleting: ${response.status}`);
       }
-      window.location.reload();
+      showToast("Deletion successful","Success");
+      
       setDoctor((prev) => prev.filter((doctor) => doctor.id !== pk));
     } catch (error) {
       console.error("Error:", error);
+      showToast("Please try again after few minutes","error");
     }
+    window.location.reload();
   };
 
   return (
-    <div>
-      <div className="d-flex flex-column m-4">
-        <SearchBar />
-        <span className="fs-4 fw-semibold mt-2">
-          All Registered Doctor Accounts
-        </span>
-        <hr className="line" />
-        <div className="mt-4 text-center">
-          <div className="AddNewUser">
-            <button
-              className="btn btn-primary"
-              data-bs-toggle="modal"
-              data-bs-target="#staticBackdrop"
-            >
-              Add New Doctors
-            </button>
-          </div>
-          <div className="table-small">
-            <table className="table table-striped table-primary">
-              <thead>
-                <tr>
-                  <th scope="col">Email</th>
-                  <th scope="col">Full Name</th>
-                  <th scope="col">Gender</th>
-                  <th scope="col">Photo</th>
-                  <th scope="col">Type</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">Degree</th>
-                  <th scope="col">Time Slots</th>
-                  <th colSpan="2">Make Changes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {doctors.map((doctor) => (
-                  <tr key={doctor.id}>
-                    <td>{doctor?.user?.user_email}</td>
-                    <td>{doctor?.user?.user_fullname}</td>
-                    <td>
-                      {doctor?.user?.user_gender === "1"
-                        ? "Male"
-                        : doctor?.user?.user_gender === "2"
-                        ? "Female"
-                        : "Others"}
-                    </td>
-                    <td>
-                      <img
-                        src={`http://127.0.0.1:8000${doctor.doctor_photo}`}
-                        alt="Doctor"
-                        style={{
-                          width: "50px",
-                          height: "50px",
-                          objectFit: "cover",
-                        }}
-                      />
-                    </td>
-                    <td>
-                      {doctor.doctor_type === 1 ? "Therapist" : "Psychiatrist"}
-                    </td>
-                    <td>
-                      {doctor.doctor_status === 1 ? "Working" : "On leave"}
-                    </td>
-                    <td>{doctor.doctor_degree}</td>
-                    <td>
-                      {doctor.time_slots?.map((slot, index) => (
-                        <div key={index}>
-                          {slot.start_time} - {slot.end_time}
-                        </div>
-                      ))}
-                    </td>
-                    <td className="text-center">
-                      <div className="d-flex flex-column justify-content-between">
-                        <button
-                          className="btn btn-success w-100"
-                          onClick={() => handleEditBtn(doctor)}
-                          data-bs-toggle="modal"
-                          data-bs-target="#editDoctorModal"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="btn btn-danger w-100"
-                          onClick={() => handleDeleteBtn(doctor.id)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+    <div className="container my-4 p-4 bg-light rounded shadow-sm">
+    <SearchBar searchQuery={searchQuery} onSearchChange={(e) => setSearchQuery(e.target.value)} />
 
-        {/* Edit Doctor Modal */}
-        <div
-          className="modal fade"
-          id="editDoctorModal"
-          tabIndex="-1"
-          aria-hidden="true"
-        >
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Edit Doctor Details</h5>
+    <div className="d-flex justify-content-between align-items-center mt-4">
+      <h4 className="text-primary fw-semibold">
+        <i className="bi bi-heart-pulse me-2"></i>
+        Registered Doctor Accounts
+      </h4>
+      <button
+        className="btn btn-primary"
+        data-bs-toggle="modal"
+        data-bs-target="#staticBackdrop"
+      >
+        <i className="bi bi-plus-circle me-2"></i>
+        Add New Doctor
+      </button>
+    </div>
+    <hr className="border-primary opacity-25" />
+
+    <div className="table-responsive mt-4">
+      <table className="table table-bordered table-hover align-middle">
+        <thead className="table-primary text-white">
+          <tr>
+            <th>ID</th>
+            <th>Email</th>
+            <th>Full Name</th>
+            <th>Photo</th>
+            <th>Specialty</th>
+            <th>Status</th>
+            <th>Qualifications</th>
+            <th>Availability</th>
+            <th colSpan="2" className="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {currentData.map((doctor) => (
+            <tr key={doctor.id}>
+              <td>{doctor.id}</td>
+              <td>{doctor?.user?.user_email}</td>
+              <td>{doctor?.user?.user_fullname}</td>
+              <td>
+                <img
+                  src={`http://127.0.0.1:8000${doctor.doctor_photo}`}
+                  alt="Doctor"
+                  className="rounded-circle"
+                  style={{
+                    width: "50px",
+                    height: "50px",
+                    objectFit: "cover",
+                    border: "2px solid #e3f2fd"
+                  }}
+                />
+              </td>
+              <td>
+                <span className={`badge ${
+                  doctor.doctor_type === 1 ? 'bg-info' : 'bg-primary'
+                }`}>
+                  {doctor.doctor_type === 1 ? "Therapist" : "Psychiatrist"}
+                </span>
+              </td>
+              <td>
+                <span className={`badge ${
+                  doctor.doctor_status === 1 ? 'bg-success' : 'bg-warning'
+                }`}>
+                  {doctor.doctor_status === 1 ? "Active" : "On Leave"}
+                </span>
+              </td>
+              <td>{doctor.doctor_degree}</td>
+              <td>
+                {doctor.time_slots?.map((slot, index) => (
+                  <div key={index} className="small">
+                    {slot.start_time} - {slot.end_time}
+                  </div>
+                ))}
+              </td>
+              <td>
                 <button
-                  type="button"
-                  className="btn-close"
-                  data-bs-dismiss="modal"
-                  aria-label="Close"
-                ></button>
-              </div>
-              <div className="modal-body">
-                <form onSubmit={(e) => handleEditDoctor(e, editId)}>
+                  className="btn btn-sm btn-outline-primary w-100 mb-2"
+                  onClick={() => handleEditBtn(doctor)}
+                  data-bs-toggle="modal"
+                  data-bs-target="#editDoctorModal"
+                >
+                  <i className="bi bi-pencil-square me-1"></i> Edit
+                </button>
+              </td>
+              <td>
+                <button
+                  className="btn btn-sm btn-outline-danger w-100"
+                  onClick={() => handleDeleteBtn(doctor.id)}
+                >
+                  <i className="bi bi-trash me-1"></i> Delete
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* Pagination */}
+      <nav aria-label="Doctor table pagination">
+        <ul className="pagination float-end mt-3">
+          <li className={`page-item ${presentPage === 1 ? 'disabled' : ''}`}>
+            <button className="page-link" onClick={prevPage}>
+              <i className="bi bi-chevron-left"></i>
+            </button>
+          </li>
+          
+          <li className={`page-item ${presentPage === Math.ceil(filteredDoctors.length / dataPerPage) ? 'disabled' : ''}`}>
+            <button className="page-link" onClick={nextPage}>
+              <i className="bi bi-chevron-right"></i>
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+
+    {/* Edit Doctor Modal */}
+    <div className="modal fade" id="editDoctorModal" tabIndex="-1" aria-hidden="true">
+      <div className="modal-dialog modal-lg modal-dialog-centered">
+        <div className="modal-content border-0 shadow">
+          <div className="modal-header bg-primary text-white">
+            <h5 className="modal-title">
+              <i className="bi bi-pencil-square me-2"></i>
+              Edit Doctor Profile
+            </h5>
+            <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form onSubmit={(e) => handleEditDoctor(e, editId)}>
+            <div className="modal-body">
+              <div className="row">
+                <div className="col-md-6">
                   <div className="mb-3">
-                    <label className="form-label">Email</label>
+                    <label className="form-label">Email Address</label>
                     <input
                       type="email"
                       name="user_email"
@@ -418,20 +485,22 @@ const formatTime = (time) => {
                     <label className="form-label">Gender</label>
                     <select
                       name="user_gender"
-                      className="form-control"
+                      className="form-select"
                       value={newData.user_gender}
                       onChange={handleEdit}
                     >
                       <option value="1">Male</option>
                       <option value="2">Female</option>
-                      <option value="3">Others</option>
+                      <option value="3">Other</option>
                     </select>
                   </div>
+                </div>
+                <div className="col-md-6">
                   <div className="mb-3">
-                    <label className="form-label">Doctor Type</label>
+                    <label className="form-label">Specialty</label>
                     <select
                       name="doctor_type"
-                      className="form-control"
+                      className="form-select"
                       value={newData.doctor_type}
                       onChange={handleEdit}
                     >
@@ -440,139 +509,130 @@ const formatTime = (time) => {
                     </select>
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Doctor Status</label>
+                    <label className="form-label">Status</label>
                     <select
                       name="doctor_status"
-                      className="form-control"
+                      className="form-select"
                       value={newData.doctor_status}
                       onChange={handleEdit}
                     >
-                      <option value="1">Working</option>
-                      <option value="2">On leave</option>
+                      <option value="1">Active</option>
+                      <option value="2">On Leave</option>
                     </select>
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Degree</label>
+                    <label className="form-label">Qualifications</label>
                     <input
                       type="text"
                       name="doctor_degree"
                       className="form-control"
                       value={newData.doctor_degree}
                       onChange={handleEdit}
+                      required
                     />
                   </div>
-
-                  <div className="mb-3">
-                    <label className="form-label">Time Slots</label>
-                    {newData.time_slots.map((slot, index) => (
-                      <div key={index} className="d-flex mb-2">
-                        <input
-                          type="time"
-                          className="form-control me-2"
-                          value={slot.start_time}
-                          onChange={(e) =>
-                            handleTimeSlotChange(
-                              index,
-                              "start_time",
-                              e.target.value
-                            )
-                          }
-                        />
-                        <input
-                          type="time"
-                          className="form-control me-2"
-                          value={slot.end_time}
-                          onChange={(e) =>
-                            handleTimeSlotChange(
-                              index,
-                              "end_time",
-                              e.target.value
-                            )
-                          }
-                        />
-                        <button
-                          type="button"
-                          className="btn btn-danger"
-                          onClick={() => removeTimeSlot(index)}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={addTimeSlot}
-                    >
-                      Add Time Slot
-                    </button>
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label">Doctor Photo</label>
-                    <input
-                      type="file"
-                      name="doctor_photo"
-                      className="form-control"
-                      onChange={(e) =>
-                        setNewData((prev) => ({
-                          ...prev,
-                          doctor_photo: e.target.files[0],
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="modal-footer">
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      data-bs-dismiss="modal"
-                    >
-                      Close
-                    </button>
-                    <button type="submit" className="btn btn-primary">
-                      Save Changes
-                    </button>
-                  </div>
-                </form>
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Add New Doctor Modal */}
-        <div
-          className="modal fade"
-          id="staticBackdrop"
-          data-bs-backdrop="static"
-          data-bs-keyboard="false"
-          tabIndex="-1"
-          aria-labelledby="staticBackdropLabel"
-          aria-hidden="true"
-        >
-          <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-            <div
-              className="modal-content"
-              style={{ backgroundColor: "#e3f2fd" }}
-            >
-              <div
-                className="modal-header"
-                style={{ backgroundColor: "#bbdefb" }}
-              >
-                <h1 className="modal-title fs-5" style={{ color: "#0d47a1" }}>
-                  Fill the contents below
-                </h1>
+              <div className="mb-3">
+                <label className="form-label">Profile Photo</label>
+                <input
+                  type="file"
+                  name="doctor_photo"
+                  className="form-control"
+                  onChange={(e) =>
+                    setNewData((prev) => ({
+                      ...prev,
+                      doctor_photo: e.target.files[0],
+                    }))
+                  }
+                />
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label">Availability Schedule</label>
+                {newData.time_slots.map((slot, index) => (
+                  <div key={index} className="row g-2 mb-2">
+                    <div className="col-md-5">
+                      <label className="small text-muted">Start Time</label>
+                      <input
+                        type="time"
+                        className="form-control"
+                        value={slot.start_time}
+                        onChange={(e) =>
+                          handleTimeSlotChange(
+                            index,
+                            "start_time",
+                            e.target.value
+                          )
+                        }
+                      />
+                    </div>
+                    <div className="col-md-5">
+                      <label className="small text-muted">End Time</label>
+                      <input
+                        type="time"
+                        className="form-control"
+                        value={slot.end_time}
+                        onChange={(e) =>
+                          handleTimeSlotChange(
+                            index,
+                            "end_time",
+                            e.target.value
+                          )
+                        }
+                      />
+                    </div>
+                    <div className="col-md-2 d-flex align-items-end">
+                      <button
+                        type="button"
+                        className="btn btn-outline-danger w-100"
+                        onClick={() => removeTimeSlot(index)}
+                      >
+                        <i className="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                ))}
                 <button
                   type="button"
-                  className="btn-close"
-                  data-bs-dismiss="modal"
-                  aria-label="Close"
-                ></button>
+                  className="btn btn-outline-primary mt-2"
+                  onClick={addTimeSlot}
+                >
+                  <i className="bi bi-plus-circle me-1"></i> Add Time Slot
+                </button>
               </div>
-              <div className="modal-body">
-                <form onSubmit={handleNewDoctor}>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
+                Cancel
+              </button>
+              <button type="submit" className="btn btn-primary">
+                Save Changes
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    {/* Add New Doctor Modal */}
+    <div className="modal fade" id="staticBackdrop" tabIndex="-1" aria-hidden="true">
+      <div className="modal-dialog modal-lg modal-dialog-centered">
+        <div className="modal-content border-0 shadow">
+          <div className="modal-header bg-primary text-white">
+            <h5 className="modal-title">
+              <i className="bi bi-person-plus me-2"></i>
+              Register New Doctor
+            </h5>
+            <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form onSubmit={handleNewDoctor}>
+            <div className="modal-body">
+              <div className="row">
+                <div className="col-md-6">
                   <div className="mb-3">
-                    <label className="form-label">Email</label>
+                    <label className="form-label">Email Address</label>
                     <input
                       type="email"
                       name="user_email"
@@ -605,7 +665,7 @@ const formatTime = (time) => {
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Retype Password</label>
+                    <label className="form-label">Confirm Password</label>
                     <input
                       type="password"
                       name="retype_password"
@@ -615,38 +675,26 @@ const formatTime = (time) => {
                       required
                     />
                   </div>
+                </div>
+                <div className="col-md-6">
                   <div className="mb-3">
                     <label className="form-label">Gender</label>
                     <select
                       name="user_gender"
-                      className="form-control"
+                      className="form-select"
                       value={newDoctor.user_gender}
                       onChange={handleNewDoctorChange}
                     >
                       <option value="1">Male</option>
                       <option value="2">Female</option>
-                      <option value="3">Others</option>
+                      <option value="3">Other</option>
                     </select>
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Doctor Photo</label>
-                    <input
-                      type="file"
-                      name="doctor_photo"
-                      className="form-control"
-                      onChange={(e) =>
-                        setNewDoctor((prev) => ({
-                          ...prev,
-                          doctor_photo: e.target.files[0],
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Doctor Type</label>
+                    <label className="form-label">Specialty</label>
                     <select
                       name="doctor_type"
-                      className="form-control"
+                      className="form-select"
                       value={newDoctor.doctor_type}
                       onChange={handleNewDoctorChange}
                     >
@@ -655,19 +703,19 @@ const formatTime = (time) => {
                     </select>
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Doctor Status</label>
+                    <label className="form-label">Status</label>
                     <select
                       name="doctor_status"
-                      className="form-control"
+                      className="form-select"
                       value={newDoctor.doctor_status}
                       onChange={handleNewDoctorChange}
                     >
-                      <option value="1">Working</option>
-                      <option value="2">On leave</option>
+                      <option value="1">Active</option>
+                      <option value="2">On Leave</option>
                     </select>
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Degree</label>
+                    <label className="form-label">Qualifications</label>
                     <input
                       type="text"
                       name="doctor_degree"
@@ -677,75 +725,94 @@ const formatTime = (time) => {
                       required
                     />
                   </div>
+                </div>
+              </div>
 
-                  <div className="mb-3">
-                    <label className="form-label">Time Slots</label>
-                    {newDoctor.time_slots.map((slot, index) => (
-                      <div key={index} className="d-flex mb-2">
-                        <input
-                          type="time"
-                          className="form-control me-2"
-                          value={slot.start_time}
-                          onChange={(e) =>
-                            handleNewTimeSlotChange(
-                              index,
-                              "start_time",
-                              e.target.value
-                            )
-                          }
-                          required
-                        />
-                        <input
-                          type="time"
-                          className="form-control me-2"
-                          value={slot.end_time}
-                          onChange={(e) =>
-                            handleNewTimeSlotChange(
-                              index,
-                              "end_time",
-                              e.target.value
-                            )
-                          }
-                          required
-                        />
-                        {newDoctor.time_slots.length > 1 && (
-                          <button
-                            type="button"
-                            className="btn btn-danger"
-                            onClick={() => removeNewTimeSlot(index)}
-                          >
-                            Remove
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={addNewTimeSlot}
-                    >
-                      Add Time Slot
-                    </button>
-                  </div>
+              <div className="mb-3">
+                <label className="form-label">Profile Photo</label>
+                <input
+                  type="file"
+                  name="doctor_photo"
+                  className="form-control"
+                  onChange={(e) =>
+                    setNewDoctor((prev) => ({
+                      ...prev,
+                      doctor_photo: e.target.files[0],
+                    }))
+                  }
+                />
+              </div>
 
-                  <div className="modal-footer">
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      data-bs-dismiss="modal"
-                    >
-                      Close
-                    </button>
-                    <button type="submit" className="btn btn-primary">
-                      Add Doctor
-                    </button>
+              <div className="mb-3">
+                <label className="form-label">Availability Schedule</label>
+                {newDoctor.time_slots.map((slot, index) => (
+                  <div key={index} className="row g-2 mb-2">
+                    <div className="col-md-5">
+                      <label className="small text-muted">Start Time</label>
+                      <input
+                        type="time"
+                        className="form-control"
+                        value={slot.start_time}
+                        onChange={(e) =>
+                          handleNewTimeSlotChange(
+                            index,
+                            "start_time",
+                            e.target.value
+                          )
+                        }
+                        required
+                      />
+                    </div>
+                    <div className="col-md-5">
+                      <label className="small text-muted">End Time</label>
+                      <input
+                        type="time"
+                        className="form-control"
+                        value={slot.end_time}
+                        onChange={(e) =>
+                          handleNewTimeSlotChange(
+                            index,
+                            "end_time",
+                            e.target.value
+                          )
+                        }
+                        required
+                      />
+                    </div>
+                    <div className="col-md-2 d-flex align-items-end">
+                      {newDoctor.time_slots.length > 1 && (
+                        <button
+                          type="button"
+                          className="btn btn-outline-danger w-100"
+                          onClick={() => removeNewTimeSlot(index)}
+                        >
+                          <i className="bi bi-trash"></i>
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </form>
+                ))}
+                <button
+                  type="button"
+                  className="btn btn-outline-primary mt-2"
+                  onClick={addNewTimeSlot}
+                >
+                  <i className="bi bi-plus-circle me-1"></i> Add Time Slot
+                </button>
               </div>
             </div>
-          </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
+                Cancel
+              </button>
+              <button type="submit" className="btn btn-primary">
+                Register Doctor
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
+  </div>
   );
 }

@@ -24,7 +24,7 @@ export default function VideoCall() {
   const remoteVideoRefs = useRef({});
   const localTracks = useRef([]);
 
-  // Track remote users count
+  //numbeer of user
   const remoteUsersCount = Object.keys(remoteUsers).length;
 
   // Stop stream function
@@ -42,7 +42,31 @@ export default function VideoCall() {
       localTracks.current = [];
     }
   };
-
+  useEffect(() => {
+    const isAlone = remoteUsersCount === 0;
+    setIsAloneInCall(isAlone);
+  
+    const cameraTrack = localTracks.current[1];
+  
+    if (isAlone && cameraTrack) {
+      cameraTrack.setEnabled(true).then(() => {
+        setIsCameraMuted(false);
+  
+        const waitForRefAndPlay = () => {
+          if (videoRef.current) {
+            cameraTrack.play(videoRef.current);
+          } else {
+            
+            setTimeout(waitForRefAndPlay, 100);
+          }
+        };
+  
+        waitForRefAndPlay(); 
+      });
+    }
+  }, [remoteUsersCount]);
+  
+  
   const joinAndDisplayLocalStream = async () => {
     if (isJoined) return;
     if (
@@ -56,7 +80,7 @@ export default function VideoCall() {
     try {
       console.log("User entering the call");
 
-      // Setup event listeners
+      // event listeners
       client.on("user-published", handleUserPublished);
       client.on("user-unpublished", handleUserUnpublished);
       client.on("user-left", handleUserLeft);
@@ -69,7 +93,7 @@ export default function VideoCall() {
 
       await client.join(appId, channel, token, uid);
 
-      // Create local tracks
+      // video and mic
       const [microphoneTrack, cameraTrack] = await Promise.all([
         AgoraRTC.createMicrophoneAudioTrack().catch((e) => {
           console.warn("Microphone access error:", e);
@@ -84,17 +108,17 @@ export default function VideoCall() {
       const tracks = [microphoneTrack, cameraTrack].filter(Boolean);
       localTracks.current = tracks;
 
-      // Play local video if available
+     
       if (cameraTrack && videoRef.current) {
         cameraTrack.play(videoRef.current);
       }
 
-      // Publish tracks if any available
+  
       if (tracks.length > 0) {
         await client.publish(tracks);
       }
 
-      // Always play audio track locally
+ 
       if (microphoneTrack) {
         microphoneTrack.play();
       }
@@ -106,16 +130,25 @@ export default function VideoCall() {
     }
   };
 
-  // Update alone status whenever remote users change
   useEffect(() => {
-    setIsAloneInCall(remoteUsersCount === 0);
-
-    // If alone in call, ensure video is on
-    if (isAloneInCall && localTracks.current[1]) {
-      localTracks.current[1].setEnabled(true);
-      setIsCameraMuted(false);
+    const isAlone = remoteUsersCount === 0;
+    setIsAloneInCall(isAlone);
+  
+    const cameraTrack = localTracks.current[1];
+    if (isAlone && cameraTrack) {
+      cameraTrack.setEnabled(true).then(() => {
+        setIsCameraMuted(false);
+       
+        setTimeout(() => {
+          if (videoRef.current) {
+            cameraTrack.play(videoRef.current);
+          }
+        }, 100); 
+      });
     }
-  }, [remoteUsersCount, isAloneInCall]);
+  }, [remoteUsersCount]);
+  
+  
 
   const showError = (message) => {
     msg.fire({
@@ -141,8 +174,10 @@ export default function VideoCall() {
         [user.uid]: {
           ...prev[user.uid],
           ...user,
-          hasVideo: mediaType === "video" || prev[user.uid]?.hasVideo,
-          hasAudio: mediaType === "audio" || prev[user.uid]?.hasAudio,
+          hasVideo:
+            mediaType === "video" ? true : prev[user.uid]?.hasVideo || false,
+          hasAudio:
+            mediaType === "audio" ? true : prev[user.uid]?.hasAudio || false,
         },
       }));
 
@@ -161,12 +196,11 @@ export default function VideoCall() {
     setRemoteUsers((prev) => {
       const updated = { ...prev };
       if (updated[user.uid]) {
-        if (mediaType === "video") updated[user.uid].hasVideo = false;
-        if (mediaType === "audio") updated[user.uid].hasAudio = false;
-
-        if (!updated[user.uid].hasVideo && !updated[user.uid].hasAudio) {
-          delete updated[user.uid];
-        }
+        updated[user.uid] = {
+          ...updated[user.uid],
+          hasVideo: mediaType === "video" ? false : updated[user.uid].hasVideo,
+          hasAudio: mediaType === "audio" ? false : updated[user.uid].hasAudio,
+        };
       }
       return updated;
     });
@@ -219,30 +253,48 @@ export default function VideoCall() {
 
   const toggleCamera = async () => {
     const cameraTrack = localTracks.current[1];
-    alert("Trying to turn cam");
   
     if (!cameraTrack) {
       console.log("Camera track not available");
       return;
     }
   
+    const newState = !isCameraMuted;
+  
     try {
-      if (isAloneInCall) {
+      if (isAloneInCall && newState) {
         await cameraTrack.setEnabled(true);
         setIsCameraMuted(false);
         showError("Video must remain on when alone in call");
-        alert("It cant");
         return;
       }
   
-      await cameraTrack.setEnabled(!isCameraMuted);
-      setIsCameraMuted(!isCameraMuted);
+      if (newState) {
+      
+        await cameraTrack.setEnabled(false);
+        cameraTrack.stop(); 
+        if (videoRef.current) {
+          videoRef.current.srcObject = null;
+        }
+      } else {
+      
+        await cameraTrack.setEnabled(true);
+        setTimeout(() => {
+          if (videoRef.current) {
+            cameraTrack.play(videoRef.current);
+          }
+        }, 100); 
+      }
+  
+      setIsCameraMuted(newState);
     } catch (error) {
       console.error("Toggle camera error:", error);
+      setIsCameraMuted(!newState);
       showError("Failed to toggle camera");
     }
   };
   
+
   const toggleMic = async () => {
     const micTrack = localTracks.current[0];
     if (!micTrack) {
@@ -284,102 +336,134 @@ export default function VideoCall() {
   }, []);
 
   return (
-    <div
-      style={{ background: "linear-gradient(to right, #B5EAEA, #EDF6E5)" }}
-      className="vh-100"
-    >
-      <div className="container pt-2 rounded vh-100">
-        <h2 className="text-center mt-4">Video Call Appointment</h2>
-        <h5 className="text-center mt-2">
-          Room Code: <span className="text-primary">{channel}</span>
+    <div className="min-vh-100" style={{ 
+      background: "linear-gradient(135deg, #f5fbff 0%, #ebf5ff 100%)",
+   
+    }}>
+      
+      <div className="py-3 text-center" style={{
+        backgroundColor: "#1976d2",
+        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+        color: "white"
+      }}>
+        <h2 className="mb-1" style={{ fontWeight: 500 }}>
+          
+          Doctor Appointment
+        </h2>
+        <div className="d-flex justify-content-center align-items-center">
+          <div className="badge bg-white text-primary fs-6 fw-normal py-2 px-3 rounded-pill">
+            
+            Room: {channel}
+          </div>
           {isAloneInCall && (
-            <span className="ms-2 badge bg-warning">
-              Waiting for others to join...
-            </span>
+            <div className="ms-3 badge bg-white text-primary py-2 px-3 rounded-pill fs-6 fw-normal">
+              
+              Waiting for participant
+            </div>
           )}
-        </h5>
-
-        <div className="row justify-content-evenly mt-3 appointment-call">
-          {/* Local User */}
-          <div className="col-md-6 col-sm-1 bg-dark align-items-center position-relative mb-5">
-            <video
-              ref={videoRef}
-              className={`video-player w-100 h-100 rounded ${
-                isCameraMuted ? "bg-secondary" : ""
-              }`}
-              autoPlay
-              playsInline
-            />
-            {isCameraMuted && (
-              <div className="position-absolute top-50 start-50 translate-middle text-white">
-                Camera Off
+        </div>
+      </div>
+    
+      {/* Video Grid Container */}
+      <div className="container-fluid py-4 px-4">
+        <div className="row g-4" style={{ minHeight: "70vh" }}>
+        
+          <div className="col-lg-6">
+            <div className="card h-100 border-0" style={{
+              borderRadius: "12px",
+              boxShadow: "0 4px 20px rgba(25, 118, 210, 0.15)",
+              overflow: "hidden"
+            }}>
+              <div className="bg-dark h-100 position-relative">
+                {!isCameraMuted ? (
+                  <video
+                    ref={videoRef}
+                    className="w-100 h-100 object-cover"
+                    autoPlay
+                    playsInline
+                  />
+                ) : (
+                  <div className="w-100 h-100 d-flex flex-column justify-content-center align-items-center" 
+                       style={{ backgroundColor: "#0d47a1" }}>
+                    <div className="bg-white rounded-circle p-3 mb-3">
+                      <i className="bi bi-person text-primary fs-2"></i>
+                    </div>
+                    <p className="text-white fs-5 mb-0">Your camera is disabled</p>
+                  </div>
+                )}
+                
               </div>
-            )}
-            <div className="position-absolute bottom-0 start-0 bg-light-subtle bg-opacity-25 text-dark p-2 rounded m-2 w-50 fw-bold">
-              {user.user_fullname} (You)
             </div>
           </div>
-
-          {/* Remote Users */}
+    
+          {/* Remote User Card */}
           {Object.keys(remoteUsers).map((uid) => (
-            <div
-              key={uid}
-              className="col-md-6 col-sm-1 bg-dark align-items-center position-relative mb-5"
-            >
-              <video
-                ref={(el) => (remoteVideoRefs.current[uid] = { current: el })}
-                className={`video-player w-100 h-100 rounded ${
-                  !remoteUsers[uid]?.hasVideo ? "bg-secondary" : ""
-                }`}
-                autoPlay
-                playsInline
-              />
-              {!remoteUsers[uid]?.hasVideo && (
-                <div className="position-absolute top-50 start-50 translate-middle text-white">
-                  Camera Off
+            <div key={uid} className="col-lg-6">
+              <div className="card h-100 border-0" style={{
+                borderRadius: "12px",
+                boxShadow: "0 4px 20px rgba(25, 118, 210, 0.15)",
+                overflow: "hidden"
+              }}>
+                <div className="bg-dark h-100 position-relative">
+                  <video
+                    ref={(el) => (remoteVideoRefs.current[uid] = { current: el })}
+                    className={`w-100 h-100 object-cover ${
+                      !remoteUsers[uid]?.hasVideo ? "d-none" : ""
+                    }`}
+                    autoPlay
+                    playsInline
+                  />
+                  {!remoteUsers[uid]?.hasVideo && (
+                    <div className="w-100 h-100 d-flex flex-column justify-content-center align-items-center" 
+                         style={{ backgroundColor: "#0d47a1" }}>
+                      <div className="bg-white rounded-circle p-3 mb-3">
+                        <i className="bi bi-person text-primary fs-2"></i>
+                      </div>
+                      <p className="text-white fs-5 mb-0">Participant camera off</p>
+                    </div>
+                  )}
+                  
                 </div>
-              )}
-              <div className="position-absolute bottom-0 start-0 bg-light-subtle bg-opacity-25 text-dark p-2 rounded m-2 w-50 fw-bold">
-                {user.user_fullname}
               </div>
             </div>
           ))}
         </div>
-
-        {/* Control Buttons */}
-        <div className="d-flex justify-content-center gap-3 mb-3">
-          <button
-            className={`btn btn-light rounded-circle p-3 ${
-              isMicMuted ? "btn-danger" : ""
-            }`}
-            onClick={toggleMic}
-            title={isMicMuted ? "Unmute microphone" : "Mute microphone"}
-          >
-            <i className={`bi ${isMicMuted ? "bi-mic-mute" : "bi-mic"}`}></i>
-          </button>
-
-          <button
-            className={`btn btn-light rounded-circle p-3 ${
-              isCameraMuted ? "btn-danger" : ""
-            }`}
-            onClick={toggleCamera}
-            title={isCameraMuted ? "Turn camera on" : "Turn camera off"}
-            disabled={isAloneInCall}
-          >
-            <i
-              className={`bi ${
+      </div>
+    
+  
+      <div className="position-fixed bottom-0 start-0 w-100 py-2" style={{
+        backgroundColor: "rgba(255,255,255,0.96)",
+        backdropFilter: "blur(4px)"
+      }}>
+        <div className="container">
+          <div className="d-flex justify-content-center gap-4">
+            <button
+              className={`btn btn-icon rounded-circle p-3 ${isMicMuted ? "btn-danger" : "btn-primary"}`}
+              onClick={toggleMic}
+              style={{ width: "56px", height: "56px" }}
+            >
+              <i className={`bi fs-6 ${isMicMuted ? "bi-mic-mute" : "bi-mic"}`}></i>
+            </button>
+    
+            <button
+              className={`btn btn-icon rounded-circle p-3 ${isCameraMuted ? "btn-danger" : "btn-primary"}`}
+              onClick={toggleCamera}
+              disabled={isAloneInCall}
+              style={{ width: "56px", height: "56px" }}
+            >
+              <i className={`bi fs-6 ${
                 isCameraMuted ? "bi-camera-video-off" : "bi-camera-video"
-              }`}
-            ></i>
-          </button>
-
-          <button
-            className="btn btn-danger rounded-circle p-3"
-            onClick={leaveCall}
-            title="Leave call"
-          >
-            <i className="bi bi-telephone-x"></i>
-          </button>
+              }`}></i>
+            </button>
+    
+            <button
+              className="btn btn-icon rounded-circle p-3 btn-danger text-center"
+              onClick={leaveCall}
+              style={{ width: "56px", height: "56px" }}
+            >
+              <i className="bi bi-door-open fs-6"></i>
+            </button>
+          </div>
         </div>
       </div>
     </div>

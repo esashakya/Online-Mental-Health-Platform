@@ -256,22 +256,49 @@ export const AuthProvider = ({ children }) => {
     }
   };
   //blog
-  const addNewBlog = async (
-    formData
-  ) => {
-    try {
+  const addNewBlog = async (formData) => {
+  try {
     const response = await fetch("http://127.0.0.1:8000/api/blog/add", {
       method: "POST",
       body: formData,
     });
+    
+   
+    let data;
+    try {
+      data = await response.json();
+      console.log(data);
+    } catch (error) {
+      console.error("Error parsing response:", error);
+    }
+
     if (response.status === 400) {
-      const errorData = await response.json();
-      console.error("Error response:", errorData);
-  }
+      console.error("Error response:", data);
+      
+      // Show specific error message from the server if available
+      const errorMessage = data && data.message 
+        ? data.message 
+        : "The entered credentials are incorrect. Please try again";
+        
+      msg.fire({
+        title: "Error Occurred in Input Fields",
+        icon: "error",
+        toast: true,
+        timer: 5000,
+        position: "top-right",
+        timerProgressBar: true,
+        showConfirmButton: false,
+        background: "#dc3545",
+        color: "#ffffff",
+        text: errorMessage,
+      });
+      
+      return false;
+    }
+    
     if (response.status === 201) {
       navigate("/admin/Post/Blog");
       
-
       msg.fire({
         title: "New Blog Added Successfully",
         icon: "success",
@@ -288,36 +315,17 @@ export const AuthProvider = ({ children }) => {
         },
         willClose: () => {
           msg.hideLoading();
-          
         },
-        
-        
-      });setTimeout(() => {
+      });
+      
+      setTimeout(() => {
         window.location.reload();
       }, 5000);
       
-    } else if (response.status === 400) {
-      msg.fire({
-        title: "Error Occured in input fields ",
-        icon: "error",
-        toast: true,
-        timer: 5000,
-        position: "top-right",
-        timerProgressBar: true,
-        showConfirmButton: false,
-        background: "#dc3545",
-        color: "#ffffff",
-        text: "The entered creddentials are incorrect. Please try again",
-        didOpen: () => {
-          msg.showLoading();
-        },
-        willClose: () => {
-          msg.hideLoading();
-        },
-      });
+      return true;
     } else {
       msg.fire({
-        title: "An Error Occured " + response.status,
+        title: "An Error Occurred " + response.status,
         icon: "error",
         toast: true,
         timer: 5000,
@@ -334,10 +342,26 @@ export const AuthProvider = ({ children }) => {
           msg.hideLoading();
         },
       });
-    }}catch(error){
-      console.error("Error:", error);
+      
+      return false;
     }
-  };
+  } catch (error) {
+    console.error("Error:", error);
+    msg.fire({
+      title: "Connection Error",
+      icon: "error",
+      toast: true,
+      timer: 5000,
+      position: "top-right",
+      timerProgressBar: true,
+      showConfirmButton: false,
+      background: "#dc3545",
+      color: "#ffffff",
+      text: "Cannot connect to the server. Please check your connection.",
+    });
+    return false;
+  }
+};
   //music
   const addNewMusic = async (
     formData
