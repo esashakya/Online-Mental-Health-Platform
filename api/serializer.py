@@ -24,6 +24,8 @@ class UserSerializer(serializers.ModelSerializer): #serialize to json format
         user = User.objects.create(
             user_fullname = validated_data['user_fullname'],
             user_email = validated_data['user_email'],
+            user_gender = validated_data['user_gender'],
+
 
         )
         user.set_password(validated_data['password'])
@@ -355,7 +357,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    user_name = serializers.ReadOnlyField(source="user_id.username") 
+    user_name = serializers.ReadOnlyField(source="user_id.user_fullname") 
     therapist_name = serializers.ReadOnlyField(source="therapist_id.user.user_fullname") 
 
     class Meta:

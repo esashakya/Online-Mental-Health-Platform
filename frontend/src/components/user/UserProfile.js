@@ -265,6 +265,7 @@ export default function UserProfile() {
                       ? "Other"
                       : "Not Specified"}
                   </p>
+                  
                   <p>
                     <strong>Email Address:</strong> {profile.user_email}
                   </p>

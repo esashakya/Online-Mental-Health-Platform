@@ -4,6 +4,7 @@ import secrets
 import string
 from datetime import date, timedelta
 from django.utils import timezone
+from django.db.models import Count
 import pytz
 import requests
 from rest_framework.pagination import PageNumberPagination
@@ -86,7 +87,14 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated]
     def get_queryset(self):
-        
+        if self.action in ['destroy', 'retrieve'] and self.request.user.is_staff:
+            return Comment.objects.all()
+
+        admin_request = self.request.query_params.get('admin', None)
+        if admin_request:
+            return Comment.objects.all()
+
+
         forum_id = self.request.query_params.get('forum', None)
         blog_id = self.request.query_params.get('blog', None)
 
@@ -128,6 +136,10 @@ class CommentViewSet(viewsets.ModelViewSet):
             raise serializers.ValidationError({
                 "error": "Either blog or forum ID must be provided"
             })
+    def destroy(self, request, *args, **kwargs):
+        
+        return super().destroy(request, *args, **kwargs)
+
 
 class MusicViewSet(viewsets.ModelViewSet):
     queryset = Music.objects.all()
@@ -334,6 +346,23 @@ def update_delete_review(request, pk):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def admin_delete_review(request, pk):
+    try:
+        review = Review.objects.get(pk=pk)
+    except Review.DoesNotExist:
+        return Response(
+            {"error": "Review not found."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    review.delete()
+    return Response(
+        {"message": "Review deleted by admin."},
+        status=status.HTTP_204_NO_CONTENT
+    )
+
 @api_view(['PUT','DELETE'])
 @parser_classes([MultiPartParser, FormParser])
 def update_user(request, pk):
@@ -524,8 +553,9 @@ class AppointmentViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         
         user = self.request.user
-
-        if user.user_role == 3:  
+        if user.is_superuser:
+            return Appointment.objects.all()
+        elif user.user_role == 3:  
             return Appointment.objects.filter(therapist_id__user=user)
         else:  
             return Appointment.objects.filter(user_id=user)
@@ -557,6 +587,18 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             self.send_confirmed_email(updated_instance)
 
         return response
+    @action(detail=False, methods=['GET'], url_path='count', permission_classes=[IsAuthenticated])
+    def get_appointment_count(self, request):
+        user = request.user
+
+        if user.is_superuser:
+            total = Appointment.objects.count()
+        elif user.user_role == 3:
+            total = Appointment.objects.filter(therapist_id__user=user).count()
+        else:
+            total = Appointment.objects.filter(user_id=user).count()
+
+        return Response({"count": total})
     @staticmethod
     def generate_random_code():
         characters = string.ascii_letters + string.digits
@@ -882,3 +924,42 @@ def check_appointment_availability(request):
         'requested_time': appointment_date,
         'therapist_id': therapist_id
     })
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def doctor_status_summary(request):
+    
+    summary = Doctor.objects.values('doctor_status').annotate(count=Count('id'))
+
+   
+    status_map = {
+        1: "Working",
+        2: "On Leave"
+    }
+
+
+    formatted = [
+        {
+            "name": status_map.get(entry['doctor_status'], "Unknown"),
+            "value": entry['count']
+        }
+        for entry in summary
+    ]
+
+    return Response(formatted)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def top_forum_posts_by_comments(request):
+    top_forums = Forum.objects.annotate(comment_count=Count('comments')) \
+                               .order_by('-comment_count')[:10] 
+
+    data = [
+        {
+            "title": forum.post_title,
+            "comment_count": forum.comment_count
+        }
+        for forum in top_forums
+    ]
+    return Response(data)

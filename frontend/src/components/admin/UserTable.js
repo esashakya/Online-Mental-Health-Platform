@@ -71,6 +71,7 @@ export default function UserTable() {
 
     try {
       await addNewUser(formData);
+      console.log(user_gender);
       setTimeout(() => {
         window.location.reload();
       }, 2000);
@@ -200,14 +201,16 @@ export default function UserTable() {
           All Registered User Accounts
         </h4>
         <button
-          className="btn btn-outline-primary"
-          data-bs-toggle="modal"
-          data-bs-target="#staticBackdrop"
-        >
-          Add New User
-        </button>
+        className="btn btn-primary"
+        data-bs-toggle="modal"
+        data-bs-target="#staticBackdrop"
+      >
+        <i className="bi bi-plus-circle me-2"></i>
+        Add New User
+      </button>
       </div>
-      <hr />
+      <hr className="border-primary opacity-25" />
+
       <div className="table-responsive mt-4">
       
         <table className="table table-bordered table-striped table-hover align-middle">
@@ -345,16 +348,16 @@ export default function UserTable() {
         aria-hidden="true"
       >
         <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-          <div className="modal-content" style={{ backgroundColor: "#e3f2fd" }}>
+          <div className="modal-content">
             <form onSubmit={handleNewUser}>
               <div
-                className="modal-header"
-                style={{ backgroundColor: "#bbdefb" }}
+                className="modal-header bg-primary "
+              
               >
-                <h5 className="modal-title text-primary">Add New User</h5>
+                <h5 className="modal-title text-light">Add New User</h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="btn-close text-light"
                   data-bs-dismiss="modal"
                 />
               </div>

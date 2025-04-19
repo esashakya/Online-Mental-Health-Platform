@@ -115,8 +115,8 @@ export default function AdminForum() {
 
       <div className="d-flex justify-content-between align-items-center mt-4">
         <h4 className="text-primary fw-semibold">
-          <i className="bi bi-chat-square-text me-2"></i>
-          Forum Posts Management
+          
+          All Forum Posts 
         </h4>
        
       </div>
@@ -126,20 +126,20 @@ export default function AdminForum() {
         <table className="table table-bordered table-hover align-middle">
           <thead className="table-primary text-white">
             <tr>
-              <th>#</th>
+              
               <th>ID</th>
               <th>Title</th>
-              <th>Preview</th>
+              <th>Detail</th>
               <th>Date</th>
               <th>Anonymous</th>
-              <th>Author</th>
+              <th>User Id</th>
               <th className="text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
             {currentData.map((post, index) => (
               <tr key={post.id}>
-                <td>{indexOfFirstData + index + 1}</td>
+               
                 <td>{post.id}</td>
                 <td className="text-truncate" style={{ maxWidth: '150px' }}>
                   {post.post_title}

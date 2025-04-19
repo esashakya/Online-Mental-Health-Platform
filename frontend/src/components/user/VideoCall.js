@@ -388,7 +388,7 @@ export default function VideoCall() {
                     <div className="bg-white rounded-circle p-3 mb-3">
                       <i className="bi bi-person text-primary fs-2"></i>
                     </div>
-                    <p className="text-white fs-5 mb-0">Your camera is disabled</p>
+                    <p className="text-white fs-5 mb-0">Camera Off</p>
                   </div>
                 )}
                 

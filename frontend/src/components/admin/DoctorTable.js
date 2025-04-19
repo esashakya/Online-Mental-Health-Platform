@@ -333,7 +333,7 @@ const formatTime = (time) => {
 
     <div className="d-flex justify-content-between align-items-center mt-4">
       <h4 className="text-primary fw-semibold">
-        <i className="bi bi-heart-pulse me-2"></i>
+       
         Registered Doctor Accounts
       </h4>
       <button
@@ -341,7 +341,7 @@ const formatTime = (time) => {
         data-bs-toggle="modal"
         data-bs-target="#staticBackdrop"
       >
-        <i className="bi bi-plus-circle me-2"></i>
+        
         Add New Doctor
       </button>
     </div>
@@ -410,7 +410,7 @@ const formatTime = (time) => {
                   data-bs-toggle="modal"
                   data-bs-target="#editDoctorModal"
                 >
-                  <i className="bi bi-pencil-square me-1"></i> Edit
+                   Edit
                 </button>
               </td>
               <td>
@@ -450,8 +450,8 @@ const formatTime = (time) => {
         <div className="modal-content border-0 shadow">
           <div className="modal-header bg-primary text-white">
             <h5 className="modal-title">
-              <i className="bi bi-pencil-square me-2"></i>
-              Edit Doctor Profile
+              
+              Edit Doctor Details
             </h5>
             <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
@@ -622,7 +622,7 @@ const formatTime = (time) => {
         <div className="modal-content border-0 shadow">
           <div className="modal-header bg-primary text-white">
             <h5 className="modal-title">
-              <i className="bi bi-person-plus me-2"></i>
+             
               Register New Doctor
             </h5>
             <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>

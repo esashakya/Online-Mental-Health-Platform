@@ -23,20 +23,20 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const storedLocalTokens = JSON.parse(localStorage.getItem("authTokens"));
     if (storedLocalTokens) {
-        const decodedUser = jwtDecode(storedLocalTokens.access);
-        if (decodedUser.exp * 1000 < Date.now()) {
-          logoutRegisteredUser(); 
-        } else {
-            setAuthTokens(storedLocalTokens);
-            setUser(decodedUser);
-        }
+      const decodedUser = jwtDecode(storedLocalTokens.access);
+      if (decodedUser.exp * 1000 < Date.now()) {
+        logoutRegisteredUser();
+      } else {
+        setAuthTokens(storedLocalTokens);
+        setUser(decodedUser);
+      }
     }
-}, []);
+  }, []);
 
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
-  
+
   const loginRegisteredUser = async (email, password) => {
     const response = await fetch("http://127.0.0.1:8000/api/token/", {
       method: "POST",
@@ -51,10 +51,21 @@ export const AuthProvider = ({ children }) => {
     const data = await response.json();
 
     if (response.status === 200) {
+      // setAuthTokens(data);
+      // setUser(jwtDecode(data.access));
+      // localStorage.setItem("authTokens", JSON.stringify(data));
+      const userDetail = jwtDecode(data.access);
+
       setAuthTokens(data);
-      setUser(jwtDecode(data.access));
+      setUser(userDetail);
       localStorage.setItem("authTokens", JSON.stringify(data));
-      navigate("/");
+
+      // Check user role directly from decoded user
+      if (userDetail.user_role === 2) {
+        navigate("/admin");
+      } else if (userDetail.user_role === 3 || userDetail.user_role === 1) {
+        navigate("/");
+      }
       msg.fire({
         title: "Login Successful!",
         icon: "success",
@@ -76,7 +87,7 @@ export const AuthProvider = ({ children }) => {
     } else if (response.status === 401 || response.status === 400) {
       const errorKey = Object.keys(data)[0];
       const errorText = data[errorKey][0];
-    
+
       msg.fire({
         title: "Login Failed!",
         icon: "error",
@@ -95,8 +106,7 @@ export const AuthProvider = ({ children }) => {
           msg.hideLoading();
         },
       });
-    }
-    else {
+    } else {
       msg.fire({
         title: "Invalid Username or password !",
         icon: "error",
@@ -117,23 +127,22 @@ export const AuthProvider = ({ children }) => {
       });
     }
   };
-  const addNewPost = async(post_title,post_detail,anonymous,posts)=>{
+  const addNewPost = async (post_title, post_detail, anonymous, posts) => {
     console.log("Sending Post Data:", posts);
-     console.log("Access Token:", authTokens.access);
+    console.log("Access Token:", authTokens.access);
     const response = await fetch("http://127.0.0.1:8000/api/forum/", {
-      method : "POST",
+      method: "POST",
       headers: {
-        "Authorization": `Bearer ${authTokens.access}`,
+        Authorization: `Bearer ${authTokens.access}`,
         "Content-Type": "application/json",
-        
       },
       body: JSON.stringify({
-        post_title,post_detail,anonymous,
-        user_id : user.user_id,
+        post_title,
+        post_detail,
+        anonymous,
+        user_id: user.user_id,
       }),
-
     });
-    
 
     if (response.status === 201) {
       navigate("/login");
@@ -174,114 +183,177 @@ export const AuthProvider = ({ children }) => {
           msg.hideLoading();
         },
       });
-    } 
-  }
-  
-  const addNewUser = async (
-    formData
-  ) => {
-    try {
-    const response = await fetch("http://127.0.0.1:8000/api/admin/add", {
-      method: "POST",
-      body: formData,
-    });
-    if (response.status === 400) {
-      const errorData = await response.json();
-      console.error("Error response:", errorData);
-  }
-    if (response.status === 201) {
-      navigate("/admin/RegisteredUsers");
-      
+    }
+  };
 
-      msg.fire({
-        title: "Registration Successful",
-        icon: "success",
-        toast: true,
-        timer: 5000,
-        position: "top-right",
-        timerProgressBar: true,
-        showConfirmButton: false,
-        background: "#28a745",
-        color: "#ffffff",
-        text: "Hope you have a great day!",
-        didOpen: () => {
-          msg.showLoading();
-        },
-        willClose: () => {
-          msg.hideLoading();
-          
-        },
-        
+  const addNewUser = async (formData) => {
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/admin/add", {
+        method: "POST",
+        body: formData,
       });
-    } else if (response.status === 400) {
-      msg.fire({
-        title: "Error Occured in input fields ",
-        icon: "error",
-        toast: true,
-        timer: 5000,
-        position: "top-right",
-        timerProgressBar: true,
-        showConfirmButton: false,
-        background: "#dc3545",
-        color: "#ffffff",
-        text: "The entered creddentials are incorrect. Please try again",
-        didOpen: () => {
-          msg.showLoading();
-        },
-        willClose: () => {
-          msg.hideLoading();
-        },
-      });
-    } else {
-      msg.fire({
-        title: "An Error Occured " + response.status,
-        icon: "error",
-        toast: true,
-        timer: 5000,
-        position: "top-right",
-        timerProgressBar: true,
-        showConfirmButton: false,
-        background: "#dc3545",
-        color: "#ffffff",
-        text: "There is some server problem. Please try again in few minutes.",
-        didOpen: () => {
-          msg.showLoading();
-        },
-        willClose: () => {
-          msg.hideLoading();
-        },
-      });
-    }}catch(error){
+      if (response.status === 400) {
+        const errorData = await response.json();
+        console.error("Error response:", errorData);
+      }
+      if (response.status === 201) {
+        navigate("/admin/RegisteredUsers");
+
+        msg.fire({
+          title: "Registration Successful",
+          icon: "success",
+          toast: true,
+          timer: 5000,
+          position: "top-right",
+          timerProgressBar: true,
+          showConfirmButton: false,
+          background: "#28a745",
+          color: "#ffffff",
+          text: "Hope you have a great day!",
+          didOpen: () => {
+            msg.showLoading();
+          },
+          willClose: () => {
+            msg.hideLoading();
+          },
+        });
+      } else if (response.status === 400) {
+        msg.fire({
+          title: "Error Occured in input fields ",
+          icon: "error",
+          toast: true,
+          timer: 5000,
+          position: "top-right",
+          timerProgressBar: true,
+          showConfirmButton: false,
+          background: "#dc3545",
+          color: "#ffffff",
+          text: "The entered creddentials are incorrect. Please try again",
+          didOpen: () => {
+            msg.showLoading();
+          },
+          willClose: () => {
+            msg.hideLoading();
+          },
+        });
+      } else {
+        msg.fire({
+          title: "An Error Occured " + response.status,
+          icon: "error",
+          toast: true,
+          timer: 5000,
+          position: "top-right",
+          timerProgressBar: true,
+          showConfirmButton: false,
+          background: "#dc3545",
+          color: "#ffffff",
+          text: "There is some server problem. Please try again in few minutes.",
+          didOpen: () => {
+            msg.showLoading();
+          },
+          willClose: () => {
+            msg.hideLoading();
+          },
+        });
+      }
+    } catch (error) {
       console.error("Error:", error);
     }
   };
   //blog
   const addNewBlog = async (formData) => {
-  try {
-    const response = await fetch("http://127.0.0.1:8000/api/blog/add", {
-      method: "POST",
-      body: formData,
-    });
-    
-   
-    let data;
     try {
-      data = await response.json();
-      console.log(data);
+      const response = await fetch("http://127.0.0.1:8000/api/blog/add", {
+        method: "POST",
+        body: formData,
+      });
+
+      let data;
+      try {
+        data = await response.json();
+        console.log(data);
+      } catch (error) {
+        console.error("Error parsing response:", error);
+      }
+
+      if (response.status === 400) {
+        console.error("Error response:", data);
+
+        // Show specific error message from the server if available
+        const errorMessage =
+          data && data.message
+            ? data.message
+            : "The entered credentials are incorrect. Please try again";
+
+        msg.fire({
+          title: "Error Occurred in Input Fields",
+          icon: "error",
+          toast: true,
+          timer: 5000,
+          position: "top-right",
+          timerProgressBar: true,
+          showConfirmButton: false,
+          background: "#dc3545",
+          color: "#ffffff",
+          text: errorMessage,
+        });
+
+        return false;
+      }
+
+      if (response.status === 201) {
+        navigate("/admin/Post/Blog");
+
+        msg.fire({
+          title: "New Blog Added Successfully",
+          icon: "success",
+          toast: true,
+          timer: 5000,
+          position: "top-right",
+          timerProgressBar: true,
+          showConfirmButton: false,
+          background: "#28a745",
+          color: "#ffffff",
+          text: "Hope you have a great day!",
+          didOpen: () => {
+            msg.showLoading();
+          },
+          willClose: () => {
+            msg.hideLoading();
+          },
+        });
+
+        setTimeout(() => {
+          window.location.reload();
+        }, 5000);
+
+        return true;
+      } else {
+        msg.fire({
+          title: "An Error Occurred " + response.status,
+          icon: "error",
+          toast: true,
+          timer: 5000,
+          position: "top-right",
+          timerProgressBar: true,
+          showConfirmButton: false,
+          background: "#dc3545",
+          color: "#ffffff",
+          text: "There is some server problem. Please try again in few minutes.",
+          didOpen: () => {
+            msg.showLoading();
+          },
+          willClose: () => {
+            msg.hideLoading();
+          },
+        });
+
+        return false;
+      }
     } catch (error) {
-      console.error("Error parsing response:", error);
-    }
-
-    if (response.status === 400) {
-      console.error("Error response:", data);
-      
-      // Show specific error message from the server if available
-      const errorMessage = data && data.message 
-        ? data.message 
-        : "The entered credentials are incorrect. Please try again";
-        
+      console.error("Error:", error);
       msg.fire({
-        title: "Error Occurred in Input Fields",
+        title: "Connection Error",
         icon: "error",
         toast: true,
         timer: 5000,
@@ -290,158 +362,86 @@ export const AuthProvider = ({ children }) => {
         showConfirmButton: false,
         background: "#dc3545",
         color: "#ffffff",
-        text: errorMessage,
+        text: "Cannot connect to the server. Please check your connection.",
       });
-      
       return false;
     }
-    
-    if (response.status === 201) {
-      navigate("/admin/Post/Blog");
-      
-      msg.fire({
-        title: "New Blog Added Successfully",
-        icon: "success",
-        toast: true,
-        timer: 5000,
-        position: "top-right",
-        timerProgressBar: true,
-        showConfirmButton: false,
-        background: "#28a745",
-        color: "#ffffff",
-        text: "Hope you have a great day!",
-        didOpen: () => {
-          msg.showLoading();
-        },
-        willClose: () => {
-          msg.hideLoading();
-        },
-      });
-      
-      setTimeout(() => {
-        window.location.reload();
-      }, 5000);
-      
-      return true;
-    } else {
-      msg.fire({
-        title: "An Error Occurred " + response.status,
-        icon: "error",
-        toast: true,
-        timer: 5000,
-        position: "top-right",
-        timerProgressBar: true,
-        showConfirmButton: false,
-        background: "#dc3545",
-        color: "#ffffff",
-        text: "There is some server problem. Please try again in few minutes.",
-        didOpen: () => {
-          msg.showLoading();
-        },
-        willClose: () => {
-          msg.hideLoading();
-        },
-      });
-      
-      return false;
-    }
-  } catch (error) {
-    console.error("Error:", error);
-    msg.fire({
-      title: "Connection Error",
-      icon: "error",
-      toast: true,
-      timer: 5000,
-      position: "top-right",
-      timerProgressBar: true,
-      showConfirmButton: false,
-      background: "#dc3545",
-      color: "#ffffff",
-      text: "Cannot connect to the server. Please check your connection.",
-    });
-    return false;
-  }
-};
+  };
   //music
-  const addNewMusic = async (
-    formData
-  ) => {
+  const addNewMusic = async (formData) => {
     try {
-    const response = await fetch("http://127.0.0.1:8000/api/music/add", {
-      method: "POST",
-      body: formData,
-    });
-    if (response.status === 400) {
-      const errorData = await response.json();
-      console.error("Error response:", errorData);
-  }
-    if (response.status === 201) {
-      navigate("/admin/RegisteredMusics");
-      
+      const response = await fetch("http://127.0.0.1:8000/api/music/add", {
+        method: "POST",
+        body: formData,
+      });
+      if (response.status === 400) {
+        const errorData = await response.json();
+        console.error("Error response:", errorData);
+      }
+      if (response.status === 201) {
+        navigate("/admin/RegisteredMusics");
 
-      msg.fire({
-        title: "New Music Added Successfully",
-        icon: "success",
-        toast: true,
-        timer: 5000,
-        position: "top-right",
-        timerProgressBar: true,
-        showConfirmButton: false,
-        background: "#28a745",
-        color: "#ffffff",
-        text: "Hope you have a great day!",
-        didOpen: () => {
-          msg.showLoading();
-        },
-        willClose: () => {
-          msg.hideLoading();
-          
-        },
-        
-        
-      });setTimeout(() => {
-        window.location.reload();
-      }, 5000);
-      
-    } else if (response.status === 400) {
-      msg.fire({
-        title: "Error Occured in input fields ",
-        icon: "error",
-        toast: true,
-        timer: 5000,
-        position: "top-right",
-        timerProgressBar: true,
-        showConfirmButton: false,
-        background: "#dc3545",
-        color: "#ffffff",
-        text: "The entered creddentials are incorrect. Please try again",
-        didOpen: () => {
-          msg.showLoading();
-        },
-        willClose: () => {
-          msg.hideLoading();
-        },
-      });
-    } else {
-      msg.fire({
-        title: "An Error Occured " + response.status,
-        icon: "error",
-        toast: true,
-        timer: 5000,
-        position: "top-right",
-        timerProgressBar: true,
-        showConfirmButton: false,
-        background: "#dc3545",
-        color: "#ffffff",
-        text: "There is some server problem. Please try again in few minutes.",
-        didOpen: () => {
-          msg.showLoading();
-        },
-        willClose: () => {
-          msg.hideLoading();
-        },
-      });
-    }}catch(error){
+        msg.fire({
+          title: "New Music Added Successfully",
+          icon: "success",
+          toast: true,
+          timer: 5000,
+          position: "top-right",
+          timerProgressBar: true,
+          showConfirmButton: false,
+          background: "#28a745",
+          color: "#ffffff",
+          text: "Hope you have a great day!",
+          didOpen: () => {
+            msg.showLoading();
+          },
+          willClose: () => {
+            msg.hideLoading();
+          },
+        });
+        setTimeout(() => {
+          window.location.reload();
+        }, 5000);
+      } else if (response.status === 400) {
+        msg.fire({
+          title: "Error Occured in input fields ",
+          icon: "error",
+          toast: true,
+          timer: 5000,
+          position: "top-right",
+          timerProgressBar: true,
+          showConfirmButton: false,
+          background: "#dc3545",
+          color: "#ffffff",
+          text: "The entered creddentials are incorrect. Please try again",
+          didOpen: () => {
+            msg.showLoading();
+          },
+          willClose: () => {
+            msg.hideLoading();
+          },
+        });
+      } else {
+        msg.fire({
+          title: "An Error Occured " + response.status,
+          icon: "error",
+          toast: true,
+          timer: 5000,
+          position: "top-right",
+          timerProgressBar: true,
+          showConfirmButton: false,
+          background: "#dc3545",
+          color: "#ffffff",
+          text: "There is some server problem. Please try again in few minutes.",
+          didOpen: () => {
+            msg.showLoading();
+          },
+          willClose: () => {
+            msg.hideLoading();
+          },
+        });
+      }
+    } catch (error) {
       console.error("Error:", error);
     }
   };
@@ -462,7 +462,7 @@ export const AuthProvider = ({ children }) => {
         user_fullname: user_fullname,
         password,
         retype_password: retype_password,
-        user_gender: userGender
+        user_gender: userGender,
       }),
     });
     const data = await response.json();
@@ -486,9 +486,12 @@ export const AuthProvider = ({ children }) => {
           msg.hideLoading();
         },
       });
-    }else if (response.status === 400) {
+    } else if (response.status === 400) {
       // email error
-      if (data.user_email && data.user_email[0] === "user with this user email already exists.") {
+      if (
+        data.user_email &&
+        data.user_email[0] === "user with this user email already exists."
+      ) {
         msg.fire({
           title: "Given email exists in our system!",
           icon: "error",
@@ -501,9 +504,12 @@ export const AuthProvider = ({ children }) => {
           color: "#ffffff",
           text: "This email address is already registered in system. Please try again with different email address.",
         });
-      } 
+      }
       //  password  error
-      else if (data.password && data.password[0] === "Password fields are not the same") {
+      else if (
+        data.password &&
+        data.password[0] === "Password fields are not the same"
+      ) {
         msg.fire({
           title: "Password Mismatch",
           icon: "error",
@@ -516,8 +522,7 @@ export const AuthProvider = ({ children }) => {
           color: "#ffffff",
           text: "Passwords you provided do not match with each other. Please try again with correct passwords.",
         });
-      } 
-      else if (
+      } else if (
         data.user_email &&
         data.user_email[0] === "Enter a valid email address."
       ) {
@@ -534,11 +539,12 @@ export const AuthProvider = ({ children }) => {
           text: "Please provide your valid email address. Example: youremail@gmail.com",
         });
       }
-      
+
       //  400 error
       else {
-        
-        const errorMessage = data[Object.keys(data)[0]]?.[0] || "Please check your input and try again.";
+        const errorMessage =
+          data[Object.keys(data)[0]]?.[0] ||
+          "Please check your input and try again.";
         msg.fire({
           title: "Invalid Input",
           icon: "error",
@@ -552,8 +558,6 @@ export const AuthProvider = ({ children }) => {
           text: errorMessage,
         });
       }
-    
-    
     } else {
       msg.fire({
         title: "An Error Occured " + response.status,
@@ -600,85 +604,83 @@ export const AuthProvider = ({ children }) => {
       },
     });
   };
-  const registerNewDoctor = async (
-    formData
-  ) => {
+  const registerNewDoctor = async (formData) => {
     try {
-    const response = await fetch("http://127.0.0.1:8000/api/register/doctor", {
-      method: "POST",
-      body: formData,
-    });
-    if (response.status === 400) {
-      const errorData = await response.json();
-      console.error("Error response:", errorData);
-  }
-    if (response.status === 201) {
-      navigate("/admin/RegisteredDoctorUsers");
-      msg.fire({
-        title: "Registration Successful",
-        icon: "success",
-        toast: true,
-        timer: 5000,
-        position: "top-right",
-        timerProgressBar: true,
-        showConfirmButton: false,
-        background: "#28a745",
-        color: "#ffffff",
-        text: "Hope you have a great day!",
-        didOpen: () => {
-          msg.showLoading();
-        },
-        willClose: () => {
-          msg.hideLoading();
-        },
-      });
-    } else if (response.status === 400) {
-      msg.fire({
-        title: "Error Occured in input fields ",
-        icon: "error",
-        toast: true,
-        timer: 5000,
-        position: "top-right",
-        timerProgressBar: true,
-        showConfirmButton: false,
-        background: "#dc3545",
-        color: "#ffffff",
-        text: "The entered creddentials are incorrect. Please try again",
-        didOpen: () => {
-          msg.showLoading();
-        },
-        willClose: () => {
-          msg.hideLoading();
-        },
-      });
-    } else {
-      msg.fire({
-        title: "An Error Occured " + response.status,
-        icon: "error",
-        toast: true,
-        timer: 5000,
-        position: "top-right",
-        timerProgressBar: true,
-        showConfirmButton: false,
-        background: "#dc3545",
-        color: "#ffffff",
-        text: "There is some server problem. Please try again in few minutes.",
-        didOpen: () => {
-          msg.showLoading();
-        },
-        willClose: () => {
-          msg.hideLoading();
-        },
-      });
-    }}catch(error){
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/register/doctor",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+      if (response.status === 400) {
+        const errorData = await response.json();
+        console.error("Error response:", errorData);
+      }
+      if (response.status === 201) {
+        navigate("/admin/RegisteredDoctorUsers");
+        msg.fire({
+          title: "Registration Successful",
+          icon: "success",
+          toast: true,
+          timer: 5000,
+          position: "top-right",
+          timerProgressBar: true,
+          showConfirmButton: false,
+          background: "#28a745",
+          color: "#ffffff",
+          text: "Hope you have a great day!",
+          didOpen: () => {
+            msg.showLoading();
+          },
+          willClose: () => {
+            msg.hideLoading();
+          },
+        });
+      } else if (response.status === 400) {
+        msg.fire({
+          title: "Error Occured in input fields ",
+          icon: "error",
+          toast: true,
+          timer: 5000,
+          position: "top-right",
+          timerProgressBar: true,
+          showConfirmButton: false,
+          background: "#dc3545",
+          color: "#ffffff",
+          text: "The entered creddentials are incorrect. Please try again",
+          didOpen: () => {
+            msg.showLoading();
+          },
+          willClose: () => {
+            msg.hideLoading();
+          },
+        });
+      } else {
+        msg.fire({
+          title: "An Error Occured " + response.status,
+          icon: "error",
+          toast: true,
+          timer: 5000,
+          position: "top-right",
+          timerProgressBar: true,
+          showConfirmButton: false,
+          background: "#dc3545",
+          color: "#ffffff",
+          text: "There is some server problem. Please try again in few minutes.",
+          didOpen: () => {
+            msg.showLoading();
+          },
+          willClose: () => {
+            msg.hideLoading();
+          },
+        });
+      }
+    } catch (error) {
       console.error("Error:", error);
     }
   };
 
-  
-  
-  
-  
   const contextData = {
     user,
     setUser,

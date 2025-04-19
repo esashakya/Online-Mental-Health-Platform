@@ -221,12 +221,12 @@ export default function AdminBlog() {
     try {
       await msg.fire({
         title: 'Are you sure?',
-        text: "You won't be able to revert this!",
+        text: "You won't be able to get back your data after this action.",
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, delete it!'
+        confirmButtonText: 'Okay'
       }).then(async (result) => {
         if (result.isConfirmed) {
           const response = await fetch(`http://127.0.0.1:8000/api/blogs/${pk}`, {
@@ -270,8 +270,8 @@ export default function AdminBlog() {
 
       <div className="d-flex justify-content-between align-items-center mt-4">
         <h4 className="text-primary fw-semibold">
-          <i className="bi bi-journal-text me-2"></i>
-          Blog Posts Management
+          
+          All Blogs 
         </h4>
         
       </div>
@@ -283,7 +283,7 @@ export default function AdminBlog() {
           data-bs-toggle="modal"
           data-bs-target="#staticBackdrop"
         >
-          <i className="bi bi-plus-circle me-2"></i>
+       
           Add New Blog Post
         </button>
       </div>
@@ -292,7 +292,7 @@ export default function AdminBlog() {
         <table className="table table-bordered table-hover align-middle">
           <thead className="table-primary text-white">
             <tr>
-              <th>#</th>
+              
               <th>Title</th>
               <th>Preview</th>
               <th>Image</th>
@@ -305,7 +305,7 @@ export default function AdminBlog() {
           <tbody>
             {currentData.map((blog, index) => (
               <tr key={blog.id}>
-                <td>{indexOfFirstData + index + 1}</td>
+                
                 <td className="fw-semibold">{blog.blog_title}</td>
                 <td className="text-truncate" style={{ maxWidth: '200px' }}>
                   {blog.blog_detail.substring(0, 60)}{blog.blog_detail.length > 60 ? '...' : ''}
@@ -446,7 +446,7 @@ export default function AdminBlog() {
           <div className="modal-content border-0 shadow">
             <div className="modal-header bg-primary text-white">
               <h5 className="modal-title">
-                <i className="bi bi-plus-circle me-2"></i>
+               
                 Create New Blog Post
               </h5>
               <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -456,7 +456,7 @@ export default function AdminBlog() {
                 <div className="row">
                   <div className="col-md-6">
                     <div className="mb-3">
-                      <label className="form-label">Blog Title*</label>
+                      <label className="form-label">Blog Title</label>
                       <input
                         type="text"
                         className="form-control"
@@ -465,7 +465,7 @@ export default function AdminBlog() {
                       />
                     </div>
                     <div className="mb-3">
-                      <label className="form-label">Category*</label>
+                      <label className="form-label">Category</label>
                       <select
                         className="form-select"
                         name="blog_category"
@@ -482,7 +482,7 @@ export default function AdminBlog() {
                   </div>
                   <div className="col-md-6">
                     <div className="mb-3">
-                      <label className="form-label">Therapist*</label>
+                      <label className="form-label">Therapist</label>
                       <select
                         className="form-select"
                         name="therapist_id"
@@ -497,7 +497,7 @@ export default function AdminBlog() {
                       </select>
                     </div>
                     <div className="mb-3">
-                      <label className="form-label">Featured Image*</label>
+                      <label className="form-label">Featured Image </label>
                       <input
                         type="file"
                         className="form-control"
@@ -509,7 +509,7 @@ export default function AdminBlog() {
                   </div>
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">Blog Content*</label>
+                  <label className="form-label">Blog Content </label>
                   <textarea
                     className="form-control"
                     name="blogDetail"
@@ -537,8 +537,8 @@ export default function AdminBlog() {
           <div className="modal-content border-0 shadow">
             <div className="modal-header bg-primary text-white">
               <h5 className="modal-title">
-                <i className="bi bi-pencil me-2"></i>
-                Edit Blog Post
+              
+                Edit Blog 
               </h5>
               <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -547,7 +547,7 @@ export default function AdminBlog() {
                 <div className="row">
                   <div className="col-md-6">
                     <div className="mb-3">
-                      <label className="form-label">Blog Title*</label>
+                      <label className="form-label">Blog Title </label>
                       <input
                         type="text"
                         className="form-control"
@@ -558,7 +558,7 @@ export default function AdminBlog() {
                       />
                     </div>
                     <div className="mb-3">
-                      <label className="form-label">Category*</label>
+                      <label className="form-label">Category </label>
                       <select
                         className="form-select"
                         name="blog_category"
@@ -577,7 +577,7 @@ export default function AdminBlog() {
                   </div>
                   <div className="col-md-6">
                     <div className="mb-3">
-                      <label className="form-label">Therapist*</label>
+                      <label className="form-label">Therapist </label>
                       <select
                         className="form-select"
                         name="therapist_id"
@@ -611,7 +611,7 @@ export default function AdminBlog() {
                   </div>
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">Blog Content*</label>
+                  <label className="form-label">Blog Content </label>
                   <textarea
                     className="form-control"
                     name="blog_detail"

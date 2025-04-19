@@ -21,7 +21,9 @@ urlpatterns=[
     path("register/", views.SignUpView.as_view()),
     path("register/doctor", views.SignUpDoctorView.as_view()),
     path('doctors/', get_doctors, name='get_doctors'),
+    path('top-forums/', views.top_forum_posts_by_comments, name='top-forums'),
     path('doctors/<int:id>', get_preferred_doctor, name='get_preferred_doctor'),
+     path('doctor-status-summary/', views.doctor_status_summary, name='doctor-status-summary'),
     path('blog/<int:id>', get_preferred_blog, name='get_preferred_blog'),
     path('appointments/check_availability/', views.check_appointment_availability, name='check-availability'),
     path('get/user/<int:id>',get_preferred_user, name='get_preferred_user'),
@@ -37,6 +39,8 @@ urlpatterns=[
     path("mood/create", views.add_mood),
     path("get/reviews/", views.get_reviews),
     path('reviews/<int:pk>/', update_delete_review, name='update-delete-review'),
+    path('admin/delete/review/<int:pk>/', views.admin_delete_review, name='admin_delete_review'),
+
 
     path("add/reviews/", views.create_review),
     path('update/doctors/<int:pk>', update_doctor, name='update_doctor'),

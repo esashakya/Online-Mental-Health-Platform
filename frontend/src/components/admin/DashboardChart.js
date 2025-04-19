@@ -1,55 +1,190 @@
-import { useEffect } from "react";
-import React,{useState}from "react";
+import React, { useState, useEffect } from "react";
+import useAxios from "../../utils/useAxios";
 import {
   LineChart,
   Line,
+  BarChart,
+  Bar,
   CartesianGrid,
   XAxis,
   YAxis,
   Tooltip,
+  Legend,
+  ResponsiveContainer
 } from "recharts";
-export default function DashboardChart() {
-  const data = [{ date: "2025/01/25", totalUsers: 5, totalDoctor: 1},{ date: "2025/01/26", totalUsers: 15,totalDoctor: 5},{ date: "2025/01/28", totalUsers: 35, totalDoctor: 5},{ date: "2025/01/29", totalUsers: 10,  totalDoctor: 7},{ date: "2025/01/25", totalUsers: 8, totalDoctor: 7}];
-  const [windowSize, setWindowSize] = useState(window.innerWidth);
+import { format, subDays } from 'date-fns';
 
-  
+export default function AppointmentsChart() {
+  const apiAxios = useAxios();
+  const [chartData, setChartData] = useState([]);
+  const [timeRange, setTimeRange] = useState(7); 
+  const [windowSize, setWindowSize] = useState(window.innerWidth);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    const checkResize = () => {
-      setWindowSize(window.innerWidth); //set the current screensize
+    const fetchAppointments = async () => {
+      try {
+        const response = await apiAxios.get("/appointments/");
+        processChartData(response.data);
+      } catch (error) {
+        console.error(" appointments:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    window.addEventListener("resize", checkResize);
-    return () => window.removeEventListener("resize", checkResize);
+    fetchAppointments();
+  }, [timeRange]);
+
+
+  const processChartData = (appointments) => {
+    const dateMap = new Map();
+    const endDate = new Date();
+    const startDate = subDays(endDate, timeRange);
+
+ 
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      const dateKey = format(d, 'yyyy-MM-dd');
+      dateMap.set(dateKey, {
+        date: format(d, 'MMM dd'),
+        scheduled: 0,
+        completed: 0,
+        cancelled: 0
+      });
+    }
+
+  
+    appointments.forEach(appt => {
+      const apptDate = new Date(appt.appointment_date);
+      if (apptDate >= startDate && apptDate <= endDate) {
+        const dateKey = format(apptDate, 'yyyy-MM-dd');
+        const entry = dateMap.get(dateKey) || {
+          date: format(apptDate, 'MMM dd'),
+          scheduled: 0,
+          completed: 0,
+          cancelled: 0
+        };
+
+        if (appt.appointment_status === 1) entry.scheduled++;
+        else if (appt.appointment_status === 2) entry.completed++;
+        else if (appt.appointment_status === 3) entry.cancelled++;
+
+        dateMap.set(dateKey, entry);
+      }
+    });
+
+    setChartData(Array.from(dateMap.values()));
+  };
+
+  useEffect(() => {
+    const handleResize = () => setWindowSize(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  //setting the width according to the screen size
-  const lineChartWidth = windowSize < 768 ? 300 : 500; 
-  return (
-    <div>
-      <div className="analysis-chart p-4 d-flex flex-column justify-content-center shadow-sm rounded ">
-        <div>
-          <span className="fw-medium fs-5 w-50">
-            Analysis Report of registered user accounts
-          </span>
-        </div>
-        <hr/>
-        <div className="progressChart mt-4">
-          <LineChart
-            width={lineChartWidth}
-            height={335}
-            data={data}
-            margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
-          >
-            <Line type="monotone" dataKey="totalUsers" stroke="#008000" />
-            <Line type="monotone" dataKey="totalDoctor" stroke="#0000FF" />
 
-            <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
-            <XAxis dataKey="date" />
-            <YAxis />
-            <Tooltip />
-          </LineChart>
+  const statusColors = {
+    scheduled: '#8884d8',
+    completed: '#82ca9d',
+    cancelled: '#ff8042'
+  };
+
+  return (
+    <div className="analysis-chart p-4 shadow-sm rounded bg-white">
+      <div className="d-flex justify-content-between  mb-3">
+        <h5 className="fw-medium mb-0">
+         
+          Appointment Trends
+        </h5>
+        <div className="btn-group btn-group-sm ms-5">
+          <button 
+            className={`btn btn-outline-primary ${timeRange === 7 ? 'active' : ''}`}
+            onClick={() => setTimeRange(7)}
+          >
+            7 Days
+          </button>
+          <button 
+            className={`btn btn-outline-primary ${timeRange === 30 ? 'active' : ''}`}
+            onClick={() => setTimeRange(30)}
+          >
+            30 Days
+          </button>
+          <button 
+            className={`btn btn-outline-primary ${timeRange === 90 ? 'active' : ''}`}
+            onClick={() => setTimeRange(90)}
+          >
+            90 Days
+          </button>
         </div>
       </div>
+      <hr />
+
+      {loading ? (
+        <div className="text-center py-5">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      ) : (
+        <div className="chart-container">
+          <ResponsiveContainer 
+            width="100%" 
+          
+            height={windowSize < 768 ? 300 : 400}
+          >
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" opacity={0.5} />
+              <XAxis 
+                dataKey="date" 
+                tick={{ fontSize: windowSize < 768 ? 10 : 12 }}
+              />
+              <YAxis 
+                tick={{ fontSize: windowSize < 768 ? 10 : 12 }}
+                width={windowSize < 768 ? 30 : 40}
+              />
+              <Tooltip 
+                contentStyle={{
+                  borderRadius: '8px',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+                }}
+              />
+              <Legend 
+                wrapperStyle={{ paddingTop: '20px' }}
+                iconSize={windowSize < 768 ? 10 : 12}
+              />
+              <Line
+                type="monotone"
+                dataKey="scheduled"
+                stroke={statusColors.scheduled}
+                strokeWidth={2}
+                dot={{ r: windowSize < 768 ? 3 : 4 }}
+                activeDot={{ r: windowSize < 768 ? 5 : 6 }}
+                name="Scheduled"
+              />
+              <Line
+                type="monotone"
+                dataKey="completed"
+                stroke={statusColors.completed}
+                strokeWidth={2}
+                dot={{ r: windowSize < 768 ? 3 : 4 }}
+                activeDot={{ r: windowSize < 768 ? 5 : 6 }}
+                name="Completed"
+              />
+              <Line
+                type="monotone"
+                dataKey="cancelled"
+                stroke={statusColors.cancelled}
+                strokeWidth={2}
+                dot={{ r: windowSize < 768 ? 3 : 4 }}
+                activeDot={{ r: windowSize < 768 ? 5 : 6 }}
+                name="Cancelled"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+
+          
+        </div>
+      )}
     </div>
   );
 }

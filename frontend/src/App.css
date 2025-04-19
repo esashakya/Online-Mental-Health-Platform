@@ -378,6 +378,29 @@ hr.blue-line{
   color: #004fc1;
   text-decoration: none;
 }
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 1050;
+  transition: transform 0.3s ease-in-out;
+  transform: translateX(-100%);
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+}
+
+.sidebar.show {
+  transform: translateX(0);
+}
+
+@media (min-width: 768px) {
+  .sidebar {
+    transform: translateX(0);
+    position: sticky;
+    height: 100vh;
+  }
+}
 
 @media (max-width: 768px) {
   .mood-card {

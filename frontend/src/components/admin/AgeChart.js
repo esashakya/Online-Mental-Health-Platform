@@ -1,70 +1,43 @@
-import React from "react";
-import { RadialBarChart, RadialBar, Legend, Tooltip } from "recharts";
-export default function AgeChart() {
-  const data = [
-    {
-      name: "18-20 Age",
-      totalNoAge: 5,
-      fill: "#8884d8",
-    },
-    {
-      name: "21-25 Age",
-      totalNoAge: 7,
-      fill: "#83a6ed",
-    },
-    {
-      name: "26-30 Age",
-      totalNoAge: 10,
-      fill: "#8dd1e1",
-    },
-    {
-      name: "30-35",
-      totalNoAge: 11,
-      fill: "#82ca9d",
-    },
-    {
-      name: "40 Age",
-      totalNoAge: 1,
-      fill: "#a4de6c",
-    },
-  ];
+import { useEffect, useState } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import axios from 'axios';
+
+const AgeChart = () => {
+  const [doctorStatusData, setDoctorStatusData] = useState([]);
+  const COLORS = {
+    "Working": "#4CAF50",  
+    "On Leave": "#FF5722"  
+  };
+  useEffect(() => {
+    axios.get(' http://127.0.0.1:8000/api/doctor-status-summary/')
+      .then(response => setDoctorStatusData(response.data))
+      .catch(error => console.error("Error fetching doctor status:", error));
+  }, []);
 
   return (
-    <div>
-      <div className="analysis-chart p-4 d-flex flex-column justify-content-center shadow-sm rounded p-2 ">
-        <div>
-          <span className="fw-medium fs-5">Analysis Report of User's age</span>
-        </div>
-        <hr/>
-        <div className="d-flex align-items-center">
-          <RadialBarChart
-            width={420}
-            height={360}
-            innerRadius="10%"
-            outerRadius="90%"
-            data={data}
-            startAngle={180}
-            endAngle={-180}
-          >
-            <RadialBar
-              minAngle={15}
-              label={{ fill: "#000000", position: "insideStart",fontSize: 12 }}
-              background
-              clockWise={true}
-              dataKey="totalNoAge"
-            />
-            
-            <Legend
-              iconSize={10}
+    <div className="p-5 shadow-sm rounded bg-white">
+       <h5 className="fw-medium mb-0">
+         
+         Doctor Status for today
+       </h5>
+       <hr className="border-primary opacity-25" />
 
-              layout="vertical"
-              verticalAlign="bottom"
-              align="right"
-            />
-            <Tooltip />
-          </RadialBarChart>
-        </div>
-      </div>
+      <ResponsiveContainer width="100%" height={400}>
+        <BarChart data={doctorStatusData}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="name" />
+          <YAxis allowDecimals={false} />
+          <Tooltip />
+          <Legend />
+          <Bar dataKey="value">
+            {doctorStatusData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={COLORS[entry.name] || "#8884d8"} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   );
-}
+};
+
+export default AgeChart;
