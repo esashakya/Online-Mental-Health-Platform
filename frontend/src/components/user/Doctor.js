@@ -77,7 +77,7 @@ export default function Doctor() {
     <div>
       <div className="doctorsList text-center mt-4">
         <h1 style={{ color: "#194a7a" }}>Our Doctors</h1>
-        <p className="fs-5 fst-italic">
+        <p className="fs-5 fst-italic mx-2">
           Our doctors are here to help. Feel free to consult with any doctor.
         </p>
       </div>

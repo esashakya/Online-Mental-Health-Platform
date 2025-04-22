@@ -26,7 +26,7 @@ export default function AdminMusic() {
       (moods.find(mood => mood.id === m.mood_id)?.type_mood || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Pagination logic
+  // next, previous button logic
   const indexOfLastData = presentPage * dataPerPage;
   const indexOfFirstData = indexOfLastData - dataPerPage;
   const currentData = filteredMusic.slice(indexOfFirstData, indexOfLastData);
@@ -45,7 +45,7 @@ export default function AdminMusic() {
     }
   };
 
-  // Fetch data
+  // getting music data from database
   useEffect(() => {
     const accessToken = authTokens?.access;
     
@@ -121,7 +121,10 @@ export default function AdminMusic() {
     formData.append("type_music", e.target.type.value);
     formData.append("mood_id", e.target.mood_id.value);
 
-    addNewMusic(formData);
+    const res = addNewMusic(formData);
+    
+
+    
   };
 
   const handleEditMusic = async (e, musicId) => {

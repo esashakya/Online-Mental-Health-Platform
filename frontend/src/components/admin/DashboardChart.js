@@ -62,12 +62,12 @@ export default function AppointmentsChart() {
           date: format(apptDate, 'MMM dd'),
           scheduled: 0,
           completed: 0,
-          cancelled: 0
+          NotAttended: 0
         };
 
         if (appt.appointment_status === 1) entry.scheduled++;
-        else if (appt.appointment_status === 2) entry.completed++;
-        else if (appt.appointment_status === 3) entry.cancelled++;
+        else if (appt.appointment_status === 5) entry.completed++;
+        else if (appt.appointment_status === 3) entry.NotAttended++;
 
         dateMap.set(dateKey, entry);
       }
@@ -90,13 +90,14 @@ export default function AppointmentsChart() {
   };
 
   return (
-    <div className="analysis-chart p-4 shadow-sm rounded bg-white">
-      <div className="d-flex justify-content-between  mb-3">
+    <div className="analysis-chart p-2 p-md-4 shadow-sm rounded bg-white w-100">
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
         <h5 className="fw-medium mb-0">
          
           Appointment Trends
         </h5>
-        <div className="btn-group btn-group-sm ms-5">
+        <div className="btn-group btn-group-sm mt-2 mt-md-0">
+
           <button 
             className={`btn btn-outline-primary ${timeRange === 7 ? 'active' : ''}`}
             onClick={() => setTimeRange(7)}

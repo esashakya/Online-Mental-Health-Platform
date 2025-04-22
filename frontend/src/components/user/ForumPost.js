@@ -60,10 +60,11 @@ const ForumPost = () => {
           apiAxios.get(`/forum/${id}/`),
           apiAxios.get(`/comments/?forum=${id}`)
         ]);
+        // console.log(commentsResponse.data);
         setPost(postResponse.data);
         setComments(commentsResponse.data);
       } catch (err) {
-        setError(err.message || "Error fetching data");
+        setError(err.message || "error comment section");
       } finally {
         setLoading(false);
       }

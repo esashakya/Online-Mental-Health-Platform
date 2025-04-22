@@ -11,9 +11,8 @@ export default function Forum() {
   const apiAxios = useAxios();
   const [post, setPost] = useState([]);
 
-  
   const { authTokens, user, addNewPost } = useContext(AuthContext);
-  
+
   useEffect(() => {
     const fetchPosts = async () => {
       try {
@@ -102,18 +101,18 @@ export default function Forum() {
       });
     }
   };
-  const navigate = useNavigate()
-      if (!user) {
-        Swal.fire({
-          title: "You need to be logged in",
-          text: "Please log in to view forum posts.",
-          icon: "warning",
-          confirmButtonText: "Go to Login",
-        }).then(() => {
-          navigate("/login"); 
-        });
-      }
-   
+  const navigate = useNavigate();
+  if (!user) {
+    Swal.fire({
+      title: "You need to be logged in",
+      text: "Please log in to view forum posts.",
+      icon: "warning",
+      confirmButtonText: "Go to Login",
+    }).then(() => {
+      navigate("/login");
+    });
+  }
+
   return (
     <div>
       <div className="topicForum text-center mt-4">
@@ -141,10 +140,10 @@ export default function Forum() {
             data-bs-target="#staticBackdrop"
           >
             <div className="row mb-3 align-items-center">
-              <div className="titlePost col-md-9 ">
+              <div className="titlePost col-8 col-md-8">
                 <h5 className="fw-medium">Add a new post</h5>
               </div>
-              <div className="dateData col-md-2 ">
+              <div className="dateData col-4 col-md-2 d-flex justify-content-end">
                 <button
                   type="button"
                   className="btn btn-primary"
@@ -156,7 +155,6 @@ export default function Forum() {
                     alignItems: "center",
                     justifyContent: "center",
                     backgroundColor: "#007AF5",
-                    marginLeft: "99%",
                   }}
                 >
                   +
@@ -198,7 +196,7 @@ export default function Forum() {
           )}
         </div>
       </div>
-      {/* <!-- Modal --> */}
+
       <div
         className="modal fade"
         id="staticBackdrop"

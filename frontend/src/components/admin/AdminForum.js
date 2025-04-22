@@ -20,7 +20,6 @@ export default function AdminForum() {
       post.user_id?.toString().includes(searchQuery)
   );
 
-  // Pagination logic
   const indexOfLastData = presentPage * dataPerPage;
   const indexOfFirstData = indexOfLastData - dataPerPage;
   const currentData = filteredPosts.slice(indexOfFirstData, indexOfLastData);
