@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Footer from "./Footer";
 
 export default function Exercise() {
   const [instruction, setInstruction] = useState("Breathe In");
@@ -33,6 +34,7 @@ export default function Exercise() {
   }, []);
 
   return (
+    <>
     <div className="exercise d-flex flex-column align-items-center px-5">
       <div className="fw-bold pt-3 text-center text-white">
         <h1>Breathing Exercise</h1>
@@ -56,6 +58,12 @@ export default function Exercise() {
 
         <div className="outer-circle"></div>
       </div>
+     
     </div>
+    <div >
+    <Footer/>
+    </div>
+     
+     </>
   );
 }

@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import AuthContext from "../../context/AuthContext";
 import AppointmentList from "./AppointmentList";
+import Footer from "./Footer";
 const Swal = require("sweetalert2");
 
 export default function UserProfile() {
@@ -293,6 +294,7 @@ export default function UserProfile() {
           <AppointmentList />
         </div>
       </div>
+      <Footer/>
     </>
   );
 }

@@ -62,7 +62,7 @@ export default function AppointmentList() {
     const interval = setInterval(fetchAppointments, 5000);
     return () => clearInterval(interval);
   }, []);
-
+  //show the button if appointment lies in the current date
   const isTodayAppointment = () => {
     if (!appointmentList) return false;
     const today = new Date().toISOString().split("T")[0];

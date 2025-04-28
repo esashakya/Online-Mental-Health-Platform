@@ -2,6 +2,8 @@ import React, { Component } from "react";
 import Review from "./Review";
 import { Link } from "react-router-dom";
 import JoinUs from "./JoinUs";
+import Footer from "./Footer";
+import HomeReviews from "./HomeReviews";
 export default function Home() {
   return (
     <div>
@@ -34,7 +36,11 @@ export default function Home() {
         ></img>
       </div>
       {/* <Review /> */}
+      <HomeReviews/>
       <JoinUs/>
+      
+      <Footer/>
+
     </div>
   );
 }

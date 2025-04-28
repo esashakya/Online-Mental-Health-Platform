@@ -4,6 +4,7 @@ import AuthContext from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, BarElement, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+import Footer from './Footer';
 
 const Swal = require("sweetalert2");
 ChartJS.register(CategoryScale, LinearScale, PointElement, BarElement, Title, Tooltip, Legend);
@@ -157,7 +158,7 @@ export default function Mood() {
     }
   }, [accessToken, userId, user, navigate]);
   
-  // Process mood data for the chart
+  // convert mood data to chart
   const moodData = userMoodData.reduce((acc, curr) => {
     const date = curr.mood_date;
     if (!acc[date]) {
@@ -169,7 +170,7 @@ export default function Mood() {
  
   const chartLabels = Object.keys(moodData)
     .sort((a, b) => new Date(a) - new Date(b))  
-    .slice(-7); // last 7 days
+    .slice(-7); //  7 days
     
   const chartData = {
     labels: chartLabels.map(date => {
@@ -383,7 +384,7 @@ export default function Mood() {
         </div>
       </div>
       
-      
+      <Footer/>
     </div>
   );
 }

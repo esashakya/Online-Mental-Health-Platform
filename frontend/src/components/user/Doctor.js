@@ -3,6 +3,7 @@ import SearchBar from "./SearchBar";
 import { useNavigate } from "react-router-dom";
 
 import AuthContext from "../../context/AuthContext";
+import Footer from "./Footer";
 
 const Swal = require("sweetalert2");
 
@@ -17,9 +18,10 @@ export default function Doctor() {
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
+        // to fetch the list of doctors from database
         const response = await fetch("http://127.0.0.1:8000/api/doctors");
         const data = await response.json();
-        console.log("doctors:", data);
+        // console.log("doctors:", data);
         setDoctor(data);
       } catch (error) {
         console.error("error caused due to:", error);
@@ -33,12 +35,12 @@ export default function Doctor() {
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
   };
-
+  // to hide or view the time slot btn
   const toggleTimeSlots = (doctorId) => {
     setExpandedDoctor(expandedDoctor === doctorId ? null : doctorId);
   };
 
- 
+  // formatting time in proper format for easier reading
   const formatTime = (timeString) => {
     if (!timeString) return "Not Available";
     
@@ -49,8 +51,8 @@ export default function Doctor() {
     
     return `${hour12}:${minutes} ${ampm}`;
   };
-
-  const filteredDoctors = doctor.filter((doctor) => {
+  // for searching where name is converted to lowercase for easier convention
+  const availableDoctors = doctor.filter((doctor) => {
     const fullName = doctor?.user?.user_fullname?.toLowerCase() || "";
     const email = doctor?.user?.user_email?.toLowerCase() || "";
     const degree = doctor?.doctor_degree?.toLowerCase() || "";
@@ -61,6 +63,7 @@ export default function Doctor() {
       degree.includes(searchQuery.toLowerCase())
     );
   });
+  // error msg
   useEffect(() => {
       if (!user) {
         Swal.fire({
@@ -74,6 +77,7 @@ export default function Doctor() {
       }
     }, [user, navigate]);
   return (
+    <>
     <div>
       <div className="doctorsList text-center mt-4">
         <h1 style={{ color: "#194a7a" }}>Our Doctors</h1>
@@ -81,11 +85,13 @@ export default function Doctor() {
           Our doctors are here to help. Feel free to consult with any doctor.
         </p>
       </div>
+      {/* search bar to search the doctor.. handleSearchChange listens to any changes made in searchbar and update the variables accordingly */}
       <SearchBar searchQuery={searchQuery} onSearchChange={handleSearchChange}/>
       <div className="container shadow-sm p-3 mb-5 bg-body-tertiary rounded">
         <div className="row mb-5">
-          {filteredDoctors.length > 0 ? (
-            filteredDoctors.map((doctor, index) => (
+          {/* availableDoctors are the filtered doctors if searched ..or in default, it shows all doctor */}
+          {availableDoctors.length > 0 ? (
+            availableDoctors.map((doctor, index) => (
               <div
                 key={index}
                 className="col-sm-4 d-flex justify-content-center"
@@ -106,7 +112,7 @@ export default function Doctor() {
                     <p className="card-text fst-italic">
                       {doctor?.user?.user_email || "No Email"}
                     </p>
-                    
+                    {/* to view the available time of doctors */}
                     <div className="mb-2">
                       <button
                         className="btn btn-outline-primary btn-sm"
@@ -117,6 +123,7 @@ export default function Doctor() {
                       
                       {expandedDoctor === doctor.id && (
                         <div className="mt-2">
+
                           {doctor.time_slots && doctor.time_slots.length > 0 ? (
                             <div className="d-flex flex-column gap-2">
                               {doctor.time_slots.map((slot, slotIndex) => (
@@ -125,7 +132,8 @@ export default function Doctor() {
                                   className="btn btn-sm btn-outline-secondary"
                                   disabled
                                 >
-                                  {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                                   {/* to display time in proper format while maintaining consistency */}
+                                  {formatTime(slot.start_time)} - {formatTime(slot.end_time)}    
                                 </button>
                               ))}
                             </div>
@@ -139,6 +147,7 @@ export default function Doctor() {
                     <p className="card-text">
                       <span className="fw-semibold">Degree:</span> {doctor.doctor_degree || "Not Degree"}
                     </p>
+                    {/* to open the webpage in new tab */}
                     <button
                       type="button"
                       className="btn btn-primary"
@@ -161,5 +170,7 @@ export default function Doctor() {
         </div>
       </div>
     </div>
+    <Footer/>
+    </>
   );
 }

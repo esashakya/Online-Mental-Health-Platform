@@ -5,6 +5,7 @@ import AuthContext from "../../context/AuthContext";
 import useAxios from "../../utils/useAxios";
 import { useNavigate, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
+import Footer from "./Footer";
 const msg = require("sweetalert2");
 
 export default function Forum() {
@@ -114,6 +115,7 @@ export default function Forum() {
   }
 
   return (
+    <>
     <div>
       <div className="topicForum text-center mt-4">
         <h1>Forum</h1>
@@ -164,6 +166,7 @@ export default function Forum() {
           </div>
         </div>
         <div className="posts">
+          {/* to display all the forum posts and looping it */}
           {Array.isArray(post) && post.length > 0 ? (
             post.map((posts, index) => (
               <div key={index} className="postedData   p-3 ">
@@ -180,6 +183,7 @@ export default function Forum() {
                   <p>{posts.post_detail}</p>
                 </div>
                 <div className="viewButton">
+                  {/* to navigate to the specific forum post */}
                   <button type="button" className="btn btn-primary">
                     <Link
                       to={`/Forum/${posts.id}`}
@@ -287,5 +291,7 @@ export default function Forum() {
         </div>
       </div>
     </div>
+    <Footer/>
+    </>
   );
 }

@@ -388,7 +388,7 @@ export default function VideoCall() {
                     <div className="bg-white rounded-circle p-3 mb-3">
                       <i className="bi bi-person text-primary fs-2"></i>
                     </div>
-                    <p className="text-white fs-5 mb-0">Camera Off</p>
+                    <p className="text-white fs-5 mb-0">Camera off</p>
                   </div>
                 )}
                 
@@ -396,7 +396,7 @@ export default function VideoCall() {
             </div>
           </div>
     
-          {/* Remote User Card */}
+          {/* another user card */}
           {Object.keys(remoteUsers).map((uid) => (
             <div key={uid} className="col-lg-6">
               <div className="card h-100 border-0" style={{

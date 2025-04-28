@@ -5,12 +5,13 @@ import SearchBar from "./SearchBar";
 import Typewriter from "typewriter-effect";
 import React, { useState, useEffect, useContext } from "react";
 import Swal from "sweetalert2";
+import Footer from "./Footer";
 const msg = require("sweetalert2");
 
 export default function Blog() {
   const { user, authTokens } = useContext(AuthContext);
   const [blogs, setBlog] = useState([]);
-  const [filteredBlogs, setFilteredBlogs] = useState([]);
+  const [selectedBlogs, setSelectedBlogs] = useState([]);
   const [doctors, setDoctor] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -31,11 +32,11 @@ export default function Blog() {
         const data = await response.json();
         console.log("blogs:", data);
         setBlog(data);
-        setFilteredBlogs(data);
+        setSelectedBlogs(data);
       } catch (error) {
         console.error("error due to:", error);
         setBlog([]);
-        setFilteredBlogs([]);
+        setSelectedBlogs([]);
       }
     };
     const fetchDoctor = async () => {
@@ -52,16 +53,17 @@ export default function Blog() {
   }, []);
   const handleSearch = (query) => {
     setSearchQuery(query);
-    if (query.trim() === "") {
-      setFilteredBlogs(blogs); 
+    //if search bar is empty, blog title is converted to lowercase
+    if (query.trim() === "") {    //all the blogs should be displayed
+      setSelectedBlogs(blogs); 
     } else {
       const filtered = blogs.filter(blog =>
         blog.blog_title.toLowerCase().includes(query.toLowerCase())
       );
-      setFilteredBlogs(filtered);
+      setSelectedBlogs(filtered);
     }
   };
-
+  //error message if user is not logged in
   const navigate = useNavigate();
   if (!user) {
     Swal.fire({
@@ -74,6 +76,7 @@ export default function Blog() {
     });
   }
   return (
+    <>
     <div>
       <div className="container">
         <div className="text-center">
@@ -95,6 +98,7 @@ export default function Blog() {
           onSearchChange={(e) => handleSearch(e.target.value)} 
         />
         {userRole == 3 ? (
+          // only for doctor this btn should be displayed
           <>
             <div
               className="AddNewBlog "
@@ -112,8 +116,9 @@ export default function Blog() {
           </>
         ) : null}
         <div className="row g-4 bg-white mt-3 px-3">
-          {filteredBlogs.length > 0 ? (
-            filteredBlogs.map((blog, index) => {
+          {/* displayiing doctor name and blog information */}
+          {selectedBlogs.length > 0 ? (
+            selectedBlogs.map((blog, index) => {
               const doctor = doctors.find(
                 (doc) => doc.id === blog.therapist_id
               );
@@ -171,5 +176,7 @@ export default function Blog() {
         </div>
       </div>
     </div>
+    <Footer/>
+    </>
   );
 }

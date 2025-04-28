@@ -1,6 +1,7 @@
 import React, { useContext } from 'react'
 import {Link} from 'react-router-dom'
 import AuthContext from '../../context/AuthContext'
+import Footer from './Footer'
 export default function Login() {
   const {loginRegisteredUser} = useContext(AuthContext)
   const handleSubmit = e => {
@@ -40,6 +41,7 @@ export default function Login() {
         </div>
         
       </div>
+      <Footer/>
     </div>
   )
 }

@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import useAxios from "../../utils/useAxios";
 import { Link } from "react-router-dom";
 import msg from "sweetalert2";
+import Footer from "./Footer";
 
 const ForumPost = () => {
   const { id } = useParams();
@@ -82,16 +83,19 @@ const ForumPost = () => {
   );
 
   return (
+    <>
     <div className="container mt-4">
       <div className="bg-light rounded p-4">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h1>{post.post_title}</h1>
+          {/* to go back forum posts */}
           <Link to="/forum" className="btn btn-secondary">
             Back to Forum
           </Link>
         </div>
         
         <div className="mb-4">
+          {/* to show personal information */}
           <p className="text-muted">
             Posted on: {new Date(post.post_date).toLocaleString()}
             {!post.anonymous && post.user_id && (
@@ -105,11 +109,11 @@ const ForumPost = () => {
           <p className="fs-5">{post.post_detail}</p>
         </div>
 
-        {/* Comments Section */}
+        {/* comments part */}
         <div className="mt-5">
           <h3>Comments ({comments.length})</h3>
           
-          {/* Comment Form */}
+          {/* to add new comment form */}
           <form onSubmit={handleCommentSubmit} className="mb-4">
             <div className="mb-3">
               <textarea
@@ -138,7 +142,7 @@ const ForumPost = () => {
             </button>
           </form>
 
-          {/* Comments List */}
+          {/* displaying the current forum's comments */}
           <div className="comments-list">
             {comments.length > 0 ? (
               comments.map((comment) => (
@@ -162,7 +166,10 @@ const ForumPost = () => {
           </div>
         </div>
       </div>
+      
     </div>
+    <Footer/>
+    </>
   );
 };
 

@@ -77,21 +77,21 @@ export default function VideoCallLobby() {
     const roomCode = e.target.roomCode.value;
 
     try {
-      // First validate the appointment code
+      // check the appointment code
       const validation = await validateAppointmentCode(roomCode);
       
       if (!validation.valid) {
         throw new Error(validation.error || 'Invalid appointment code');
       }
 
-      // If valid, get the token and join the call
+      // if there is valid code, it is redirected else it displays error message
       let response = await fetch(
         `http://127.0.0.1:8000/get/AppointmentToken/?channel=${roomCode}`,
         
       );
       
       if (!response.ok) {
-        throw new Error('Failed to get call token');
+        throw new Error('call token not found');
       }
 
       let data = await response.json();
@@ -203,7 +203,7 @@ console.log("UID:", uid);
               {isLoading ? (
                 <>
                   <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                  Validating...
+                  validating
                 </>
               ) : (
                 "Join Call"

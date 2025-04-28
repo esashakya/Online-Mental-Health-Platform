@@ -4,6 +4,7 @@ import Category from "./Category";
 import { useNavigate } from "react-router-dom";
 
 import AuthContext from "../../context/AuthContext";
+import Footer from "./Footer";
 const Swal = require("sweetalert2");
 export default function Music() {
   const customRef = useRef(null);
@@ -14,6 +15,7 @@ export default function Music() {
     const navigate = useNavigate();
   
   const handleSlide = (direction) => {
+    // for sliding and displaying musics
     if (customRef.current) {
       customRef.current.scrollBy({
         left: direction === "previous" ? -450 : 450,
@@ -157,6 +159,7 @@ export default function Music() {
           </div>
         </div>
       </div>
+      <Footer/>
     </div>
   );
 }

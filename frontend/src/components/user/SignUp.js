@@ -1,6 +1,7 @@
 import React, { useState, useContext } from "react";
 import { Link } from "react-router-dom";
 import AuthContext from "../../context/AuthContext";
+import Footer from "./Footer";
 const msg = require("sweetalert2");
 export default function SignUp() {
   const { registerNewUser } = useContext(AuthContext);
@@ -79,6 +80,7 @@ export default function SignUp() {
 
           <div className="col-md-6 pt-4 text-center mb-3">
             <h1>Sign Up</h1>
+            {/* when submitting , it calls handleSubmit.. any changes done in fields it calls handleChange */}
             <form className="signUpForm" onSubmit={handleSubmit}>
               <div className="input-group mb-3 pt-3">
                 <input
@@ -163,6 +165,7 @@ export default function SignUp() {
                   Log In
                 </Link>
               </div>
+              {/* sign up button is disabled until all fields are entered */}
               <button type="submit" className="btn btn-primary" disabled={!isFormValid()}>
                 Sign Up
               </button>
@@ -170,6 +173,7 @@ export default function SignUp() {
           </div>
         </div>
       </div>
+      <Footer/>
     </div>
   );
 }

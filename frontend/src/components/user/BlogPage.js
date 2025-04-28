@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import AuthContext from "../../context/AuthContext";
 import useAxios from "../../utils/useAxios";
 import Swal from "sweetalert2";
+import Footer from "./Footer";
 
 export default function BlogPage() {
   const { id } = useParams();
@@ -91,6 +92,7 @@ export default function BlogPage() {
   const para3 = sentence.slice(2 * para).join(" ");
 
   return (
+    <>
     <div className="container my-5">
       <div className="d-flex flex-column align-items-center">
         <div
@@ -188,5 +190,7 @@ export default function BlogPage() {
         </div>
       </div>
     </div>
+    <Footer/>
+    </>
   );
 }

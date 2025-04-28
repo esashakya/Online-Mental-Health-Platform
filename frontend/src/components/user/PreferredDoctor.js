@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../../context/AuthContext";
+import Footer from "./Footer";
 const Swal = require("sweetalert2");
 
 export default function PreferredDoctor() {
@@ -16,7 +17,7 @@ export default function PreferredDoctor() {
   const [rating, setRating] = useState(1);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const accessToken = authTokens?.access;
-
+  //getting doctor details
   useEffect(() => {
     const fetchDoctorDetails = async () => {
       try {
@@ -30,7 +31,7 @@ export default function PreferredDoctor() {
 
     fetchDoctorDetails();
   }, [id]);
-
+  //getting the reviews of specific doctor
   useEffect(() => {
     const fetchReviews = async () => {
       try {
@@ -82,34 +83,8 @@ export default function PreferredDoctor() {
     }
   }, [id, user]); 
 
-  const checkSlotAvailability = async (therapistId, slotDateTime) => {
-    try {
-      const response = await fetch(
-        `http://127.0.0.1:8000/api/appointments/check_availability/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({
-            therapist_id: therapistId,
-            appointment_date: slotDateTime.toISOString(),
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to check availability");
-      }
-
-      const data = await response.json();
-      return data.available;
-    } catch (error) {
-      console.error("Error checking availability:", error);
-      return false;
-    }
-  };
+ //to handle the review section for submitting
+ //checking validation
 
   const handleReviewSubmit = async () => {
     if (newReview.trim() !== "") {
@@ -184,13 +159,13 @@ export default function PreferredDoctor() {
       }
     }
   };
-
+  //editing review section
   const handleEditReview = (review) => {
     setEditingReview(review);
     setNewReview(review.review_post);
     setRating(review.doctor_ratings);
   };
-
+  //deleting the specific review
   const handleDeleteReview = async (reviewId) => {
     try {
       const result = await Swal.fire({
@@ -229,7 +204,7 @@ export default function PreferredDoctor() {
     setNewReview("");
     setRating(1);
   };
-
+  //render the stars based on selection
   const renderStars = (rating) => {
     return Array(5)
       .fill(0)
@@ -281,12 +256,13 @@ export default function PreferredDoctor() {
     return (
       <div className="d-flex flex-column justify-content-center align-items-center mb-3">
         <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
+          <span className="visually-hidden">loading</span>
         </div>
       </div>
     );
 
   return (
+    <>
     <div className="container my-5">
       <div className="card shadow-lg mb-4" style={{ overflow: "hidden" }}>
         <div className="row g-0">
@@ -449,6 +425,9 @@ export default function PreferredDoctor() {
           </div>
         )}
       </div>
+     
     </div>
+     <Footer/>
+     </>
   );
 }

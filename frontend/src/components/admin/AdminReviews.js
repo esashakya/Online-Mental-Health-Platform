@@ -117,7 +117,7 @@ export default function AdminReviews() {
       {isLoading ? (
         <div className="text-center py-5">
           <div className="spinner-border text-primary" role="status" />
-          <p className="mt-2">Loading reviews...</p>
+          <p className="mt-2">reviews are being loaded</p>
         </div>
       ) : (
         <div className="table-responsive mt-4">
@@ -187,7 +187,7 @@ export default function AdminReviews() {
           <div className="modal-content border-0 shadow">
             <div className="modal-header bg-info text-dark">
               <h5 className="modal-title">
-                <i className="bi bi-star-fill me-2"></i> Review Details
+                Review Details
               </h5>
               <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>

@@ -226,7 +226,7 @@ export default function AdminComments() {
           <div className="modal-content border-0 shadow">
             <div className="modal-header bg-info text-dark">
               <h5 className="modal-title">
-                <i className="bi bi-chat-left-text me-2"></i>
+             
                 Comment Details
               </h5>
               <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>

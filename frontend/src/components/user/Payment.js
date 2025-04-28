@@ -376,6 +376,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
 import AuthContext from "../../context/AuthContext";
 import { v4 as uuidv4 } from "uuid";
+import Footer from "./Footer";
 
 const Payment = () => {
   const [loading, setLoading] = useState(false);
@@ -576,6 +577,7 @@ const Payment = () => {
           </div>
         </div>
       </div>
+      <Footer/>
     </div>
   );
 };
